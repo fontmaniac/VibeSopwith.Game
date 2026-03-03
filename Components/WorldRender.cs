@@ -58,7 +58,7 @@ namespace VibeSopwith.Components
 
             TheGame.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, null, null, null, null, transform);
             
-            _groundRender.Draw(world.Ground, TheGame.SpriteBatch);
+            _groundRender.Draw(world.Ground, thickness: 0.2f, TheGame.SpriteBatch);
 
             TheGame.SpriteBatch.End();
 

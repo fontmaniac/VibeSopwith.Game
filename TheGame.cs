@@ -20,7 +20,7 @@ namespace VibeSopwith
 
         // Camera State
         private float _cameraPositionX = 0f;
-        private const float ScrollSpeed = 1000f; // World units per second
+        private const float ScrollSpeed = 500f; // World units per second
 
         public TheGame()
         {

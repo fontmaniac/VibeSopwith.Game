@@ -7,7 +7,6 @@ namespace VibeSopwith.Components
     internal class GroundRender(Game game) : DrawableGameComponent(game)
     {
         private Texture2D _pixel = null!;
-        private const int LineThickness = 3;
 
         public void LoadContent(GraphicsDevice graphicsDevice)
         {
@@ -15,14 +14,14 @@ namespace VibeSopwith.Components
             _pixel.SetData(new[] { Color.White });
         }
 
-        public void Draw(Ground ground, SpriteBatch spriteBatch)
+        public void Draw(Ground ground, float thickness, SpriteBatch spriteBatch)
         {
             for (int i = 1; i < ground.Points.Count; i++)
             {
                 var start = ground.Points[i - 1];
                 var end = ground.Points[i];
 
-                DrawLine(spriteBatch, start, end, Color.White, LineThickness);
+                DrawLine(spriteBatch, start, end, Color.White, thickness);
             }
         }
 
