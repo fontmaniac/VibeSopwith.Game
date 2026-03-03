@@ -1,2 +1,38 @@
+# Build artifacts
+bin/
+obj/
+artifacts/
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# IDE folders (optional, if using VS or Rider)
+.vscode/
+.idea/
+.vs/
+
+# Logs and temp files
+*.log
+*.tmp
+output/
+
+# NuGet packages
+*.nupkg
+*.snupkg
+
+# Test results
+TestResult.xml
+*.trx
+*.coverage
+*.coveragexml
+
+# Launch profiles
+**/Properties/launchSettings.json
+
+.fake
+
 /Content/*
 /Content/
