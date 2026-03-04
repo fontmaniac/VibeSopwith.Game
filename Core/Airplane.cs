@@ -17,8 +17,8 @@ namespace VibeSopwith.Game.Core
 
         public void Place(Vector2 pos, Winding normalDown) => CurrentState = CurrentState with { Position = pos, NormalDown = normalDown };
 
-        private const float Acceleration = 0.1f; // meters per second^2
-        private const float MaxSpeed = 0.5f; // meters per second
+        private const float Acceleration = 0.05f; // meters per second^2
+        private const float MaxSpeed = 0.4f; // meters per second
         private const float PitchAngle = 4.0f;
         private const float RollGracePeriod = 1f / 4f; // Time in seconds before subsequent roll input is accepted.
 
@@ -49,7 +49,7 @@ namespace VibeSopwith.Game.Core
 
             var newDirection = Speed == 0f ? Direction : Vector2.TransformNormal(Direction,
                 Pitch == PitchInput.Backward ? Matrix.CreateRotationZ(rollFactor * MathHelper.ToRadians(PitchAngle)) :
-                Pitch == PitchInput.Forward  ? Matrix.CreateRotationZ(rollFactor * MathHelper.ToRadians(PitchAngle)) :
+                Pitch == PitchInput.Forward  ? Matrix.CreateRotationZ(-rollFactor * MathHelper.ToRadians(PitchAngle)) :
                 Matrix.Identity);
 
             var newPosition = Position + newDirection * newSpeed;
