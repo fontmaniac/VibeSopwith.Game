@@ -58,6 +58,7 @@ namespace VibeSopwith.Game.Components
             var transform = translation * scale;
 
             // Main world render pass; rendering into "global" render target.
+            var vp = GraphicsDevice.Viewport;
             EnsureRenderTarget();
             GraphicsDevice.SetRenderTarget(_rt);
             GraphicsDevice.Clear(Color.Black);
@@ -71,15 +72,17 @@ namespace VibeSopwith.Game.Components
 
             // Screen-render pass - paste _rt flipped vertically.
             GraphicsDevice.SetRenderTarget(null);
+            GraphicsDevice.Clear(Color.Black);  // Without this the screen becomes "cornflower".
+            GraphicsDevice.Viewport = vp;
 
             TheGame.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, null, null, null, null);
 
             TheGame.SpriteBatch.Draw(
-                texture: _rt, 
-                destinationRectangle: new Rectangle(0, 0, _rt.Width, _rt.Height), 
-                sourceRectangle: null, 
-                color: Color.White, rotation: 0f, origin: Vector2.Zero, 
-                effects: SpriteEffects.FlipVertically, 
+                texture: _rt,
+                destinationRectangle: new Rectangle(0, 0, _rt.Width, _rt.Height),
+                sourceRectangle: null,
+                color: Color.White, rotation: 0f, origin: Vector2.Zero,
+                effects: SpriteEffects.FlipVertically,
                 layerDepth: 0f);
 
             TheGame.SpriteBatch.End();

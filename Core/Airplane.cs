@@ -30,8 +30,6 @@ namespace VibeSopwith.Game.Core
         public PitchInput Pitch;
         public RollInput Roll;
 
-        private DateTime _lastRoll = DateTime.MinValue;
-
         public State ApplyInputs(GameTime gameTime)
         {
             var newSpeed = MathHelper.Clamp((
