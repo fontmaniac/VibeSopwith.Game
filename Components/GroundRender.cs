@@ -1,10 +1,10 @@
-using VibeSopwith.Core;
+using VibeSopwith.Game.Core;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace VibeSopwith.Components
+namespace VibeSopwith.Game.Components
 {
-    internal class GroundRender(Game game) : DrawableGameComponent(game)
+    internal class GroundRender(Microsoft.Xna.Framework.Game game) : DrawableGameComponent(game)
     {
         private Texture2D _pixel = null!;
 

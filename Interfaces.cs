@@ -1,6 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 
-namespace VibeSopwith;
+namespace VibeSopwith.Game;
 
 public enum Winding { Clockwise, CounterClockwise }
 

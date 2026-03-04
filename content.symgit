@@ -1,8 +1,5 @@
-MANIFEST-2026-03-03T08:05:01Z-master-8631a70a5ca04cd4982a4cbeea721d73
+MANIFEST-2026-03-04T04:17:09Z-master-6ce17cb795e34132a03549db43566349
 Content
 https://github.com/fontmaniac/VibeSopwith.Content.git
 
-+ Fonts/Arial12.xnb
-+ Fonts/Arial14.xnb
-+ Fonts/Arial16.xnb
-+ Textures/Plane_1.png
+* Textures/Plane_1.png

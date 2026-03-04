@@ -1,11 +1,10 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using VibeSopwith.Utils;
-using VibeSopwith.Core; // Added for GameWorld constants
-using VibeSopwith.Components; // Added for WorldRender
+using VibeSopwith.Game.Utils;
+using VibeSopwith.Game.Core; 
 
-namespace VibeSopwith
+namespace VibeSopwith.Game
 {
     public class TheGame : Microsoft.Xna.Framework.Game
     {
@@ -19,8 +18,8 @@ namespace VibeSopwith
         private readonly Core.GameWorld _world;
 
         // Camera State
-        private float _cameraPositionX = 0f;
-        private const float ScrollSpeed = 500f; // World units per second
+        private float _cameraPositionX = GameWorld.WorldLength / 2f;
+        private const float ScrollSpeed = 200f; // World units per second
 
         public TheGame()
         {
@@ -86,9 +85,10 @@ namespace VibeSopwith
                 // Clamp CameraPositionX
                 var scale = (float)GraphicsDevice.Viewport.Height / Core.GameWorld.WorldHeight;
                 var viewportWidthInWorldUnits = GraphicsDevice.Viewport.Width / scale;
-                var maxCameraX = Core.GameWorld.WorldLength - viewportWidthInWorldUnits;
+                var minCameraX = viewportWidthInWorldUnits / 2f;
+                var maxCameraX = Core.GameWorld.WorldLength - viewportWidthInWorldUnits / 2f;
 
-                _cameraPositionX = MathHelper.Clamp(_cameraPositionX, 0f, Math.Max(0f, maxCameraX)); // Ensure maxCameraX isn't negative for small worlds
+                _cameraPositionX = MathHelper.Clamp(_cameraPositionX, minCameraX, maxCameraX); 
             });
         }
 
@@ -97,8 +97,12 @@ namespace VibeSopwith
             GraphicsDevice.Clear(Color.Black);
 
             base.Draw(gameTime);
-            
-            _worldRender.Draw(_world, gameTime, _cameraPositionX); // Pass CameraPositionX
+
+            var scale = (float)GraphicsDevice.Viewport.Height / Core.GameWorld.WorldHeight;
+            var viewportWidthInWorldUnits = GraphicsDevice.Viewport.Width / scale;
+            var minCameraX = viewportWidthInWorldUnits / 2f;
+
+            _worldRender.Draw(_world, gameTime, _cameraPositionX - minCameraX); 
         }
     }
 }

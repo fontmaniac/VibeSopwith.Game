@@ -1,17 +1,14 @@
-using VibeSopwith.Core;
+using VibeSopwith.Game.Core;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace VibeSopwith.Components
+namespace VibeSopwith.Game.Components
 {
-    internal class WorldRender : DrawableGameComponent
+    internal class WorldRender(Microsoft.Xna.Framework.Game game) : DrawableGameComponent(game)
     {
         private RenderTarget2D _rt = null!;
         private GroundRender _groundRender = null!; 
-
-        public WorldRender(Game game) : base(game)
-        {
-        }
+        private AirplaneRender _airplaneRender = null!;
 
         public override void Initialize()
         {
@@ -26,6 +23,15 @@ namespace VibeSopwith.Components
 
             _groundRender = new GroundRender(Game); 
             _groundRender.LoadContent(GraphicsDevice);
+
+            _airplaneRender = new AirplaneRender(Game);
+            _airplaneRender.LoadContent();
+        }
+
+        protected override void UnloadContent()
+        {
+            _airplaneRender?.Dispose();
+            _groundRender?.Dispose();
         }
 
         void EnsureRenderTarget()
@@ -59,6 +65,7 @@ namespace VibeSopwith.Components
             TheGame.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, null, null, null, null, transform);
             
             _groundRender.Draw(world.Ground, thickness: 0.2f, TheGame.SpriteBatch);
+            _airplaneRender.Draw(world.Plane, gameTime);
 
             TheGame.SpriteBatch.End();
 

@@ -41,4 +41,10 @@
     <PackageReference Include="MLEM.Ui.FNA" Version="8.0.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Content\Textures\Plane_1.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

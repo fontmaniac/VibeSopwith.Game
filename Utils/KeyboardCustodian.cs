@@ -1,6 +1,6 @@
 using Microsoft.Xna.Framework.Input;
 
-namespace VibeSopwith.Utils
+namespace VibeSopwith.Game.Utils
 {
     internal class KeyboardCustodian
     {

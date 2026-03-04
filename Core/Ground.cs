@@ -1,6 +1,6 @@
 using Microsoft.Xna.Framework;
 
-namespace VibeSopwith.Core
+namespace VibeSopwith.Game.Core
 {
     internal class Ground 
     {
