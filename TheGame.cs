@@ -1,8 +1,8 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using VibeSopwith.Game.Utils;
 using VibeSopwith.Game.Core; 
+using VibeSopwith.Game.Utils;
 
 namespace VibeSopwith.Game
 {
@@ -17,14 +17,10 @@ namespace VibeSopwith.Game
         private Components.WorldRender _worldRender = null!;
         private readonly Core.GameWorld _world;
 
-        // Camera State
-        private float _cameraPositionX = GameWorld.WorldLength / 2f;
-        private const float ScrollSpeed = 200f; // World units per second
-
         public TheGame()
         {
             _graphics = new GraphicsDeviceManager(this);
-            _graphics.PreferredBackBufferWidth = 1600; // Default resolution
+            _graphics.PreferredBackBufferWidth = 1600; 
             _graphics.PreferredBackBufferHeight = 1000;
             _graphics.SynchronizeWithVerticalRetrace = true;
 
@@ -75,21 +71,22 @@ namespace VibeSopwith.Game
                 if (kc.IsKeyPressed(Keys.Escape))
                     this.Exit();
 
-                // Handle horizontal scrolling input
-                var deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
-                _cameraPositionX +=
-                    kc.IsKeyDown(Keys.A) ? -ScrollSpeed * deltaTime :
-                    kc.IsKeyDown(Keys.D) ? +ScrollSpeed * deltaTime :
-                    0f;
+                _world.Plane.Throttle =
+                    (kc.IsKeyDown(Keys.A) && !kc.IsKeyDown(Keys.D)) ? Airplane.ThrottleInput.Reversing :
+                    (!kc.IsKeyDown(Keys.A) && kc.IsKeyDown(Keys.D)) ? Airplane.ThrottleInput.Throttling :
+                    Airplane.ThrottleInput.None;
 
-                // Clamp CameraPositionX
-                var scale = (float)GraphicsDevice.Viewport.Height / Core.GameWorld.WorldHeight;
-                var viewportWidthInWorldUnits = GraphicsDevice.Viewport.Width / scale;
-                var minCameraX = viewportWidthInWorldUnits / 2f;
-                var maxCameraX = Core.GameWorld.WorldLength - viewportWidthInWorldUnits / 2f;
+                _world.Plane.Pitch =
+                    (kc.IsKeyDown(Keys.W) && !kc.IsKeyDown(Keys.S)) ? Airplane.PitchInput.Backward :
+                    (!kc.IsKeyDown(Keys.W) && kc.IsKeyDown(Keys.S)) ? Airplane.PitchInput.Forward :
+                    Airplane.PitchInput.None;
 
-                _cameraPositionX = MathHelper.Clamp(_cameraPositionX, minCameraX, maxCameraX); 
+                _world.Plane.Roll =
+                    kc.IsKeyDown(Keys.X) ? Airplane.RollInput.Roll : Airplane.RollInput.None;
+
             });
+
+            _world.Simulate(gameTime);
         }
 
         protected override void Draw(GameTime gameTime)
@@ -101,8 +98,11 @@ namespace VibeSopwith.Game
             var scale = (float)GraphicsDevice.Viewport.Height / Core.GameWorld.WorldHeight;
             var viewportWidthInWorldUnits = GraphicsDevice.Viewport.Width / scale;
             var minCameraX = viewportWidthInWorldUnits / 2f;
+            var maxCameraX = Core.GameWorld.WorldLength - viewportWidthInWorldUnits / 2f;
 
-            _worldRender.Draw(_world, gameTime, _cameraPositionX - minCameraX); 
+            var cameraPositionX = MathHelper.Clamp(_world.Plane.Position.X, minCameraX, maxCameraX);
+
+            _worldRender.Draw(_world, gameTime, cameraPositionX - minCameraX); 
         }
     }
 }

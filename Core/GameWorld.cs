@@ -18,7 +18,16 @@ namespace VibeSopwith.Game.Core
             Ground = Ground.MakeRandom();
             Plane = new Airplane();
             Plane.Place(new Vector2(WorldLength / 2f, WorldHeight / 2f), Winding.Clockwise);
-
         }
+
+        public void Simulate(GameTime gameTime)
+        {
+            var planeProjected = Plane.ApplyInputs(gameTime);
+
+            Plane.CurrentState = planeProjected;
+
+            Plane.ClearInputs();
+        }
+
     }
 }
