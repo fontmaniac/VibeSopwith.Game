@@ -86,10 +86,6 @@ namespace VibeSopwith.Game.Components
                 layerDepth: 0f);
 
             TheGame.SpriteBatch.End();
-
-            // Here goes UI/HUD components rendering, as it doesn't make sense to position them in world coordinates.
-
-            // ...
         }
     }
 }

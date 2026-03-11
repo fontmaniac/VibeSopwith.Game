@@ -1,10 +1,14 @@
+using VibeSopwith.Game.Utils;
 using Microsoft.Xna.Framework;
+using nkast.Aether.Physics2D.Dynamics;
+using Aether = nkast.Aether.Physics2D.Common;
 
 namespace VibeSopwith.Game.Core
 {
     internal class Ground 
     {
         public readonly List<Vector2> Points;
+        public Body Body = null!;
 
         private Ground(List<Vector2> points)
         {
@@ -37,6 +41,25 @@ namespace VibeSopwith.Game.Core
             }
 
             return new Ground(points);
+        }
+
+        public void SetupRigging(World collisionWorld)
+        {
+            var vertices = new Aether.Vertices();
+
+            foreach (var point in Points)
+                vertices.Add(point.ToAether());
+
+            vertices.Add(Vector2.UnitX.ToAether() * GameWorld.WorldLength);
+            vertices.Add(Vector2.Zero.ToAether());
+
+            var groundBody = collisionWorld.CreateBody(Aether.Vector2.Zero, 0f, BodyType.Static);
+            groundBody.Tag = this;
+
+            var shape = new nkast.Aether.Physics2D.Collision.Shapes.PolygonShape(vertices, 1.0f);
+            var fixture = groundBody.CreateFixture(shape);
+
+            Body = groundBody;
         }
     }
 }

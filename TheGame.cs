@@ -124,8 +124,6 @@ namespace VibeSopwith.Game
         {
             base.Draw(gameTime);
 
-            GraphicsDevice.Clear(Color.Black);
-
             var full = GraphicsDevice.Viewport;
             var bnd = full.Height - 80;
 
@@ -137,6 +135,8 @@ namespace VibeSopwith.Game
             {
                 _gizmo.PreparedDraw(_world.Plane);
             });
+
+            GraphicsDevice.Clear(Color.Black);
 
             DrawInViewport(mainViewport, full, () =>
             {

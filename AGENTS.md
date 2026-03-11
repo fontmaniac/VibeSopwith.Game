@@ -1,0 +1,1 @@
+- Use conventions outlined in Docs\\Architecture.md

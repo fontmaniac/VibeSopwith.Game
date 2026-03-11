@@ -36,15 +36,11 @@ namespace VibeSopwith.Game.Graphics
             }
         }
 
-        public static Color AverageColors(Color c1, Color c2, Color c3, Color c4)
-        {
-            return new Color(
-                (c1.R + c2.R + c3.R + c4.R) / 4,
-                (c1.G + c2.G + c3.G + c4.G) / 4,
-                (c1.B + c2.B + c3.B + c4.B) / 4,
-                (c1.A + c2.A + c3.A + c4.A) / 4
-            );
-        }
+        public static Color AverageColors(Color c1, Color c2, Color c3, Color c4) => new Color(
+            (c1.R + c2.R + c3.R + c4.R) / 4,
+            (c1.G + c2.G + c3.G + c4.G) / 4,
+            (c1.B + c2.B + c3.B + c4.B) / 4,
+            (c1.A + c2.A + c3.A + c4.A) / 4);
 
         public static Texture2D Cast(GraphicsDevice gd, SpriteBatch spriteBatch, Texture2D master, Vector2 origin, float rotation, SpriteEffects effects)
         {
