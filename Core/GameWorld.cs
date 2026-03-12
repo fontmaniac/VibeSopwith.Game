@@ -14,6 +14,8 @@ namespace VibeSopwith.Game.Core
         public readonly Ground Ground;
         public readonly Airplane Plane;
 
+        public readonly Explosion TestExplosion;
+
         private readonly World collisionWorld;
 
         public GameWorld()
@@ -22,6 +24,9 @@ namespace VibeSopwith.Game.Core
             Ground = Ground.MakeRandom();
             Plane = new Airplane();
             Plane.Place(new Vector2(WorldLength / 2f, WorldHeight / 2f), Winding.Clockwise);
+
+            TestExplosion = new Explosion(16f, 16f, TimeSpan.FromSeconds(2));
+            TestExplosion.RootPosition = Plane.Position;
 
             collisionWorld = new World()
             {

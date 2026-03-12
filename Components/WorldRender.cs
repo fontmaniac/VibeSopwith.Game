@@ -9,6 +9,7 @@ namespace VibeSopwith.Game.Components
         private RenderTarget2D _rt = null!;
         private GroundRender _groundRender = null!; 
         private AirplaneRender _airplaneRender = null!;
+        private ExplosionRender _explosionRender = null!;
 
         public override void Initialize()
         {
@@ -26,12 +27,16 @@ namespace VibeSopwith.Game.Components
 
             _airplaneRender = new AirplaneRender(Game);
             _airplaneRender.LoadContent();
+
+            _explosionRender = new ExplosionRender(Game);
+            _explosionRender.LoadContent();
         }
 
         protected override void UnloadContent()
         {
             _airplaneRender?.Dispose();
             _groundRender?.Dispose();
+            _explosionRender?.Dispose();
         }
 
         void EnsureRenderTarget()
@@ -63,10 +68,11 @@ namespace VibeSopwith.Game.Components
             GraphicsDevice.SetRenderTarget(_rt);
             GraphicsDevice.Clear(Color.Black);
 
-            TheGame.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, null, null, null, null, transform);
+            TheGame.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, null, null, null, null, transform);
             
             _groundRender.Draw(world.Ground, thickness: 0.2f, TheGame.SpriteBatch);
             _airplaneRender.Draw(world.Plane, gameTime);
+            _explosionRender.Draw(world.TestExplosion, gameTime);
 
             TheGame.SpriteBatch.End();
 
