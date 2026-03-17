@@ -45,19 +45,26 @@ namespace VibeSopwith.Game.Core
 
         public void SetupRigging(World collisionWorld)
         {
-            var vertices = new Aether.Vertices();
-
-            foreach (var point in Points)
-                vertices.Add(point.ToAether());
-
-            vertices.Add(Vector2.UnitX.ToAether() * GameWorld.WorldLength);
-            vertices.Add(Vector2.Zero.ToAether());
-
             var groundBody = collisionWorld.CreateBody(Aether.Vector2.Zero, 0f, BodyType.Static);
             groundBody.Tag = this;
 
-            var shape = new nkast.Aether.Physics2D.Collision.Shapes.PolygonShape(vertices, 1.0f);
-            var fixture = groundBody.CreateFixture(shape);
+            for (var i = 0; i < Points.Count-1; ++i)
+            {
+                var p1 = Points[i];
+                var p2 = Points[i+1];
+                var bottomLeft = new Vector2(p1.X, 0);
+                var topLeft = new Vector2(p1.X, p1.Y);
+                var topRight = new Vector2(p2.X, p2.Y);
+                var bottomRight = new Vector2(p2.X, 0);
+                var vertices = new Aether.Vertices();
+                vertices.Add(bottomLeft.ToAether());
+                vertices.Add(topLeft.ToAether());
+                vertices.Add(topRight.ToAether());
+                vertices.Add(bottomRight.ToAether());
+
+                var shape = new nkast.Aether.Physics2D.Collision.Shapes.PolygonShape(vertices, 1.0f);
+                var fixture = groundBody.CreateFixture(shape);
+            }
 
             Body = groundBody;
         }

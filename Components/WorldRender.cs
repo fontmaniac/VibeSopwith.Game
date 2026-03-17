@@ -6,10 +6,12 @@ namespace VibeSopwith.Game.Components
 {
     internal class WorldRender(Microsoft.Xna.Framework.Game game) : DrawableGameComponent(game)
     {
-        private RenderTarget2D _rt = null!;
-        private GroundRender _groundRender = null!; 
+        private GroundRender _groundRender = null!;
+        private AetherBodyRender _bodyRender = null!;
+
         private AirplaneRender _airplaneRender = null!;
         private ExplosionRender _explosionRender = null!;
+
 
         public override void Initialize()
         {
@@ -20,8 +22,6 @@ namespace VibeSopwith.Game.Components
         {
             base.LoadContent();
 
-            EnsureRenderTarget();
-
             _groundRender = new GroundRender(Game); 
             _groundRender.LoadContent(GraphicsDevice);
 
@@ -30,6 +30,9 @@ namespace VibeSopwith.Game.Components
 
             _explosionRender = new ExplosionRender(Game);
             _explosionRender.LoadContent();
+
+            _bodyRender = new AetherBodyRender(Game);
+            _bodyRender.LoadContent();
         }
 
         protected override void UnloadContent()
@@ -39,14 +42,38 @@ namespace VibeSopwith.Game.Components
             _explosionRender?.Dispose();
         }
 
-        void EnsureRenderTarget()
+        private void DrawStraight(GameWorld world, GameTime gameTime, float cameraPositionX)
         {
-            var vp = GraphicsDevice.Viewport;
-            if (_rt == null || _rt.Width != vp.Width || _rt.Height != vp.Height)
-            {
-                _rt?.Dispose();
-                _rt = new RenderTarget2D(GraphicsDevice, vp.Width, vp.Height, false, SurfaceFormat.Color, DepthFormat.None);
-            }
+            float scaleFactor = (float)GraphicsDevice.Viewport.Height / GameWorld.WorldHeight;
+
+            // 1. Scale: X normal, Y flipped
+            var scale = Matrix.CreateScale(scaleFactor, -scaleFactor, 1f);
+
+            // 2. Move world origin (0,0) to bottom-left of screen
+            var translateY = Matrix.CreateTranslation(0f, GraphicsDevice.Viewport.Height, 0f);
+
+            // 3. Camera X
+            var translateCamera = Matrix.CreateTranslation(-cameraPositionX, 0f, 0f);
+
+            // Final: world -> camera -> scale+flip -> move to screen
+            var transform = translateCamera * scale * translateY;
+
+            TheGame.SpriteBatch.Begin(
+                SpriteSortMode.Deferred,
+                BlendState.NonPremultiplied,
+                SamplerState.LinearClamp, 
+                DepthStencilState.None,
+                RasterizerState.CullNone, 
+                null,
+                transform);
+
+            _groundRender.Draw(world.Ground, thickness: 0.2f, TheGame.SpriteBatch);
+            _airplaneRender.Draw(world.Plane, gameTime);
+            _explosionRender.Draw(world.TestExplosion, gameTime);
+            _bodyRender.Draw(world.Plane.Body, gameTime);
+            _bodyRender.Draw(world.Ground.Body, gameTime);
+
+            TheGame.SpriteBatch.End();
         }
 
 
@@ -54,44 +81,9 @@ namespace VibeSopwith.Game.Components
         {
             base.Draw(gameTime);
 
-            float scaleFactor = (float)GraphicsDevice.Viewport.Height / GameWorld.WorldHeight;
-
-            var translation = Matrix.CreateTranslation(-cameraPositionX, 0, 0);
-            var scale = Matrix.CreateScale(scaleFactor, scaleFactor, 1);
-
-            // Final transform
-            var transform = translation * scale;
-
-            // Main world render pass; rendering into "global" render target.
-            var vp = GraphicsDevice.Viewport;
-            EnsureRenderTarget();
-            GraphicsDevice.SetRenderTarget(_rt);
-            GraphicsDevice.Clear(Color.Black);
-
-            TheGame.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, null, null, null, null, transform);
-            
-            _groundRender.Draw(world.Ground, thickness: 0.2f, TheGame.SpriteBatch);
-            _airplaneRender.Draw(world.Plane, gameTime);
-            _explosionRender.Draw(world.TestExplosion, gameTime);
-
-            TheGame.SpriteBatch.End();
-
-            // Screen-render pass - paste _rt flipped vertically.
-            GraphicsDevice.SetRenderTarget(null);
-            GraphicsDevice.Clear(Color.Black);  // Without this the screen becomes "cornflower".
-            GraphicsDevice.Viewport = vp;
-
-            TheGame.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, null, null, null, null);
-
-            TheGame.SpriteBatch.Draw(
-                texture: _rt,
-                destinationRectangle: new Rectangle(0, 0, _rt.Width, _rt.Height),
-                sourceRectangle: null,
-                color: Color.White, rotation: 0f, origin: Vector2.Zero,
-                effects: SpriteEffects.FlipVertically,
-                layerDepth: 0f);
-
-            TheGame.SpriteBatch.End();
+            DrawStraight(world, gameTime, cameraPositionX);
         }
+
+
     }
 }

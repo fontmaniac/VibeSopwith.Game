@@ -17,6 +17,7 @@ namespace VibeSopwith.Game.Components
 
         private Paragraph _alt = null!;
         private Paragraph _spd = null!;
+        private Paragraph _lng = null!;
 
         public new void LoadContent()
         {
@@ -31,10 +32,11 @@ namespace VibeSopwith.Game.Components
 
             _uiSystem = new UiSystem(this.Game, untexturedStyle);
 
-            _root = new Panel(Anchor.TopLeft, new Vector2(200, 100), new Vector2(2, 2), false, true);
+            _root = new Panel(Anchor.TopLeft, new Vector2(200, 150), new Vector2(2, 2), false, true);
             _uiSystem.Add("Root", _root);
 
             _root.AddChild(_alt = new Paragraph(Anchor.AutoLeft, 1, "Altitude"));
+            _root.AddChild(_lng = new Paragraph(Anchor.AutoLeft, 1, "Position"));
             _root.AddChild(_spd = new Paragraph(Anchor.AutoLeft, 1, "Speed"));
         }
 
@@ -57,6 +59,7 @@ namespace VibeSopwith.Game.Components
             base.Draw(gameTime);
 
             _alt.Text = $"Altitude: {(int)plane.Position.Y}";
+            _lng.Text = $"Position: {(int)plane.Position.X}";
             _spd.Text = $"Speed: {plane.Speed:0.000}";
 
             _uiSystem.Draw(gameTime, TheGame.SpriteBatch);

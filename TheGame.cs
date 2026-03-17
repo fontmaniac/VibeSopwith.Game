@@ -125,16 +125,11 @@ namespace VibeSopwith.Game
             base.Draw(gameTime);
 
             var full = GraphicsDevice.Viewport;
-            var bnd = full.Height - 80;
+            var bnd = full.Height - 120;
 
             var mainViewport = new Viewport(0, 0, full.Width, bnd);
-            var dashViewport = new Viewport(0, bnd, 200, 80);
-            var gizmoViewport = new Viewport(200, bnd, 80, 80);
-
-            DrawInViewport(gizmoViewport, full, () =>
-            {
-                _gizmo.PreparedDraw(_world.Plane);
-            });
+            var dashViewport = new Viewport(0, bnd, 200, 120);
+            var gizmoViewport = new Viewport(200, bnd, 120, 120);
 
             GraphicsDevice.Clear(Color.Black);
 
@@ -157,7 +152,7 @@ namespace VibeSopwith.Game
 
             DrawInViewport(gizmoViewport, full, () =>
             {
-                _gizmo.Draw(gameTime);
+                _gizmo.Draw(_world.Plane, gameTime);
             });
         }
     }

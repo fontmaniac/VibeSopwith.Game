@@ -1,5 +1,6 @@
 using Microsoft.Xna.Framework;
 using nkast.Aether.Physics2D.Dynamics;
+using VibeSopwith.Game.Utils;
 using Aether = nkast.Aether.Physics2D.Common;
 
 namespace VibeSopwith.Game.Core
@@ -20,8 +21,8 @@ namespace VibeSopwith.Game.Core
 
         public GameWorld()
         {
-            //Ground = Ground.MakeFlat(0.25f); 
-            Ground = Ground.MakeRandom();
+            Ground = Ground.MakeFlat(0.25f); 
+            //Ground = Ground.MakeRandom();
             Plane = new Airplane();
             Plane.Place(new Vector2(WorldLength / 2f, WorldHeight / 2f), Winding.Clockwise);
 
@@ -34,6 +35,8 @@ namespace VibeSopwith.Game.Core
             };
 
             Ground.SetupRigging(collisionWorld);
+            Plane.SetupRigging(collisionWorld);
+            Plane.Body.Position = Plane.Position.ToAether();
         }
 
         public void Simulate(GameTime gameTime)
