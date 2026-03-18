@@ -13,7 +13,7 @@ namespace VibeSopwith.Game.Core
         public static readonly Random WorldSeed = new Random(12345);
 
         public readonly Ground Ground;
-        public Airplane Plane;
+        public Airplane Plane = null!;
         private readonly List<Explosion> explosions = new List<Explosion>();
         private Explosion? planeExplosion = null; 
         public IEnumerable<Explosion> Explosions 
@@ -24,6 +24,8 @@ namespace VibeSopwith.Game.Core
                 foreach (var exp in explosions) yield return exp;
             } 
         }
+
+        public readonly List<Bomb> Bombs = new List<Bomb>();
 
         private readonly World collisionWorld;
 
@@ -64,6 +66,17 @@ namespace VibeSopwith.Game.Core
             }
 
             var planeProjected = Plane.ApplyInputs(gameTime);
+            
+            // Spawn a bomb, if requested.
+            if (planeProjected.launchingBomb)
+            {
+                // Bomb spawned half-height off the plane Position in direction of NormalDown, with initial Direction equal to Plane's.
+                var bomb = new Bomb(new Bomb.State(Vector2.Zero, Plane.Direction, Vector2.Zero));
+                var spawnPos = Plane.Position + Plane.Direction.Rotate(float.Pi / 2f * (Plane.NormalDown == Winding.Clockwise ? -1f : +1f)) * bomb.Height * 0.5f;
+                bomb.CurrentState = bomb.CurrentState with { Position = spawnPos };
+                Bombs.Add(bomb);
+            }
+
             Plane.PreSimulationPrepare(planeProjected);
 
             collisionWorld.Step((float)gameTime.ElapsedGameTime.TotalSeconds);

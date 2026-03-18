@@ -106,6 +106,8 @@ namespace VibeSopwith.Game
                 _world.Plane.Roll =
                     kc.IsKeyDown(Keys.X) ? Airplane.RollInput.Roll : Airplane.RollInput.None;
 
+                _world.Plane.Bomb =
+                    kc.IsKeyDown(Keys.B) ? Airplane.BombInput.Active : Airplane.BombInput.Inactive;
             });
 
             _world.Simulate(gameTime);
@@ -140,7 +142,7 @@ namespace VibeSopwith.Game
                 var minCameraX = viewportWidthInWorldUnits / 2f;
                 var maxCameraX = Core.GameWorld.WorldLength - viewportWidthInWorldUnits / 2f;
 
-                var cameraPositionX = MathHelper.Clamp(_world.Plane.Position.X, minCameraX, maxCameraX);
+                var cameraPositionX = MathHelper.Clamp(_world.Plane.MidPoint.X, minCameraX, maxCameraX);
 
                 _worldRender.Draw(_world, gameTime, cameraPositionX - minCameraX);
             });

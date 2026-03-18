@@ -11,6 +11,7 @@ namespace VibeSopwith.Game.Components
 
         private AirplaneRender _airplaneRender = null!;
         private ExplosionRender _explosionRender = null!;
+        private BombRender _bombRender = null!;
 
 
         public override void Initialize()
@@ -31,12 +32,16 @@ namespace VibeSopwith.Game.Components
             _explosionRender = new ExplosionRender(Game);
             _explosionRender.LoadContent();
 
+            _bombRender = new BombRender(Game);
+            _bombRender.LoadContent();
+
             _bodyRender = new AetherBodyRender(Game);
             _bodyRender.LoadContent();
         }
 
         protected override void UnloadContent()
         {
+            _bombRender?.Dispose();
             _airplaneRender?.Dispose();
             _groundRender?.Dispose();
             _explosionRender?.Dispose();
@@ -69,8 +74,13 @@ namespace VibeSopwith.Game.Components
 
             _groundRender.Draw(world.Ground, thickness: 0.2f, TheGame.SpriteBatch);
             _airplaneRender.Draw(world.Plane, gameTime);
+
+            foreach (var bomb in world.Bombs)
+                _bombRender.Draw(bomb, gameTime);
+
             foreach (var explosion in world.Explosions)
                 _explosionRender.Draw(explosion, gameTime);
+
             _bodyRender.Draw(world.Plane.Body, gameTime);
             _bodyRender.Draw(world.Ground.Body, gameTime);
 
