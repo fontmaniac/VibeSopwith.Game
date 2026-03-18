@@ -66,6 +66,8 @@ namespace VibeSopwith.Game.Core
             var fixture0 = body.CreateFixture(shape0);
             fixture0.Friction = 0.5f;
             fixture0.Restitution = 0.0f;
+            fixture0.CollisionCategories = Category.Cat1;
+            fixture0.CollidesWith = Category.All;
 
             // Add fixture 1
             var vertices1 = new Aether.Vertices();
@@ -79,6 +81,8 @@ namespace VibeSopwith.Game.Core
             var fixture1 = body.CreateFixture(shape1);
             fixture1.Friction = 0.5f;
             fixture1.Restitution = 0.0f;
+            fixture1.CollisionCategories = Category.Cat1;
+            fixture1.CollidesWith = Category.All;
 
             // Add fixture 2
             var vertices2 = new Aether.Vertices();
@@ -92,6 +96,8 @@ namespace VibeSopwith.Game.Core
             var fixture2 = body.CreateFixture(shape2);
             fixture2.Friction = 0.5f;
             fixture2.Restitution = 0.0f;
+            fixture2.CollisionCategories = Category.Cat1;
+            fixture2.CollidesWith = Category.All;
 
             // Add fixture 3
             var vertices3 = new Aether.Vertices();
@@ -106,6 +112,8 @@ namespace VibeSopwith.Game.Core
             var fixture3 = body.CreateFixture(shape3);
             fixture3.Friction = 0.5f;
             fixture3.Restitution = 0.0f;
+            fixture3.CollisionCategories = Category.Cat1;
+            fixture3.CollidesWith = Category.All;
 
             Aether.Vector2 findMidPoint(IEnumerable<Aether.Vector2> vertices)
             {
@@ -138,7 +146,7 @@ namespace VibeSopwith.Game.Core
         private const float MaxSpeed = 0.4f; // meters per second
         private const float PitchAngle = 4.0f;
         private const float RollGracePeriod = 1f / 4f; // Time in seconds before subsequent roll input is accepted.
-        private const float BombGracePeriod = 1f / 2f; // Time in seconds before subsequent bomb can be spawned.
+        private const float BombGracePeriod = 0.35f; // Time in seconds before subsequent bomb can be spawned.
 
         public enum ThrottleInput { Throttling, None, Reversing }
         public enum PitchInput { Forward, None, Backward }

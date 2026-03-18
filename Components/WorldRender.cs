@@ -84,6 +84,7 @@ namespace VibeSopwith.Game.Components
             _bodyRender.Draw(world.Plane.Body, gameTime);
             _bodyRender.Draw(world.Ground.Body, gameTime);
 
+
             TheGame.SpriteBatch.End();
         }
 
