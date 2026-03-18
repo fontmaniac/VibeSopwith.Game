@@ -69,7 +69,8 @@ namespace VibeSopwith.Game.Components
 
             _groundRender.Draw(world.Ground, thickness: 0.2f, TheGame.SpriteBatch);
             _airplaneRender.Draw(world.Plane, gameTime);
-            _explosionRender.Draw(world.TestExplosion, gameTime);
+            foreach (var explosion in world.Explosions)
+                _explosionRender.Draw(explosion, gameTime);
             _bodyRender.Draw(world.Plane.Body, gameTime);
             _bodyRender.Draw(world.Ground.Body, gameTime);
 

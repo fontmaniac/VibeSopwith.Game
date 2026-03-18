@@ -28,3 +28,14 @@ public record Centered(
         src.Height);
 }
 
+
+public interface ISimulated<TState>
+{
+    // Populate Aether2D Body properties from instance properties for simulation purposes.
+    public void PreSimulationPrepare(TState projected);
+
+    // Populate instance properties from Aether2D Body properties computed at simulation step.
+    public void PostSimulationUpdate(TState projected);
+}
+
+

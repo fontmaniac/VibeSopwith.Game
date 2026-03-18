@@ -59,7 +59,7 @@ namespace VibeSopwith.Game.Components
 
         public void Draw(Explosion explosion, GameTime gameTime)
         {
-            Animation.Draw(explosion, explosion.StartTime, _phases, true, gameTime, TheGame.SpriteBatch);
+            Animation.Draw(explosion, explosion.StartTime, _phases, false, gameTime, TheGame.SpriteBatch);
         }
     }
 }

@@ -19,5 +19,6 @@ namespace VibeSopwith.Game.Core
             StartTime = startTime;
         }
 
+        public bool IsExpired(TimeSpan gameTime) => StartTime + Duration < gameTime; 
     }
 }

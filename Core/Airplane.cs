@@ -1,11 +1,12 @@
 ﻿using Microsoft.Xna.Framework;
 using nkast.Aether.Physics2D.Dynamics;
 using System.Diagnostics.Metrics;
+using VibeSopwith.Game.Utils;
 using Aether = nkast.Aether.Physics2D.Common;
 
 namespace VibeSopwith.Game.Core
 {
-    internal class Airplane : ICentered
+    internal class Airplane : ICentered, ISimulated<Airplane.State>
     {
         public Body Body = null!;
 
@@ -20,72 +21,75 @@ namespace VibeSopwith.Game.Core
         public float Length => 3.46f;
         public float Height => 2.0f;
 
+        public bool Exploded = false;
+
         public void Place(Vector2 pos, Winding normalDown) => CurrentState = CurrentState with { Position = pos, NormalDown = normalDown };
+
+        public void RemoveRigging(World collisionWorld)
+        {
+            collisionWorld.Remove(Body);
+        }
 
         public void SetupRigging(World collisionWorld)
         {
             var body = collisionWorld.CreateBody(Aether.Vector2.Zero, 0f, BodyType.Dynamic);
             body.Tag = this;
-            body.FixedRotation = false;
-            body.Mass = 1000f;
+            body.FixedRotation = true;
+            body.Mass = 500f;
             body.Inertia = 0f;
-            body.LinearDamping = 0f;
-            body.AngularDamping = 0f;
 
             // Add fixture 0
             var vertices0 = new Aether.Vertices();
-            vertices0.Add(new Aether.Vector2(-0.1284f, +0.9745f));
-            vertices0.Add(new Aether.Vector2(0.8782f, +0.9802f));
-            vertices0.Add(new Aether.Vector2(0.8593f, -0.8329f));
-            vertices0.Add(new Aether.Vector2(0.6686f, -1f));
-            vertices0.Add(new Aether.Vector2(0.5005f, -1f));
-            vertices0.Add(new Aether.Vector2(0.3003f, -0.814f));
-            vertices0.Add(new Aether.Vector2(-0.1228f, +0.5553f));
+            vertices0.Add(new Aether.Vector2(0.0000f, 0f));
+            vertices0.Add(new Aether.Vector2(0.2304f, 0f));
+            vertices0.Add(new Aether.Vector2(0.3513f, 1.968f));
+            vertices0.Add(new Aether.Vector2(-0.6837f, 1.9793f));
+            vertices0.Add(new Aether.Vector2(-0.763f, 1.5506f));
+            vertices0.Add(new Aether.Vector2(-0.1681f, 0.0359f));
             var shape0 = new nkast.Aether.Physics2D.Collision.Shapes.PolygonShape(vertices0, 1.0f);
             var fixture0 = body.CreateFixture(shape0);
             fixture0.Friction = 0.5f;
-            fixture0.Restitution = 0.1f;
+            fixture0.Restitution = 0.0f;
 
             // Add fixture 1
             var vertices1 = new Aether.Vertices();
-            vertices1.Add(new Aether.Vector2(1.5714f, +0.6384f));
-            vertices1.Add(new Aether.Vector2(1.713f, +0.1964f));
-            vertices1.Add(new Aether.Vector2(1.7187f, +0.0416f));
-            vertices1.Add(new Aether.Vector2(1.5732f, -0.4042f));
-            vertices1.Add(new Aether.Vector2(0.8329f, -0.4004f));
-            vertices1.Add(new Aether.Vector2(0.8197f, +0.6648f));
+            vertices1.Add(new Aether.Vector2(1.1521f, 1.1898f));
+            vertices1.Add(new Aether.Vector2(1.1521f, 1.035f));
+            vertices1.Add(new Aether.Vector2(0.9821f, 0.5779f));
+            vertices1.Add(new Aether.Vector2(0.2569f, 0.6138f));
+            vertices1.Add(new Aether.Vector2(0.2606f, 1.6412f));
+            vertices1.Add(new Aether.Vector2(0.9764f, 1.645f));
             var shape1 = new nkast.Aether.Physics2D.Collision.Shapes.PolygonShape(vertices1, 1.0f);
             var fixture1 = body.CreateFixture(shape1);
             fixture1.Friction = 0.5f;
-            fixture1.Restitution = 0.1f;
+            fixture1.Restitution = 0.0f;
 
             // Add fixture 2
             var vertices2 = new Aether.Vertices();
-            vertices2.Add(new Aether.Vector2(-0.0963f, +0.5553f));
-            vertices2.Add(new Aether.Vector2(0.1473f, -0.2285f));
-            vertices2.Add(new Aether.Vector2(-1.4429f, -0.0812f));
-            vertices2.Add(new Aether.Vector2(-1.7224f, +0.2531f));
-            vertices2.Add(new Aether.Vector2(-1.7243f, +0.8801f));
-            vertices2.Add(new Aether.Vector2(-1.3315f, +0.8896f));
-            vertices2.Add(new Aether.Vector2(-1.1124f, +0.5666f));
+            vertices2.Add(new Aether.Vector2(-0.763f, 1.5562f));
+            vertices2.Add(new Aether.Vector2(-1.8943f, 1.8868f));
+            vertices2.Add(new Aether.Vector2(-2.2645f, 1.8811f));
+            vertices2.Add(new Aether.Vector2(-2.2664f, 1.1861f));
+            vertices2.Add(new Aether.Vector2(-2.0454f, 0.9462f));
+            vertices2.Add(new Aether.Vector2(-0.4457f, 0.7517f));
             var shape2 = new nkast.Aether.Physics2D.Collision.Shapes.PolygonShape(vertices2, 1.0f);
             var fixture2 = body.CreateFixture(shape2);
             fixture2.Friction = 0.5f;
-            fixture2.Restitution = 0.1f;
+            fixture2.Restitution = 0.0f;
 
             // Add fixture 3
             var vertices3 = new Aether.Vertices();
-            vertices3.Add(new Aether.Vector2(-1.069f, -0.1058f));
-            vertices3.Add(new Aether.Vector2(-1.0822f,-0.5288f));
-            vertices3.Add(new Aether.Vector2(-1.2578f, -0.695f));
-            vertices3.Add(new Aether.Vector2(-1.4259f, -0.6912f));
-            vertices3.Add(new Aether.Vector2(-1.5808f, -0.508f));
-            vertices3.Add(new Aether.Vector2(-1.5581f, -0.3286f));
-            vertices3.Add(new Aether.Vector2(-1.2333f, -0.0907f));
+            vertices3.Add(new Aether.Vector2(-1.8074f, 0.933f));
+            vertices3.Add(new Aether.Vector2(-1.6261f, 0.9103f));
+            vertices3.Add(new Aether.Vector2(-1.6639f, 0.4438f));
+            vertices3.Add(new Aether.Vector2(-1.832f, 0.3041f));
+            vertices3.Add(new Aether.Vector2(-2.0246f, 0.3343f));
+            vertices3.Add(new Aether.Vector2(-2.1417f, 0.5458f));
+            vertices3.Add(new Aether.Vector2(-2.0152f, 0.7649f));
             var shape3 = new nkast.Aether.Physics2D.Collision.Shapes.PolygonShape(vertices3, 1.0f);
             var fixture3 = body.CreateFixture(shape3);
             fixture3.Friction = 0.5f;
-            fixture3.Restitution = 0.1f;
+            fixture3.Restitution = 0.0f;
 
             this.Body = body;
         }
@@ -135,6 +139,16 @@ namespace VibeSopwith.Game.Core
             Roll = RollInput.None;
         }
 
+        public void PreSimulationPrepare(State projected)
+        {
+            
+        }
 
+        public void PostSimulationUpdate(State projected)
+        {
+            CurrentState = projected;
+            Body.Position = Position.ToAether();
+            Body.Rotation = Direction.ToAngle();
+        }
     }
 }
