@@ -146,7 +146,7 @@ namespace VibeSopwith.Game.Core
         private const float MaxSpeed = 0.4f; // meters per second
         private const float PitchAngle = 4.0f;
         private const float RollGracePeriod = 1f / 4f; // Time in seconds before subsequent roll input is accepted.
-        private const float BombGracePeriod = 0.35f; // Time in seconds before subsequent bomb can be spawned.
+        private const float BombGracePeriod = 0.25f; // Time in seconds before subsequent bomb can be spawned.
 
         public enum ThrottleInput { Throttling, None, Reversing }
         public enum PitchInput { Forward, None, Backward }

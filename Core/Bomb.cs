@@ -1,11 +1,10 @@
 ﻿using Microsoft.Xna.Framework;
 using nkast.Aether.Physics2D.Dynamics;
 using VibeSopwith.Game.Utils;
-using Aether = nkast.Aether.Physics2D.Common;
 
 namespace VibeSopwith.Game.Core
 {
-    internal class Bomb : ICentered, ISimulated<Bomb.State>
+    internal class Bomb : ICentered, ISimulated<Unit>
     {
         public Body Body = null!;
         public record State(Vector2 Position, Vector2 Direction, Vector2 Velocity);
@@ -30,33 +29,59 @@ namespace VibeSopwith.Game.Core
             body.FixedRotation = false;
             body.Mass = 100f;
             body.Inertia = 0f;
-            body.LinearDamping = 0f;
-            body.AngularDamping = 8.0f;
+            body.LinearDamping = 0.0f;
+            body.AngularDamping = 5.0f;
 
             // Add fixture 0
-            var vertices0 = new Aether.Vertices();
-            vertices0.Add(new Aether.Vector2(-0.75f,  0.5f));
-            vertices0.Add(new Aether.Vector2(0.3775f, 0.5f));
-            vertices0.Add(new Aether.Vector2(0.7484f, 0.0301f));
-            vertices0.Add(new Aether.Vector2(0.7492f, -0.0184f));
-            vertices0.Add(new Aether.Vector2(0.3889f, -0.5f));
-            vertices0.Add(new Aether.Vector2(-0.75f,  -0.5f));
-            var shape0 = new nkast.Aether.Physics2D.Collision.Shapes.PolygonShape(vertices0, 1.0f);
-            var fixture0 = body.CreateFixture(shape0);
-            fixture0.Friction = 0.0f;
+            var fixture0 = new[]
+            {
+                (-0.24f, 0.5f),
+                (0.3900f, 0.5f),
+                (0.75f, 0.03f),
+                (0.75f, -0.03f),
+                (0.3900f, -0.5f),
+                (-0.24f, -0.5f)
+            }.ToPolygon(body);
+
+            fixture0.Friction = 0.2f;
             fixture0.Restitution = 0.0f;
             fixture0.CollisionCategories = Category.Cat10;
-            fixture0.CollidesWith = Category.All;
+            fixture0.CollidesWith = Category.All & ~Category.Cat10;
+
+            // Add fixture 1
+            var fixture1 = new[]
+            {
+                (-0.24f, 0.2625f),
+                (-0.69f, 0.4447f),
+                (-0.75f, 0.1087f),
+                (-0.75f, -0.066f),
+                (-0.69f, -0.4087f),
+                (-0.24f, -0.1764f)
+            }.ToPolygon(body, 0.2f);
+
+            fixture1.Friction = 0.2f;
+            fixture1.Restitution = 0.0f;
+            fixture1.CollisionCategories = Category.Cat10;
+            fixture1.CollidesWith = Category.All & ~Category.Cat10;
 
             this.Body = body;
         }
 
-        public void PreSimulationPrepare(State projected)
+        public void PreSimulationPrepare(Unit _)
         {
-            
+            var velo = Body.LinearVelocity.ToXna();
+            var drag = velo * -0.1f;
+            var tailPoint = Body.GetWorldPoint(new Vector2(-0.75f, 0f).ToAether());
+
+            // Aether documentation about ApplyForce is incorrect.
+            // When 'point' parameter is ommitted the force is applied not to Center-of-Mass, but to Origin [0, 0].
+            // In this particular case application of drag to tailPoint doesn't stabilize the bomb on its own
+            // and needs to be combined with relatively high AngularDamping setting.
+            // AngularDamping = 5.0f seems to produce believable "lock-in" of Direction into Velocity.
+            Body.ApplyForce(drag.ToAether(), tailPoint);
         }
 
-        public void PostSimulationUpdate(State projected)
+        public void PostSimulationUpdate(Unit _)
         {
             CurrentState = CurrentState with
             {

@@ -49,5 +49,11 @@ namespace VibeSopwith.Game.Utils
 
         public static Vector2 Rotate(this Vector2 orig, float radAngle) => Vector2.Transform(orig, Matrix.CreateRotationZ(radAngle));
 
+        public static Fixture ToPolygon(this (float x, float y)[] srcVertices, Body body, float density = 1.0f)
+        {
+            var vertices = new Aether.Vertices(srcVertices.Select(t => new Aether.Vector2(t.x, t.y)));
+            return body.CreatePolygon(vertices, density);
+        }
+
     }
 }

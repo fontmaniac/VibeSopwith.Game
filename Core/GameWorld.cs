@@ -1,8 +1,8 @@
 using Microsoft.Xna.Framework;
 using nkast.Aether.Physics2D.Dynamics;
 using nkast.Aether.Physics2D.Dynamics.Contacts;
+using System;
 using VibeSopwith.Game.Utils;
-using Aether = nkast.Aether.Physics2D.Common;
 
 namespace VibeSopwith.Game.Core
 {
@@ -14,7 +14,7 @@ namespace VibeSopwith.Game.Core
         public static readonly Random WorldSeed = new Random(12345);
 
         public readonly Ground Ground;
-        public Airplane Plane = null!;
+        public Airplane Plane;
         private readonly List<Explosion> explosions = new List<Explosion>();
         private Explosion? planeExplosion = null; 
         public IEnumerable<Explosion> Explosions 
@@ -32,108 +32,140 @@ namespace VibeSopwith.Game.Core
 
         public GameWorld()
         {
-            //Ground = Ground.MakeFlat(0.25f); 
-            Ground = Ground.MakeRandom();
-
             collisionWorld = new World()
             {
                 Gravity = (-Vector2.UnitY * 10f).ToAether(),
             };
 
+            Ground = Ground.MakeFlat(0.1f); 
+            //Ground = Ground.MakeRandom();
             Ground.SetupRigging(collisionWorld);
-
-            MakeNewPlane();
+            Plane = MakeNewPlane();
         }
 
-        private void MakeNewPlane()
+        private Airplane MakeNewPlane()
         {
-            Plane = new Airplane();
-            Plane.Place(new Vector2(WorldLength / 2f, WorldHeight / 2f), Winding.Clockwise);
-            Plane.SetupRigging(collisionWorld);
-            Plane.Body.Position = Plane.Position.ToAether();
-            Plane.Body.Rotation = Plane.Direction.ToAngle();
+            var plane = new Airplane();
+            plane.Place(new Vector2(WorldLength / 2f, WorldHeight * 0.9f), Winding.Clockwise);
+            plane.SetupRigging(collisionWorld);
+            plane.Body.Position = plane.Position.ToAether();
+            plane.Body.Rotation = plane.Direction.ToAngle();
+            return plane;
         }
+
+        private void ExecutePlaneCollision(Contact ct, GameTime gameTime, Stack<Action> postCheckActions)
+        {
+            ct.GetWorldManifold(out var normal, out var points);
+            var contactPoint = points[0]; // first contact point
+            Console.WriteLine($"Plane-Ground collision detected at {contactPoint.X} - {contactPoint.Y}. Total points {ct.Manifold.PointCount}");
+
+            if (Plane.Exploded) return;
+            // Remove world body
+            postCheckActions.Push(() => { Plane.RemoveRigging(collisionWorld); });
+
+            Plane.Exploded = true;
+
+            // Add explosion.
+            planeExplosion = new Explosion(16f, 16f, gameTime.TotalGameTime);
+            planeExplosion.RootPosition = new Vector2(contactPoint.X, contactPoint.Y);
+        }
+
+        private void ExecuteBombGroundExplosion(Contact ct, GameTime gameTime, Stack<Action> postCheckActions)
+        {
+            ct.GetWorldManifold(out var normal, out var points);
+            var contactPoint = points[0]; // first contact point
+            Console.WriteLine($"Bomb-Ground collision detected at {contactPoint.X} - {contactPoint.Y}. Total points {ct.Manifold.PointCount}");
+
+            var bomb = Bombs.FirstOrDefault(b => (ct.FixtureA.Body.Tag as Bomb ?? ct.FixtureB.Body.Tag as Bomb) == b);
+            if (bomb == null) return;
+            // Remove world body
+            postCheckActions.Push(() => { collisionWorld.Remove(bomb.Body); });
+            Bombs.Remove(bomb);
+
+            // Add explosion.
+            var bombExplosion = new Explosion(16f, 16f, gameTime.TotalGameTime);
+            bombExplosion.RootPosition = new Vector2(contactPoint.X, contactPoint.Y);
+            explosions.Add(bombExplosion);
+
+        }
+
+        private static bool IsCollision(Contact ct, Func<Fixture, bool> check1, Func<Fixture, bool> check2)
+        {
+            if (!ct.IsTouching) return false;
+            if (!((check1(ct.FixtureA) && check2(ct.FixtureB)) || (check1(ct.FixtureB) && check2(ct.FixtureA)))) return false;
+            return true;
+        }
+
 
         public void Simulate(GameTime gameTime)
         {
-            if (Plane.Exploded)
+            var doBeforeSimulation = () =>
             {
-                if (planeExplosion?.IsExpired(gameTime.TotalGameTime) == true)
+                if (Plane.Exploded)
                 {
-                    planeExplosion = null;
-                    MakeNewPlane();
+                    if (planeExplosion?.IsExpired(gameTime.TotalGameTime) == true)
+                    {
+                        planeExplosion = null;
+                        Plane = MakeNewPlane();
+                    }
+
+                    return () => { };
                 }
-                return;
-            }
+                else
+                {
+                    var planeProjected = Plane.ApplyInputs(gameTime);
 
-            var planeProjected = Plane.ApplyInputs(gameTime);
-            
-            // Spawn a bomb, if requested.
-            if (planeProjected.launchingBomb)
-            {
-                // Bomb spawned half-height off the plane Position in direction of NormalDown, with initial Direction equal to Plane's.
-                var bomb = new Bomb(new Bomb.State(Vector2.Zero, Plane.Direction, Plane.Direction * Plane.Speed));
-                var spawnPos = Plane.Position + Plane.Direction.Rotate(float.Pi / 2f * (Plane.NormalDown == Winding.Clockwise ? -1f : +1f)) * bomb.Height * 0.6f;
-                bomb.CurrentState = bomb.CurrentState with { Position = spawnPos };
-                bomb.SetupRigging(collisionWorld);
-                Bombs.Add(bomb);
-            }
+                    // Spawn a bomb, if requested.
+                    if (planeProjected.launchingBomb)
+                    {
+                        // Bomb spawned half-height off the plane Position in direction of NormalDown, with initial Direction equal to Plane's.
+                        var bomb = new Bomb(new Bomb.State(Vector2.Zero, Plane.Direction, Plane.Direction * Plane.Speed));
+                        var spawnPos = Plane.Position + Plane.Direction.Rotate(float.Pi / 2f * (Plane.NormalDown == Winding.Clockwise ? -1f : +1f)) * bomb.Height * 0.6f;
+                        bomb.CurrentState = bomb.CurrentState with { Position = spawnPos };
+                        bomb.SetupRigging(collisionWorld);
+                        Bombs.Add(bomb);
+                    }
 
-            Plane.PreSimulationPrepare(planeProjected);
+                    Plane.PreSimulationPrepare(planeProjected);
 
-            collisionWorld.Step((float)gameTime.ElapsedGameTime.TotalSeconds);
+                    return () =>
+                    {
+                        Plane.PostSimulationUpdate(planeProjected);
+                        Plane.ClearInputs();
+                    };
+                }
+            };
 
-            Plane.PostSimulationUpdate(planeProjected);
-            Plane.ClearInputs();
+            // Do plane-dependent things before simulation
+            var planePostSimulation = doBeforeSimulation();
 
             foreach (var bomb in Bombs)
-                bomb.PostSimulationUpdate(bomb.CurrentState);
+                bomb.PreSimulationPrepare(Unit.Value);
 
+            // Simulate
+            collisionWorld.Step((float)gameTime.ElapsedGameTime.TotalSeconds);
+
+            // Update plane state if not exploded
+            planePostSimulation();
+
+            // Update bomb states
+            foreach (var bomb in Bombs)
+                bomb.PostSimulationUpdate(Unit.Value);
+
+            // Get rid of expired explosions
             var expiredExplosions = explosions.Where(e => e.IsExpired(gameTime.TotalGameTime)).ToArray();
             foreach (var ee in expiredExplosions)
                 explosions.Remove(ee);
 
-            var postCheckActions = new List<Action>();
+            // Collision check round.
+            var postCheckActions = new Stack<Action>(); // Push here actions which manipulate collisionWorld, to avoid corruption mid-iteration.
 
-            for (Contact ct = collisionWorld.ContactList; ct != null; ct = ct.Next)
+            for (Contact ct = collisionWorld.ContactList.Next; ct != collisionWorld.ContactList; ct = ct.Next)
             {
-                if (ct.IsTouching && ((ct.FixtureA.Body.Tag == Plane && ct.FixtureB.Body.Tag == Ground) || (ct.FixtureA.Body.Tag == Ground && ct.FixtureB.Body.Tag == Plane)))
-                {
-                    ct.GetWorldManifold(out var normal, out var points);
-                    var contactPoint = points[0]; // first contact point
-                    Console.WriteLine($"Plane-Ground collision detected at {contactPoint.X} - {contactPoint.Y}. Total points {ct.Manifold.PointCount}");
-
-                    // Set plane to Exploded
-                    Plane.Exploded = true;
-
-                    // Remove world body
-                    postCheckActions.Add(() => { Plane.RemoveRigging(collisionWorld); });
-
-                    // Add explosion.
-                    planeExplosion = new Explosion(16f, 16f, gameTime.TotalGameTime);
-                    planeExplosion.RootPosition = new Vector2(contactPoint.X, contactPoint.Y);
-                }
-                else if (ct.IsTouching && ((ct.FixtureA.Body.Tag is Bomb && ct.FixtureB.Body.Tag == Ground) || (ct.FixtureA.Body.Tag == Ground && ct.FixtureB.Body.Tag is Bomb)))
-                {
-                    ct.GetWorldManifold(out var normal, out var points);
-                    var contactPoint = points[0]; // first contact point
-                    Console.WriteLine($"Bomb-Ground collision detected at {contactPoint.X} - {contactPoint.Y}. Total points {ct.Manifold.PointCount}");
-
-                    // Add explosion.
-                    var bombExplosion = new Explosion(16f, 16f, gameTime.TotalGameTime);
-                    bombExplosion.RootPosition = new Vector2(contactPoint.X, contactPoint.Y);
-                    explosions.Add(bombExplosion);
-
-                    var bomb = Bombs.FirstOrDefault(b => (ct.FixtureA.Body.Tag as Bomb ?? ct.FixtureB.Body.Tag as Bomb) == b);
-                    if (bomb != null)
-                    {
-                        postCheckActions.Add(() => { collisionWorld.Remove(bomb.Body); });
-                        Bombs.Remove(bomb);
-                    }
-                }
-
-                if (ct.Next == collisionWorld.ContactList)
-                    break;
+                if (IsCollision(ct, f => f.Body.Tag is Airplane, f => f.Body.Tag is Ground))
+                    ExecutePlaneCollision(ct, gameTime, postCheckActions);
+                else if (IsCollision(ct, f => f.Body.Tag is Bomb, f => f.Body.Tag is Ground))
+                    ExecuteBombGroundExplosion(ct, gameTime, postCheckActions);
             }
 
             foreach (var postAction in postCheckActions) postAction();

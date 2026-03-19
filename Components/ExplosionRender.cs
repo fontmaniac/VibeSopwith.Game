@@ -8,8 +8,8 @@ namespace VibeSopwith.Game.Components
     internal class ExplosionRender(Microsoft.Xna.Framework.Game game) : DrawableGameComponent(game)
     {
         private Texture2D _spriteSheet = null!;
-        private const int SheetRows = 5;
-        private const int SheetCols = 10;
+        private const int SheetRows = 4;
+        private const int SheetCols = 4;
 
         private Animation.IPhase<Explosion>[] _phases = null!;
 
@@ -37,7 +37,7 @@ namespace VibeSopwith.Game.Components
         {
             base.LoadContent();
 
-            _spriteSheet = Game.Content.Load<Texture2D>("Textures\\Explosion_1.png");
+            _spriteSheet = Game.Content.Load<Texture2D>("Textures\\Explosion_2.png");
 
             var frameWidth = _spriteSheet.Width / SheetCols;
             var frameHeight = _spriteSheet.Height / SheetRows;
@@ -50,7 +50,7 @@ namespace VibeSopwith.Game.Components
                     var texX = (i % SheetCols) * frameWidth;
                     var texY = (i / SheetCols) * frameHeight;
                     var srcRect = new Rectangle(texX + 1, texY + 1, frameWidth, frameHeight);
-                    var origin = new Vector2(frameWidth / 2f, 0);
+                    var origin = new Vector2(frameWidth / 2f, frameHeight / 2f);
 
                     return new ExplosionPhase(phaseNumber, _spriteSheet, srcRect, origin);
                 })

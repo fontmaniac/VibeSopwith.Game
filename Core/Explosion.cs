@@ -5,7 +5,7 @@ namespace VibeSopwith.Game.Core
     internal class Explosion
     {
         public Vector2 RootPosition { get; set; } = Vector2.Zero;   // World position of explosion "root" - point in the middle of the bottom edge of the texture.
-        public TimeSpan Duration { get; set; } = TimeSpan.FromSeconds(2);
+        public TimeSpan Duration { get; set; } = TimeSpan.FromSeconds(1);
 
         public float Length;
         public float Height;
