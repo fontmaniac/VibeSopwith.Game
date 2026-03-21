@@ -106,7 +106,7 @@ namespace VibeSopwith.Game
                 _world.Plane.Roll =
                     kc.IsKeyDown(Keys.X) ? Airplane.RollInput.Roll : Airplane.RollInput.None;
 
-                _world.Plane.Bomb =
+                _world.Plane.BombLaunch =
                     kc.IsKeyDown(Keys.B) ? Airplane.BombInput.Active : Airplane.BombInput.Inactive;
             });
 

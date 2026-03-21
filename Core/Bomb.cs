@@ -13,8 +13,12 @@ namespace VibeSopwith.Game.Core
         public Vector2 Position { get => CurrentState.Position; }
         public Vector2 Direction { get => CurrentState.Direction; }
         public Winding NormalDown => Winding.Clockwise;
-        public float Length => 1.5f;
-        public float Height => 1.0f;
+
+        public const float BombLength = 1.5f;
+        public const float BombHeight = 1.0f;
+
+        public float Length => BombLength;
+        public float Height => BombHeight;
 
         public Bomb(State initialState)
         {
@@ -46,7 +50,7 @@ namespace VibeSopwith.Game.Core
             fixture0.Friction = 0.2f;
             fixture0.Restitution = 0.0f;
             fixture0.CollisionCategories = Category.Cat10;
-            fixture0.CollidesWith = Category.All & ~Category.Cat10;
+            fixture0.CollidesWith = Category.All;// & ~Category.Cat10;
 
             // Add fixture 1
             var fixture1 = new[]
@@ -70,7 +74,7 @@ namespace VibeSopwith.Game.Core
         public void PreSimulationPrepare(Unit _)
         {
             var velo = Body.LinearVelocity.ToXna();
-            var drag = velo * -0.1f;
+            var drag = velo * -0.15f;
             var tailPoint = Body.GetWorldPoint(new Vector2(-0.75f, 0f).ToAether());
 
             // Aether documentation about ApplyForce is incorrect.

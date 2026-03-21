@@ -47,6 +47,8 @@ namespace VibeSopwith.Game.Core
         {
             var groundBody = collisionWorld.CreateBody(Aether.Vector2.Zero, 0f, BodyType.Static);
             groundBody.Tag = this;
+            groundBody.IgnoreGravity = true;
+            groundBody.Mass = float.MaxValue;
 
             for (var i = 0; i < Points.Count-1; ++i)
             {
@@ -64,6 +66,7 @@ namespace VibeSopwith.Game.Core
 
                 var shape = new nkast.Aether.Physics2D.Collision.Shapes.PolygonShape(vertices, 1.0f);
                 var fixture = groundBody.CreateFixture(shape);
+                fixture.CollisionCategories = Category.Cat2;
             }
 
             Body = groundBody;

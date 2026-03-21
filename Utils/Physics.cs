@@ -19,6 +19,8 @@ namespace VibeSopwith.Game.Utils
 
         public static Vector2 ToXna(this Aether.Vector2 v) => new Vector2(v.X, v.Y);
         public static Aether.Vector2 ToAether(this Vector2 v) => new Aether.Vector2(v.X, v.Y);
+        public static Vector2 ToXna(this (float x, float y) v) => new Vector2(v.x, v.y);
+        public static Aether.Vector2 ToAether(this (float x, float y) v) => new Aether.Vector2(v.x, v.y);
 
         public static float ToAngle(this Vector2 v) => (float)Math.Atan2(v.Y, v.X);
 

@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using nkast.Aether.Physics2D.Collision.Shapes;
 using nkast.Aether.Physics2D.Dynamics;
+using VibeSopwith.Game.Utils;
 
 namespace VibeSopwith.Game.Components
 {
@@ -30,7 +31,7 @@ namespace VibeSopwith.Game.Components
         {
             var edge = end - start;
             var angle = (float)Math.Atan2(edge.Y, edge.X);
-            TheGame.SpriteBatch.Draw(_pixel, start, null, color, angle, Vector2.Zero, new Vector2(edge.Length(), 0.02f), SpriteEffects.None, 0f);
+            TheGame.SpriteBatch.Draw(_pixel, start, null, color, angle, Vector2.Zero, new Vector2(edge.Length(), 0.05f), SpriteEffects.None, 0f);
         }
 
 
@@ -39,19 +40,18 @@ namespace VibeSopwith.Game.Components
             if (fixture.Shape is PolygonShape poly)
             {
                 var body = fixture.Body;
-                var transform = Matrix.CreateRotationZ(body.Rotation) * Matrix.CreateTranslation(body.Position.X, body.Position.Y, 0f);
 
                 foreach (var vertex in poly.Vertices)
                 {
-                    var worldPos = Vector2.Transform(new Vector2(vertex.X, vertex.Y), transform);
+                    var worldPos = fixture.Body.GetWorldPoint(vertex).ToXna();
                     TheGame.SpriteBatch.Draw(_pixel, worldPos, null, color, 0f, Vector2.Zero, 0.05f, SpriteEffects.None, 0f);
                 }
 
                 // Optionally draw edges
                 for (int i = 0; i < poly.Vertices.Count; i++)
                 {
-                    var a = Vector2.Transform(new Vector2(poly.Vertices[i].X, poly.Vertices[i].Y), transform);
-                    var b = Vector2.Transform(new Vector2(poly.Vertices[(i + 1) % poly.Vertices.Count].X, poly.Vertices[(i + 1) % poly.Vertices.Count].Y), transform);
+                    var a = fixture.Body.GetWorldPoint(poly.Vertices[i]).ToXna();
+                    var b = fixture.Body.GetWorldPoint(poly.Vertices[(i + 1) % poly.Vertices.Count]).ToXna();   
                     DrawLine(a, b, color);
                 }
             }
