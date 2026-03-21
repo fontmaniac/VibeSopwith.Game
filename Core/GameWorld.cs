@@ -1,8 +1,8 @@
 using Microsoft.Xna.Framework;
 using nkast.Aether.Physics2D.Dynamics;
 using nkast.Aether.Physics2D.Dynamics.Contacts;
-using System;
 using VibeSopwith.Game.Utils;
+using Aether = nkast.Aether.Physics2D.Common;
 
 namespace VibeSopwith.Game.Core
 {
@@ -53,98 +53,84 @@ namespace VibeSopwith.Game.Core
             return plane;
         }
 
-        private nkast.Aether.Physics2D.Common.Vector2 PrintContactLog(Contact ct, string contactType)
+        private static Explosion MakeExplosion(GameTime gameTime, Aether.Vector2 pt) =>
+            new Explosion(16f, 16f, gameTime.TotalGameTime) { RootPosition = pt.ToXna() };
+
+        private static Aether.Vector2 PrintContactLog(Contact ct, string contactType)
         {
             ct.GetWorldManifold(out var normal, out var points);
-            var contactPoint = points[0]; // first contact point
+            var contactPoint = points[0]; 
             Console.WriteLine($"{contactType} collision detected at {contactPoint.X} - {contactPoint.Y}. Total points {ct.Manifold.PointCount}");
             return contactPoint;
         }
 
-        private void ExecutePlaneGroundCollision(Contact ct, GameTime gameTime, Stack<Action> postCheckActions)
+        private record struct CollisionContext(Aether.Vector2 cp, GameTime gameTime, Stack<Action> postCheckActions);
+
+        private void ExecuteCollision(CollisionContext ctx, Airplane plane, Ground ground)
         {
-            var cp = PrintContactLog(ct, "Plane-Ground");
-
-            if (Plane.Exploded) return;
-            
-            // Remove world body
-            postCheckActions.Push(() => { Plane.RemoveRigging(collisionWorld); });
-
-            Plane.Exploded = true;
-
-            // Add explosion.
-            planeExplosion = new Explosion(16f, 16f, gameTime.TotalGameTime) { RootPosition = new Vector2(cp.X, cp.Y) };
+            ctx.postCheckActions.Push(() => { plane.RemoveRigging(collisionWorld); });
+            plane.Exploded = true;
+            planeExplosion = MakeExplosion(ctx.gameTime, ctx.cp);
         }
 
-        private void ExecuteBombGroundExplosion(Contact ct, GameTime gameTime, Stack<Action> postCheckActions)
+        private void ExecuteExplosion(CollisionContext ctx, Bomb bomb, Ground ground)
         {
-            var cp = PrintContactLog(ct, "Bomb-Ground");
-
-            var bomb = Bombs.FirstOrDefault(b => (ct.FixtureA.Body.Tag as Bomb ?? ct.FixtureB.Body.Tag as Bomb) == b);
-            if (bomb == null) return;
-            // Remove world body
-            postCheckActions.Push(() => { collisionWorld.Remove(bomb.Body); });
+            ctx.postCheckActions.Push(() => { collisionWorld.Remove(bomb.Body); });
             Bombs.Remove(bomb);
-
-            // Add explosion.
-            var bombExplosion = new Explosion(16f, 16f, gameTime.TotalGameTime);
-            bombExplosion.RootPosition = new Vector2(cp.X, cp.Y);
-            explosions.Add(bombExplosion);
-
+            explosions.Add(MakeExplosion(ctx.gameTime, ctx.cp));
         }
 
-        private void ExecuteBombPlaneExplosion(Contact ct, GameTime gameTime, Stack<Action> postCheckActions)
+        private void ExecuteExplosion(CollisionContext ctx, Bomb bomb, Airplane plane)
         {
-            var cp = PrintContactLog(ct, "Bomb-Plane");
-
-            var bomb = Bombs.FirstOrDefault(b => (ct.FixtureA.Body.Tag as Bomb ?? ct.FixtureB.Body.Tag as Bomb) == b);
-            if (bomb == null) return;
-            // Remove world Bomb body
-            postCheckActions.Push(() => { collisionWorld.Remove(bomb.Body); });
+            ctx.postCheckActions.Push(() => { collisionWorld.Remove(bomb.Body); });
             Bombs.Remove(bomb);
-
-            if (Plane.Exploded) return;
-            // Remove world Plane body
-            postCheckActions.Push(() => { Plane.RemoveRigging(collisionWorld); });
-
+            ctx.postCheckActions.Push(() => { Plane.RemoveRigging(collisionWorld); });
             Plane.Exploded = true;
-
-            // Add explosions - Plane & bomb together.
-            planeExplosion = new Explosion(16f, 16f, gameTime.TotalGameTime);
-            planeExplosion.RootPosition = new Vector2(cp.X, cp.Y);
-            var bombExplosion = new Explosion(16f, 16f, gameTime.TotalGameTime);
-            bombExplosion.RootPosition = new Vector2(cp.X, cp.Y);
-            explosions.Add(bombExplosion);
+            planeExplosion = MakeExplosion(ctx.gameTime, ctx.cp);
+            explosions.Add(MakeExplosion(ctx.gameTime, ctx.cp));
         }
 
-
-        private void ExecuteBombBombExplosion(Contact ct, GameTime gameTime, Stack<Action> postCheckActions)
+        private void ExecuteExplosion(CollisionContext ctx, Bomb bomb1, Bomb bomb2)
         {
-            var cp = PrintContactLog(ct, "Bomb-Bomb");
-
-            var bomb1 = Bombs.FirstOrDefault(b => (ct.FixtureA.Body.Tag as Bomb) == b);
-            var bomb2 = Bombs.FirstOrDefault(b => (ct.FixtureB.Body.Tag as Bomb) == b);
-            if (bomb1 == null || bomb2 == null) return;
-            // Remove world bodies
-            postCheckActions.Push(() => { collisionWorld.Remove(bomb1.Body); });
-            postCheckActions.Push(() => { collisionWorld.Remove(bomb2.Body); });
+            ctx.postCheckActions.Push(() => { collisionWorld.Remove(bomb1.Body); });
+            ctx.postCheckActions.Push(() => { collisionWorld.Remove(bomb2.Body); });
             Bombs.Remove(bomb1);
             Bombs.Remove(bomb2);
-
-            // Add explosion.
-            var bombExplosion = new Explosion(16f, 16f, gameTime.TotalGameTime);
-            bombExplosion.RootPosition = new Vector2(cp.X, cp.Y);
-            explosions.Add(bombExplosion);
-
+            explosions.Add(MakeExplosion(ctx.gameTime, ctx.cp));
         }
 
-
-        private static bool IsCollision(Contact ct, Func<Fixture, bool> check1, Func<Fixture, bool> check2)
+        private static bool OnCollision<TFix1, TFix2>(
+            Contact ct, 
+            string collisionType,
+            Func<TFix1, bool> check1, 
+            Func<TFix2, bool> check2,
+            Action<Aether.Vector2, TFix1, TFix2> execute)
         {
             if (!ct.IsTouching) return false;
-            if (!((check1(ct.FixtureA) && check2(ct.FixtureB)) || (check1(ct.FixtureB) && check2(ct.FixtureA)))) return false;
+            
+            (bool, T?) castAndCheck<T>(Fixture fix, Func<T, bool> check) => fix.Body.Tag is T fix1 && check(fix1) ? (true, fix1) : (false, default(T));
+
+            (TFix1 fix1, TFix2 fix2)? tryPair(Fixture fa, Fixture fb)
+            {
+                var (ok1, v1) = castAndCheck<TFix1>(fa, check1);
+                if (!ok1) return null;
+
+                var (ok2, v2) = castAndCheck<TFix2>(fb, check2);
+                return ok2 ? (v1!, v2!) : null;
+            }
+
+            var fixtures = 
+                tryPair(ct.FixtureA, ct.FixtureB) ?? 
+                tryPair(ct.FixtureB, ct.FixtureA);
+
+            if (fixtures == null) return false;
+
+            var cp = PrintContactLog(ct, collisionType);
+            execute(cp, fixtures.Value.fix1, fixtures.Value.fix2);
+
             return true;
         }
+
 
 
         public void Simulate(GameTime gameTime)
@@ -205,17 +191,19 @@ namespace VibeSopwith.Game.Core
 
             // Collision check round.
             var postCheckActions = new Stack<Action>(); // Push here actions which manipulate collisionWorld, to avoid corruption mid-iteration.
+            var makeCtx = (Aether.Vector2 cp) => new CollisionContext(cp, gameTime, postCheckActions);
 
             for (Contact ct = collisionWorld.ContactList.Next; ct != collisionWorld.ContactList; ct = ct.Next)
             {
-                if (IsCollision(ct, f => f.Body.Tag is Airplane, f => f.Body.Tag is Ground))
-                    ExecutePlaneGroundCollision(ct, gameTime, postCheckActions);
-                else if (IsCollision(ct, f => f.Body.Tag is Bomb, f => f.Body.Tag is Ground))
-                    ExecuteBombGroundExplosion(ct, gameTime, postCheckActions);
-                else if (IsCollision(ct, f => f.Body.Tag is Bomb, f => f.Body.Tag is Bomb))
-                    ExecuteBombBombExplosion(ct, gameTime, postCheckActions);
-                else if (IsCollision(ct, f => f.Body.Tag is Airplane, f => f.Body.Tag is Bomb))
-                    ExecuteBombPlaneExplosion(ct, gameTime, postCheckActions);
+                var bombAlive   = (Bomb bomb)      => Bombs.Exists(b => bomb == b);
+                var groundAlive = (Ground ground)  => true;
+                var planeAlive  = (Airplane plane) => !plane.Exploded;
+
+                var _ = 
+                    OnCollision(ct, "Plane-Ground", planeAlive, groundAlive, (cp, p, g)   => ExecuteCollision(makeCtx(cp), p,  g))  ||
+                    OnCollision(ct, "Bomb-Ground",  bombAlive,  groundAlive, (cp, b, g)   => ExecuteExplosion(makeCtx(cp), b,  g))  ||
+                    OnCollision(ct, "Bomb-Bomb",    bombAlive,  bombAlive,   (cp, b1, b2) => ExecuteExplosion(makeCtx(cp), b1, b2)) ||
+                    OnCollision(ct, "Bomb-Plane",   bombAlive,  planeAlive,  (cp, b, p)   => ExecuteExplosion(makeCtx(cp), b,  p));
             }
 
             foreach (var postAction in postCheckActions) postAction();
