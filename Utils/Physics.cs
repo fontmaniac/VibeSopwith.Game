@@ -1,6 +1,7 @@
 using Microsoft.Xna.Framework;
 using nkast.Aether.Physics2D.Collision.Shapes;
 using nkast.Aether.Physics2D.Dynamics;
+using nkast.Aether.Physics2D.Dynamics.Contacts;
 using Aether = nkast.Aether.Physics2D.Common;
 
 namespace VibeSopwith.Game.Utils
@@ -55,6 +56,46 @@ namespace VibeSopwith.Game.Utils
         {
             var vertices = new Aether.Vertices(srcVertices.Select(t => new Aether.Vector2(t.x, t.y)));
             return body.CreatePolygon(vertices, density);
+        }
+
+        private static Aether.Vector2 PrintContactLog(Contact ct, string contactType)
+        {
+            ct.GetWorldManifold(out var normal, out var points);
+            var contactPoint = points[0];
+            Console.WriteLine($"{contactType} collision detected at {contactPoint.X} - {contactPoint.Y}. Total points {ct.Manifold.PointCount}");
+            return contactPoint;
+        }
+
+        public static bool OnCollision<TFix1, TFix2>(
+            Contact ct,
+            string collisionType,
+            Func<TFix1, bool> check1,
+            Func<TFix2, bool> check2,
+            Action<Aether.Vector2, TFix1, TFix2> execute)
+        {
+            if (!ct.IsTouching) return false;
+
+            (bool, T?) castAndCheck<T>(Fixture fix, Func<T, bool> check) => fix.Body.Tag is T fix1 && check(fix1) ? (true, fix1) : (false, default(T));
+
+            (TFix1 fix1, TFix2 fix2)? tryPair(Fixture fa, Fixture fb)
+            {
+                var (ok1, v1) = castAndCheck<TFix1>(fa, check1);
+                if (!ok1) return null;
+
+                var (ok2, v2) = castAndCheck<TFix2>(fb, check2);
+                return ok2 ? (v1!, v2!) : null;
+            }
+
+            var fixtures =
+                tryPair(ct.FixtureA, ct.FixtureB) ??
+                tryPair(ct.FixtureB, ct.FixtureA);
+
+            if (fixtures == null) return false;
+
+            var cp = PrintContactLog(ct, collisionType);
+            execute(cp, fixtures.Value.fix1, fixtures.Value.fix2);
+
+            return true;
         }
 
     }

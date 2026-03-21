@@ -9,9 +9,9 @@ namespace VibeSopwith.Game.Core
     {
         public Body Body = null!;
 
-        public record State(Vector2 Position, Vector2 Direction, Winding NormalDown, float Speed, Bomb? Bomb, DateTime RollTime, DateTime BombTime);
+        public record State(Vector2 Position, Vector2 Direction, Winding NormalDown, float Speed, Bomb? Bomb, Bullet? Bullet, DateTime RollTime, DateTime BombTime, DateTime BulletTime);
 
-        public State CurrentState = new State(Vector2.Zero, Vector2.UnitX, Winding.Clockwise, 0f, null, DateTime.MinValue, DateTime.MinValue);
+        public State CurrentState = new State(Vector2.Zero, Vector2.UnitX, Winding.Clockwise, 0f, null, null, DateTime.MinValue, DateTime.MinValue, DateTime.MinValue);
         public float Speed { get => CurrentState.Speed; }
 
         public Vector2 Position { get => CurrentState.Position; }       // World position of the plane in meters. 
@@ -137,38 +137,63 @@ namespace VibeSopwith.Game.Core
         {
             { "gun0", (0.64f, 1.1f) },
             { "gun1", (1.15f, 1.1f) },
-            { "midPoint", (0.0f, 1.1f) }
+            { "midPoint", (0.0f, 1.1f) },
+            { "origin", (0.0f, 0.0f) },
         };
+
+        private (float X, float Y) GetRefPoint(string name)
+        {
+            var refPoint = refPoints[name];
+            return (refPoint.X, FlipFactor * refPoint.Y);
+        }
 
         private Bomb SpawnBomb()
         {
-            var mp = refPoints["midPoint"].ToAether() * -FlipFactor;
-            var launchDirection = Body.GetWorldVector(mp).ToXna();
-            var spawnPos = Position 
-                + launchDirection
-                * Bomb.BombHeight * 0.55f;
+            var mp = Body.GetWorldPoint(GetRefPoint("midPoint").ToAether());
+            var origin = Body.GetWorldPoint(GetRefPoint("origin").ToAether());
+            var launchDirection = origin - mp;
+            var spawnPos = origin + launchDirection * Bomb.BombHeight * 0.55f;
             var velocityVector = 
                 Direction * Speed   // From Plane's flight.
-                + Vector2.Normalize(launchDirection) * BombLaunchSpeed; // From Bomb's launcher.
-            return new Bomb(new Bomb.State(spawnPos, Direction, velocityVector));
+                + Vector2.Normalize(launchDirection.ToXna()) * BombLaunchSpeed; // From Bomb's launcher.
+
+            return new Bomb(new Bomb.State(spawnPos.ToXna(), Direction, velocityVector));
         }
 
-        private const float Acceleration = 0.025f; // meters per second^2
-        private const float MaxSpeed = 0.4f; // meters per second
+        private Bullet SpawnBullet(TimeSpan startTime)
+        {
+            var gun0 = Body.GetWorldPoint(GetRefPoint("gun0").ToAether());
+            var gun1 = Body.GetWorldPoint(GetRefPoint("gun1").ToAether());
+            var launchDirection = gun1 - gun0;
+            var spawnPos = gun1 + launchDirection * 0.1f;
+            var velocityVector =
+                Direction * Speed   // From Plane's flight.
+                + Vector2.Normalize(launchDirection.ToXna()) * BulletSpeed;
+
+            return new Bullet(new Bullet.State(spawnPos.ToXna(), Vector2.Normalize(velocityVector), velocityVector), startTime);
+        }
+
+
+        private const float Acceleration = 0.025f;  // meters per second^2
+        private const float MaxSpeed = 0.4f;        // meters per second
         private const float PitchAngle = 4.0f;
-        private const float RollGracePeriod = 1f / 4f; // Time in seconds before subsequent roll input is accepted.
-        private const float BombGracePeriod = 0.25f;   // Time in seconds before subsequent bomb can be spawned.
-        private const float BombLaunchSpeed = 0.1f;    // meters per second
+        private const float RollGracePeriod = 1f / 4f;  // Time in seconds before subsequent roll input is accepted.
+        private const float BombGracePeriod = 0.25f;    // Time in seconds before subsequent bomb can be spawned.
+        private const float BombLaunchSpeed = 0.1f;     // meters per second
+        private const float BulletGracePeriod = 1f / 8f;   // Time in seconds before subsequent bullet can be spawned.
+        private const float BulletSpeed = 0.35f;           // meters per second
 
         public enum ThrottleInput { Throttling, None, Reversing }
         public enum PitchInput { Forward, None, Backward }
         public enum RollInput { Roll, None }
         public enum BombInput { Active, Inactive }
+        public enum GunInput { Active, Inactive }
 
         public ThrottleInput Throttle;
         public PitchInput Pitch;
         public RollInput Roll;
         public BombInput BombLaunch;
+        public GunInput GunFire;
 
         public State ApplyInputs(GameTime gameTime)
         {
@@ -182,6 +207,10 @@ namespace VibeSopwith.Game.Core
             var (newBomb, newBombTime) = (BombLaunch == BombInput.Inactive || (nowTime - CurrentState.BombTime).TotalSeconds < BombGracePeriod) 
                 ? (null, CurrentState.BombTime) 
                 : (SpawnBomb(), nowTime);
+
+            var (newBullet, newBulletTime) = (GunFire == GunInput.Inactive || (nowTime - CurrentState.BulletTime).TotalSeconds < BulletGracePeriod)
+                ? (null, CurrentState.BulletTime)
+                : (SpawnBullet(gameTime.TotalGameTime), nowTime);
 
             var (newWinding, newRollTime) = (Roll == RollInput.None || (nowTime - CurrentState.RollTime).TotalSeconds < RollGracePeriod) ? (NormalDown, CurrentState.RollTime) :
                 NormalDown == Winding.Clockwise
@@ -197,7 +226,7 @@ namespace VibeSopwith.Game.Core
 
             var newPosition = Position + newDirection * newSpeed;
 
-            return new State(newPosition, newDirection, newWinding, newSpeed, newBomb, newRollTime, newBombTime);
+            return new State(newPosition, newDirection, newWinding, newSpeed, newBomb, newBullet, newRollTime, newBombTime, newBulletTime);
         }
 
         public void ClearInputs()
@@ -205,6 +234,8 @@ namespace VibeSopwith.Game.Core
             Throttle = ThrottleInput.None;
             Pitch = PitchInput.None;
             Roll = RollInput.None;
+            BombLaunch = BombInput.Inactive;
+            GunFire = GunInput.Inactive;
         }
 
         public void PreSimulationPrepare(State projected)

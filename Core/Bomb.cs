@@ -25,7 +25,7 @@ namespace VibeSopwith.Game.Core
             CurrentState = initialState;
         }
 
-        public void SetupRigging(World collisionWorld)
+        public Bomb SetupRigging(World collisionWorld)
         {
             var body = collisionWorld.CreateBody(Position.ToAether(), Direction.ToAngle(), BodyType.Dynamic);
             body.LinearVelocity = (CurrentState.Velocity * 60f).ToAether();
@@ -69,6 +69,8 @@ namespace VibeSopwith.Game.Core
             fixture1.CollidesWith = Category.All & ~Category.Cat10;
 
             this.Body = body;
+
+            return this;
         }
 
         public void PreSimulationPrepare(Unit _)

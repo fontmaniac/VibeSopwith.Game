@@ -47,7 +47,6 @@ namespace VibeSopwith.Game.Components
                     TheGame.SpriteBatch.Draw(_pixel, worldPos, null, color, 0f, Vector2.Zero, 0.05f, SpriteEffects.None, 0f);
                 }
 
-                // Optionally draw edges
                 for (int i = 0; i < poly.Vertices.Count; i++)
                 {
                     var a = fixture.Body.GetWorldPoint(poly.Vertices[i]).ToXna();

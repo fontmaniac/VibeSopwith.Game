@@ -27,6 +27,7 @@ namespace VibeSopwith.Game.Core
         }
 
         public readonly List<Bomb> Bombs = new List<Bomb>();
+        public readonly List<Bullet> Bullets = new List<Bullet>();
 
         private readonly World collisionWorld;
 
@@ -53,16 +54,11 @@ namespace VibeSopwith.Game.Core
             return plane;
         }
 
-        private static Explosion MakeExplosion(GameTime gameTime, Aether.Vector2 pt) =>
+        private static Explosion MakeBigExplosion(GameTime gameTime, Aether.Vector2 pt) =>
             new Explosion(16f, 16f, gameTime.TotalGameTime) { RootPosition = pt.ToXna() };
 
-        private static Aether.Vector2 PrintContactLog(Contact ct, string contactType)
-        {
-            ct.GetWorldManifold(out var normal, out var points);
-            var contactPoint = points[0]; 
-            Console.WriteLine($"{contactType} collision detected at {contactPoint.X} - {contactPoint.Y}. Total points {ct.Manifold.PointCount}");
-            return contactPoint;
-        }
+        private static Explosion MakeSmallExplosion(GameTime gameTime, Aether.Vector2 pt) =>
+            new Explosion(1f, 1f, gameTime.TotalGameTime) { RootPosition = pt.ToXna() };
 
         private record struct CollisionContext(Aether.Vector2 cp, GameTime gameTime, Stack<Action> postCheckActions);
 
@@ -70,14 +66,21 @@ namespace VibeSopwith.Game.Core
         {
             ctx.postCheckActions.Push(() => { plane.RemoveRigging(collisionWorld); });
             plane.Exploded = true;
-            planeExplosion = MakeExplosion(ctx.gameTime, ctx.cp);
+            planeExplosion = MakeBigExplosion(ctx.gameTime, ctx.cp);
         }
 
         private void ExecuteExplosion(CollisionContext ctx, Bomb bomb, Ground ground)
         {
             ctx.postCheckActions.Push(() => { collisionWorld.Remove(bomb.Body); });
             Bombs.Remove(bomb);
-            explosions.Add(MakeExplosion(ctx.gameTime, ctx.cp));
+            explosions.Add(MakeBigExplosion(ctx.gameTime, ctx.cp));
+        }
+
+        private void ExecuteExplosion(CollisionContext ctx, Bullet bullet, Ground ground)
+        {
+            ctx.postCheckActions.Push(() => { collisionWorld.Remove(bullet.Body); });
+            Bullets.Remove(bullet);
+            explosions.Add(MakeSmallExplosion(ctx.gameTime, ctx.cp));
         }
 
         private void ExecuteExplosion(CollisionContext ctx, Bomb bomb, Airplane plane)
@@ -86,8 +89,8 @@ namespace VibeSopwith.Game.Core
             Bombs.Remove(bomb);
             ctx.postCheckActions.Push(() => { Plane.RemoveRigging(collisionWorld); });
             Plane.Exploded = true;
-            planeExplosion = MakeExplosion(ctx.gameTime, ctx.cp);
-            explosions.Add(MakeExplosion(ctx.gameTime, ctx.cp));
+            planeExplosion = MakeBigExplosion(ctx.gameTime, ctx.cp);
+            explosions.Add(MakeBigExplosion(ctx.gameTime, ctx.cp));
         }
 
         private void ExecuteExplosion(CollisionContext ctx, Bomb bomb1, Bomb bomb2)
@@ -96,42 +99,8 @@ namespace VibeSopwith.Game.Core
             ctx.postCheckActions.Push(() => { collisionWorld.Remove(bomb2.Body); });
             Bombs.Remove(bomb1);
             Bombs.Remove(bomb2);
-            explosions.Add(MakeExplosion(ctx.gameTime, ctx.cp));
+            explosions.Add(MakeBigExplosion(ctx.gameTime, ctx.cp));
         }
-
-        private static bool OnCollision<TFix1, TFix2>(
-            Contact ct, 
-            string collisionType,
-            Func<TFix1, bool> check1, 
-            Func<TFix2, bool> check2,
-            Action<Aether.Vector2, TFix1, TFix2> execute)
-        {
-            if (!ct.IsTouching) return false;
-            
-            (bool, T?) castAndCheck<T>(Fixture fix, Func<T, bool> check) => fix.Body.Tag is T fix1 && check(fix1) ? (true, fix1) : (false, default(T));
-
-            (TFix1 fix1, TFix2 fix2)? tryPair(Fixture fa, Fixture fb)
-            {
-                var (ok1, v1) = castAndCheck<TFix1>(fa, check1);
-                if (!ok1) return null;
-
-                var (ok2, v2) = castAndCheck<TFix2>(fb, check2);
-                return ok2 ? (v1!, v2!) : null;
-            }
-
-            var fixtures = 
-                tryPair(ct.FixtureA, ct.FixtureB) ?? 
-                tryPair(ct.FixtureB, ct.FixtureA);
-
-            if (fixtures == null) return false;
-
-            var cp = PrintContactLog(ct, collisionType);
-            execute(cp, fixtures.Value.fix1, fixtures.Value.fix2);
-
-            return true;
-        }
-
-
 
         public void Simulate(GameTime gameTime)
         {
@@ -152,11 +121,10 @@ namespace VibeSopwith.Game.Core
                     var planeProjected = Plane.ApplyInputs(gameTime);
 
                     if (planeProjected.Bomb != null)
-                    {
-                        var bomb = planeProjected.Bomb;
-                        bomb.SetupRigging(collisionWorld);
-                        Bombs.Add(bomb);
-                    }
+                        Bombs.Add(planeProjected.Bomb.SetupRigging(collisionWorld));
+
+                    if (planeProjected.Bullet != null)
+                        Bullets.Add(planeProjected.Bullet.SetupRigging(collisionWorld));
 
                     Plane.PreSimulationPrepare(planeProjected);
 
@@ -174,6 +142,9 @@ namespace VibeSopwith.Game.Core
             foreach (var bomb in Bombs)
                 bomb.PreSimulationPrepare(Unit.Value);
 
+            foreach (var bullet in Bullets)
+                bullet.PreSimulationPrepare(Unit.Value);
+
             // Simulate
             collisionWorld.Step((float)gameTime.ElapsedGameTime.TotalSeconds);
 
@@ -183,6 +154,15 @@ namespace VibeSopwith.Game.Core
             // Update bomb states
             foreach (var bomb in Bombs)
                 bomb.PostSimulationUpdate(Unit.Value);
+
+            // Update bullet states
+            foreach (var bullet in Bullets)
+                bullet.PostSimulationUpdate(Unit.Value);
+
+            // Get rid of expired bullets
+            var expiredBullets = Bullets.Where(e => e.IsExpired(gameTime.TotalGameTime)).ToArray();
+            foreach (var eb in expiredBullets)
+                Bullets.Remove(eb);
 
             // Get rid of expired explosions
             var expiredExplosions = explosions.Where(e => e.IsExpired(gameTime.TotalGameTime)).ToArray();
@@ -196,14 +176,17 @@ namespace VibeSopwith.Game.Core
             for (Contact ct = collisionWorld.ContactList.Next; ct != collisionWorld.ContactList; ct = ct.Next)
             {
                 var bombAlive   = (Bomb bomb)      => Bombs.Exists(b => bomb == b);
+                var bulletAlive = (Bullet bullet)  => Bullets.Exists(b => bullet == b);
                 var groundAlive = (Ground ground)  => true;
                 var planeAlive  = (Airplane plane) => !plane.Exploded;
 
                 var _ = 
-                    OnCollision(ct, "Plane-Ground", planeAlive, groundAlive, (cp, p, g)   => ExecuteCollision(makeCtx(cp), p,  g))  ||
-                    OnCollision(ct, "Bomb-Ground",  bombAlive,  groundAlive, (cp, b, g)   => ExecuteExplosion(makeCtx(cp), b,  g))  ||
-                    OnCollision(ct, "Bomb-Bomb",    bombAlive,  bombAlive,   (cp, b1, b2) => ExecuteExplosion(makeCtx(cp), b1, b2)) ||
-                    OnCollision(ct, "Bomb-Plane",   bombAlive,  planeAlive,  (cp, b, p)   => ExecuteExplosion(makeCtx(cp), b,  p));
+                    Physics.OnCollision(ct, "Plane-Ground",  planeAlive,  groundAlive, (cp, p, g)   => ExecuteCollision(makeCtx(cp), p,  g))  ||
+                    Physics.OnCollision(ct, "Bomb-Ground",   bombAlive,   groundAlive, (cp, b, g)   => ExecuteExplosion(makeCtx(cp), b,  g))  ||
+                    Physics.OnCollision(ct, "Bomb-Bomb",     bombAlive,   bombAlive,   (cp, b1, b2) => ExecuteExplosion(makeCtx(cp), b1, b2)) ||
+                    Physics.OnCollision(ct, "Bomb-Plane",    bombAlive,   planeAlive,  (cp, b, p)   => ExecuteExplosion(makeCtx(cp), b,  p))  ||
+                    Physics.OnCollision(ct, "Bullet-Ground", bulletAlive, groundAlive, (cp, b, g)   => ExecuteExplosion(makeCtx(cp), b,  g))  ||
+                    false;
             }
 
             foreach (var postAction in postCheckActions) postAction();

@@ -108,6 +108,9 @@ namespace VibeSopwith.Game
 
                 _world.Plane.BombLaunch =
                     kc.IsKeyDown(Keys.B) ? Airplane.BombInput.Active : Airplane.BombInput.Inactive;
+
+                _world.Plane.GunFire =
+                    kc.IsKeyDown(Keys.Space) ? Airplane.GunInput.Active : Airplane.GunInput.Inactive;
             });
 
             _world.Simulate(gameTime);
