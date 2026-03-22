@@ -52,12 +52,10 @@ namespace VibeSopwith.Game.Components
             _explosionRender?.Dispose();
         }
 
-        private void DrawStraight(GameWorld world, GameTime gameTime, float cameraPositionX)
+        private void DrawStraight(GameWorld world, GameTime gameTime, float scaleHorz, float scaleVert, bool drawBullets, float groundThicknessPx, float cameraPositionX)
         {
-            float scaleFactor = (float)GraphicsDevice.Viewport.Height / GameWorld.WorldHeight;
-
             // 1. Scale: X normal, Y flipped
-            var scale = Matrix.CreateScale(scaleFactor, -scaleFactor, 1f);
+            var scale = Matrix.CreateScale(scaleHorz, -scaleVert, 1f);
 
             // 2. Move world origin (0,0) to bottom-left of screen
             var translateY = Matrix.CreateTranslation(0f, GraphicsDevice.Viewport.Height, 0f);
@@ -77,16 +75,17 @@ namespace VibeSopwith.Game.Components
                 null,
                 transform);
 
-            _groundRender.Draw(world.Ground, thickness: 0.2f, TheGame.SpriteBatch);
+            _groundRender.Draw(world.Ground, groundThicknessPx, scaleVert, TheGame.SpriteBatch);
             _airplaneRender.Draw(world.Plane, gameTime);
 
             foreach (var bomb in world.Bombs)
                 _bombRender.Draw(bomb, gameTime);
 
-            foreach (var bullet in world.Bullets)
-                _bulletRender.Draw(bullet, scaleFactor, gameTime);
+            if (drawBullets)
+                foreach (var bullet in world.Bullets)
+                    _bulletRender.Draw(bullet, scaleVert, gameTime);
 
-            foreach (var explosion in world.Explosions)
+            foreach (var explosion in world.GetExplosions())
                 _explosionRender.Draw(explosion, gameTime);
 
             _bodyRender.Draw(world.Plane.Body, gameTime);
@@ -101,7 +100,19 @@ namespace VibeSopwith.Game.Components
         {
             base.Draw(gameTime);
 
-            DrawStraight(world, gameTime, cameraPositionX);
+            float scaleVertFactor = (float)GraphicsDevice.Viewport.Height / GameWorld.WorldHeight;
+
+            DrawStraight(world, gameTime, scaleVertFactor, scaleVertFactor, true, 4f, cameraPositionX);
+        }
+
+        public void DrawMinimap(GameWorld world, GameTime gameTime)
+        {
+            base.Draw(gameTime);
+
+            float scaleVertFactor = (float)GraphicsDevice.Viewport.Height / GameWorld.WorldHeight;
+            float scaleHorzFactor = (float)GraphicsDevice.Viewport.Width / GameWorld.WorldLength;
+
+            DrawStraight(world, gameTime, scaleHorzFactor, scaleVertFactor, false, 1f, 0f);
         }
 
 

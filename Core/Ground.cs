@@ -19,12 +19,16 @@ namespace VibeSopwith.Game.Core
         {
             var points = new List<Vector2>();
 
+            points.Add(new Vector2(0, GameWorld.WorldHeight));
+
             for (int i = 0; i <= 20; i++) 
             {
-                var x = GameWorld.WorldLength * (i / 20.0f); 
+                var x = GameWorld.WorldLength * 0.025f + (GameWorld.WorldLength * 0.95f) * (i / 20.0f); 
                 var y = (float)(GameWorld.WorldSeed.NextDouble() * (GameWorld.WorldHeight * 0.5) + (GameWorld.WorldHeight * 0.25));
                 points.Add(new Vector2(x, y));
             }
+
+            points.Add(new Vector2(GameWorld.WorldLength, GameWorld.WorldHeight));
 
             return new Ground(points);
         }

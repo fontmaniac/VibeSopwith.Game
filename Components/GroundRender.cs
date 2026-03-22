@@ -14,22 +14,28 @@ namespace VibeSopwith.Game.Components
             _pixel.SetData(new[] { Color.White });
         }
 
-        public void Draw(Ground ground, float thickness, SpriteBatch spriteBatch)
+        public void Draw(Ground ground, float thickness, float scaleVert, SpriteBatch spriteBatch)
         {
             for (int i = 1; i < ground.Points.Count; i++)
             {
                 var start = ground.Points[i - 1];
                 var end = ground.Points[i];
 
-                DrawLine(spriteBatch, start, end, Color.White, thickness);
+                DrawLine(spriteBatch, start, end, Color.White, thickness, scaleVert);
             }
         }
 
-        private void DrawLine(SpriteBatch spriteBatch, Vector2 point1, Vector2 point2, Color color, float thickness)
+        private void DrawLine(SpriteBatch spriteBatch, Vector2 point1, Vector2 point2, Color color, float thicknessPx, float scaleVert)
         {
-            float distance = Vector2.Distance(point1, point2);
-            float angle = (float)Math.Atan2(point2.Y - point1.Y, point2.X - point1.X);
-            spriteBatch.Draw(_pixel!, point1, null, color, angle, Vector2.Zero, new Vector2(distance, thickness), SpriteEffects.None, 0);
+            float dx = point2.X - point1.X;
+            float dy = point2.Y - point1.Y;
+
+            float distanceWorld = Vector2.Distance(point1, point2);
+            float angle = MathF.Atan2(dy, dx);
+
+            Vector2 scale = new(distanceWorld, thicknessPx/scaleVert);
+
+            spriteBatch.Draw(_pixel, point1, null, color, angle, Vector2.Zero, scale, SpriteEffects.None, 0f);
         }
     }
 }

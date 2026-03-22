@@ -8,7 +8,7 @@ namespace VibeSopwith.Game.Core
 {
     internal class GameWorld 
     {
-        public const int WorldLength = 1000;
+        public const int WorldLength = 600;
         public const int WorldHeight = 50;
 
         public static readonly Random WorldSeed = new Random(12345);
@@ -17,13 +17,10 @@ namespace VibeSopwith.Game.Core
         public Airplane Plane;
         private readonly List<Explosion> explosions = new List<Explosion>();
         private Explosion? planeExplosion = null; 
-        public IEnumerable<Explosion> Explosions 
+        public IEnumerable<Explosion> GetExplosions()
         { 
-            get
-            { 
-                if (planeExplosion != null) yield return planeExplosion;
-                foreach (var exp in explosions) yield return exp;
-            } 
+            if (planeExplosion != null) yield return planeExplosion;
+            foreach (var exp in explosions) yield return exp;
         }
 
         public readonly List<Bomb> Bombs = new List<Bomb>();
@@ -38,8 +35,8 @@ namespace VibeSopwith.Game.Core
                 Gravity = (-Vector2.UnitY * 10f).ToAether(),
             };
 
-            Ground = Ground.MakeFlat(0.1f); 
-            //Ground = Ground.MakeRandom();
+            //Ground = Ground.MakeFlat(0.1f); 
+            Ground = Ground.MakeRandom();
             Ground.SetupRigging(collisionWorld);
             Plane = MakeNewPlane();
         }

@@ -135,6 +135,7 @@ namespace VibeSopwith.Game
             var mainViewport = new Viewport(0, 0, full.Width, bnd);
             var dashViewport = new Viewport(0, bnd, 200, 120);
             var gizmoViewport = new Viewport(200, bnd, 120, 120);
+            var minimapViewport = new Viewport(full.Width / 2 + 5, bnd + 20, full.Width / 2 - 10, 120 - 40);
 
             GraphicsDevice.Clear(Color.Black);
 
@@ -158,6 +159,11 @@ namespace VibeSopwith.Game
             DrawInViewport(gizmoViewport, full, () =>
             {
                 _gizmo.Draw(_world.Plane, gameTime);
+            });
+
+            DrawInViewport(minimapViewport, full, () =>
+            {
+                _worldRender.DrawMinimap(_world, gameTime);
             });
         }
     }
