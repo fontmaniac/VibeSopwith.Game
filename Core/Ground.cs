@@ -17,14 +17,14 @@ namespace VibeSopwith.Game.Core
 
         public enum Units { Pct, Met }     // Met - world units, "Meters"; Pct - percentage of the relevant overall measurement - GameWorld.Height or GameWorld.Length
 
-        private abstract record HOffset(float Value, Units Units)
+        public abstract record HOffset(float Value, Units Units)
         {
             public sealed record OffLeft(float Value, Units Units) : HOffset(Value, Units);
             public sealed record OffRight(float Value, Units Units) : HOffset(Value, Units);
             public sealed record OffPrev(float Value, Units Units) : HOffset(Value, Units);
         }
 
-        private abstract record VOffset(float Value, Units Units)
+        public abstract record VOffset(float Value, Units Units)
         {
             public sealed record OffFloor(float Value, Units Units) : VOffset(Value, Units);
             public sealed record OffCeiling(float Value, Units Units) : VOffset(Value, Units);
@@ -125,59 +125,49 @@ namespace VibeSopwith.Game.Core
 
             // Final point at right ceiling
             var result =  b.Segment(OffRight(0f, Units.Pct), OffCeiling(0f, Units.Pct)).Build();
-            Console.WriteLine(ReverseEngineer(result, Units.Met, Units.Met));
+            
+            Console.WriteLine(ReverseEngineer(result, Units.Pct, Units.Met));
             return result;
         }
 
         public static Ground MakeQuasiRandom1() =>
             new GroundBuilder()
-            .Segment(OffLeft(0f, Units.Met), OffFloor(50f, Units.Met))
-            .Segment(OffPrev(15f, Units.Met), OffFloor(14.169f, Units.Met))
-            .Segment(OffPrev(28.5f, Units.Met), OffFloor(14.254f, Units.Met))
-            .Segment(OffPrev(28.5f, Units.Met), OffFloor(31.869f, Units.Met))
-            .Segment(OffPrev(28.5f, Units.Met), OffFloor(25.278f, Units.Met))
-            .Segment(OffPrev(28.5f, Units.Met), OffFloor(32.437f, Units.Met))
-            .Segment(OffPrev(28.5f, Units.Met), OffFloor(33.183f, Units.Met))
-            .Segment(OffPrev(28.5f, Units.Met), OffFloor(16.649f, Units.Met))
-            .Segment(OffPrev(28.5f, Units.Met), OffFloor(30.903f, Units.Met))
-            .Segment(OffPrev(28.5f, Units.Met), OffFloor(19.005f, Units.Met))
-            .Segment(OffPrev(28.5f, Units.Met), OffFloor(25.15f, Units.Met))
-            .Segment(OffPrev(28.5f, Units.Met), OffFloor(18.257f, Units.Met))
-            .Segment(OffPrev(28.5f, Units.Met), OffFloor(22.179f, Units.Met))
-            .Segment(OffPrev(28.5f, Units.Met), OffFloor(17.9f, Units.Met))
-            .Segment(OffPrev(28.5f, Units.Met), OffFloor(13.02f, Units.Met))
-            .Segment(OffPrev(28.5f, Units.Met), OffFloor(15.871f, Units.Met))
-            .Segment(OffPrev(28.5f, Units.Met), OffFloor(31.021f, Units.Met))
-            .Segment(OffPrev(28.5f, Units.Met), OffFloor(17.377f, Units.Met))
-            .Segment(OffPrev(28.5f, Units.Met), OffFloor(34.676f, Units.Met))
-            .Segment(OffPrev(28.5f, Units.Met), OffFloor(34.028f, Units.Met))
-            .Segment(OffPrev(28.5f, Units.Met), OffFloor(21.472f, Units.Met))
-            .Segment(OffPrev(28.5f, Units.Met), OffFloor(15.093f, Units.Met))
-            .Segment(OffRight(0f, Units.Met), OffFloor(50f, Units.Met))
-            .Build();
+                .Segment(OffLeft(0f, Units.Pct), OffFloor(50f, Units.Met))
+                .Segment(OffLeft(2.5f, Units.Pct), OffFloor(14.169f, Units.Met))
+                .SegmentFlat(OffLeft(7.25f, Units.Pct))
+                .Segment(OffLeft(12f, Units.Pct), OffFloor(31.869f, Units.Met))
+                .Segment(OffLeft(16.75f, Units.Pct), OffFloor(25.278f, Units.Met))
+                .Segment(OffLeft(21.5f, Units.Pct), OffFloor(32.437f, Units.Met))
+                .SegmentFlat(OffLeft(26.25f, Units.Pct))
+                .Segment(OffLeft(31f, Units.Pct), OffFloor(16.649f, Units.Met))
+                .Segment(OffLeft(35.75f, Units.Pct), OffFloor(30.903f, Units.Met))
+                .Segment(OffLeft(40.5f, Units.Pct), OffFloor(19.005f, Units.Met))
+                .Segment(OffLeft(45.25f, Units.Pct), OffFloor(25.15f, Units.Met))
+                .Segment(OffLeft(50f, Units.Pct), OffFloor(18.257f, Units.Met))
+                .Segment(OffLeft(54.75f, Units.Pct), OffFloor(22.179f, Units.Met))
+                .Segment(OffLeft(59.5f, Units.Pct), OffFloor(17.9f, Units.Met))
+                .Segment(OffLeft(64.25f, Units.Pct), OffFloor(13.02f, Units.Met))
+                .Segment(OffLeft(69f, Units.Pct), OffFloor(15.871f, Units.Met))
+                .Segment(OffLeft(73.75f, Units.Pct), OffFloor(31.021f, Units.Met))
+                .Segment(OffLeft(78.5f, Units.Pct), OffFloor(17.377f, Units.Met))
+                .Segment(OffLeft(83.25f, Units.Pct), OffFloor(34.676f, Units.Met))
+                .SegmentFlat(OffLeft(88f, Units.Pct))
+                .Segment(OffLeft(92.75f, Units.Pct), OffFloor(21.472f, Units.Met))
+                .Segment(OffLeft(97.5f, Units.Pct), OffFloor(15.093f, Units.Met))
+                .Segment(OffRight(0f, Units.Pct), OffFloor(50f, Units.Met))
+                .Build();
 
-        public static string ReverseEngineerTask(Ground ground, Units horzUnits, Units vertUnits)
+        public static Ground MakeWithPlatforms()
         {
-            return "";
-            // This method should "reverse-engineer" an instance of Ground class into a variant of builder-based code that would generate exactly that instance. 
-            // Invariants to preserve:
-            // - Points are considered "First" when they lie before 0 on X-axis, plus the very first point which lies after 0.
-            // - Points are considered "Last" when they lie after GameWorld.WorldLength on X-axis, plus the very last point which lies before GameWorld.WorldLength.
-            // - All points in-between "First" and "Last" group are considered "Middle"
-            // - "First" points should be horizontally represented by `OffLeft`.
-            // - "Last" points should be horizontally represented by `OffRight`.
-            // - "Middle" points should be horizontally represented by `OffPrev`.
-            // - "Middle" points should be vertically represented by `OffFloor`.
-            // - "First" and "Last" points should be vertically represented by `OffFloor`.
-            // - All vertical and horizontal offsets must be expressed according to passed in parameters horzUnits and vertUnits.
-            // - Where appropriate (i.e. current-Y == prev-Y), regardles of First/Last/Middle category, SegmentFlat should be used.
-            // - No "optimizations" or loops - each source point must be represented by one and only one explicit `Segment` or `SegmentFlat` operator.
-            // - No specific detection or action for "degenerate" Ground instances (i.e. with no points or a single point, or indetenrminate categorization of First/Last/Middle)
-            //   I am happy for silent failure or indeterminate result.
+            var result = MakeQuasiRandom1();
+            //result = PlacePlatform(result, OffLeft(50, Units.Pct), 20, OffFloor(50, Units.Pct));
+            result = PlacePlatform(result, OffLeft(11, Units.Met), 4, OffFloor(60, Units.Pct), float.Pi / 4f);
+            result = PlacePlatform(result, OffLeft(50, Units.Pct), 80, OffFloor(42, Units.Pct));
 
+            return result;
         }
 
-        public static string ReverseEngineer(Ground ground, Units horzUnits, Units vertUnits)
+        public static string ReverseEngineer(Ground ground, Units horzUnits, Units vertUnits, bool useOffPrev = false, float flatThreshold = 0.03f)
         {
             var sb = new System.Text.StringBuilder();
             var pts = ground.Points;
@@ -193,16 +183,12 @@ namespace VibeSopwith.Game.Core
             {
                 var p = pts[i];
 
-                bool isFirst =
-                    p.X < 0 ||
-                    (i == 1 && p.X >= 0);
-
-                bool isLast =
-                    p.X > GameWorld.WorldLength ||
-                    (i == pts.Count - 1 && p.X <= GameWorld.WorldLength);
+                bool isFirst = p.X < 0 || (i == 1 && p.X >= 0);
+                bool isLast = p.X > GameWorld.WorldLength || (i == pts.Count - 1 && p.X <= GameWorld.WorldLength);
 
                 bool isMiddle = !isFirst && !isLast;
-                bool isFlat = Math.Abs(p.Y - prev.Y) < 0.0001f;
+                var dx = Math.Abs(p.X - prev.X);
+                bool isFlat = (dx != 0.0f) && Math.Abs(p.Y - prev.Y) / dx < flatThreshold;
 
                 // Horizontal offset (func, value)
                 (string horzFunc, float horzVal) =
@@ -214,10 +200,15 @@ namespace VibeSopwith.Game.Core
                         horzUnits == Units.Pct
                             ? ((GameWorld.WorldLength - p.X) / GameWorld.WorldLength) * 100f
                             : (GameWorld.WorldLength - p.X))
-                    : ("OffPrev", // Middle
-                        horzUnits == Units.Pct
-                            ? ((p.X - prev.X) / GameWorld.WorldLength) * 100f
-                            : (p.X - prev.X));
+                    : useOffPrev        // Middle
+                        ? ("OffPrev", 
+                            horzUnits == Units.Pct
+                                ? ((p.X - prev.X) / GameWorld.WorldLength) * 100f
+                                : (p.X - prev.X)) 
+                        : ("OffLeft",
+                            horzUnits == Units.Pct
+                                ? (p.X / GameWorld.WorldLength) * 100f
+                                : p.X);
 
                 // Vertical offset (func, value)
                 (string vertFunc, float vertVal) =
@@ -248,6 +239,181 @@ namespace VibeSopwith.Game.Core
                 .Segment(OffLeft(0, Units.Pct), OffFloor(heightPercentage * 100f, Units.Pct))
                 .SegmentFlat(OffRight(0f, Units.Pct))
                 .Build();
+
+        public static Ground PlacePlatform(
+            Ground src,
+            HOffset.OffLeft centerOffset,
+            float platformWidth,
+            VOffset.OffFloor levelOffset,
+            float sideSlopeAngleRad = float.Pi / 6f)
+        {
+            // --- Local helpers -----------------------------------------------------
+
+            float ResolveX(HOffset.OffLeft o) =>
+                o.Units == Units.Pct
+                    ? GameWorld.WorldLength * (o.Value / 100f)
+                    : o.Value;
+
+            float ResolveY(VOffset.OffFloor o) =>
+                o.Units == Units.Pct
+                    ? GameWorld.WorldHeight * (o.Value / 100f)
+                    : o.Value;
+
+            bool IntersectSegSeg(Vector2 a, Vector2 b, Vector2 c, Vector2 d, out Vector2 hit)
+            {
+                hit = default;
+
+                var r = b - a;
+                var s = d - c;
+                float rxs = r.X * s.Y - r.Y * s.X;
+                if (Math.Abs(rxs) < 1e-6f) return false; // parallel
+
+                var cma = c - a;
+                float t = (cma.X * s.Y - cma.Y * s.X) / rxs;
+                float u = (cma.X * r.Y - cma.Y * r.X) / rxs;
+
+                if (t < 0 || t > 1 || u < 0 || u > 1) return false;
+
+                hit = a + t * r;
+                return true;
+            }
+
+            Vector2? ClipToX(Vector2 p1, Vector2 p2, float x)
+            {
+                if ((p1.X <= x && p2.X <= x) || (p1.X >= x && p2.X >= x))
+                    return null;
+
+                float t = (x - p1.X) / (p2.X - p1.X);
+                if (t < 0 || t > 1) return null;
+
+                return new Vector2(x, p1.Y + t * (p2.Y - p1.Y));
+            }
+
+            IEnumerable<Vector2> ClipSegmentToRange(Vector2 p1, Vector2 p2, float xMin, float xMax)
+            {
+                if (p1.X > p2.X) (p1, p2) = (p2, p1);
+
+                if (p2.X < xMin || p1.X > xMax)
+                    yield break;
+
+                var a = p1;
+                var b = p2;
+
+                if (a.X < xMin)
+                {
+                    var c = ClipToX(a, b, xMin);
+                    if (c.HasValue) a = c.Value;
+                }
+
+                if (b.X > xMax)
+                {
+                    var c = ClipToX(a, b, xMax);
+                    if (c.HasValue) b = c.Value;
+                }
+
+                yield return a;
+                if (b != a) yield return b;
+            }
+
+            // --- Compute trapezoid geometry ----------------------------------------
+
+            float cx = ResolveX(centerOffset);
+            float ty = ResolveY(levelOffset);
+
+            float halfW = platformWidth / 2f;
+
+            var topLeft = new Vector2(cx - halfW, ty);
+            var topRight = new Vector2(cx + halfW, ty);
+
+            float dx = ty * MathF.Tan(sideSlopeAngleRad);
+
+            var bottomLeft = new Vector2(topLeft.X - dx, 0);
+            var bottomRight = new Vector2(topRight.X + dx, 0);
+
+            var L1 = bottomLeft; var L2 = topLeft;
+            var T1 = topLeft; var T2 = topRight;
+            var R1 = topRight; var R2 = bottomRight;
+
+            // --- Collect intersections ---------------------------------------------
+
+            var hits = new List<(float X, float Y, char Edge)>();
+            var pts = src.Points;
+
+            for (int i = 0; i < pts.Count - 1; i++)
+            {
+                bool isBoundarySegment = (i == 0) || (i == pts.Count - 2);
+
+                var g1 = pts[i];
+                var g2 = pts[i + 1];
+
+                if (!isBoundarySegment && IntersectSegSeg(g1, g2, L1, L2, out var hL))
+                    hits.Add((hL.X, hL.Y, 'L'));
+
+                if (!isBoundarySegment && IntersectSegSeg(g1, g2, T1, T2, out var hT))
+                    hits.Add((hT.X, hT.Y, 'T'));
+
+                if (!isBoundarySegment && IntersectSegSeg(g1, g2, R1, R2, out var hR))
+                    hits.Add((hR.X, hR.Y, 'R'));
+            }
+
+            // --- If no intersections: return clone ---------------------------------
+
+            if (hits.Count == 0)
+                return new Ground(new List<Vector2>(src.Points));
+
+            // --- Determine cut region ----------------------------------------------
+
+            float cutStartX = hits.Min(h => h.X);
+            float cutEndX = hits.Max(h => h.X);
+
+            // --- Build result polyline ---------------------------------------------
+
+            var result = new List<Vector2>();
+
+            // 1. Ground left of cutStartX
+            foreach (var p in pts)
+                if (p.X < cutStartX)
+                    result.Add(p);
+
+            // 2. Insert cutStart intersection
+            var startHit = hits.OrderBy(h => Math.Abs(h.X - cutStartX)).First();
+            result.Add(new Vector2(startHit.X, startHit.Y));
+
+            // 3. Insert trapezoid edges clipped to [cutStartX, cutEndX]
+
+            void AddClipped(Vector2 a, Vector2 b)
+            {
+                foreach (var p in ClipSegmentToRange(a, b, cutStartX, cutEndX))
+                    result.Add(p);
+            }
+
+            // Left slope
+            if (cutStartX <= L2.X && cutEndX >= L1.X)
+                AddClipped(L1, L2);
+
+            // Top
+            if (cutStartX <= T2.X && cutEndX >= T1.X)
+                AddClipped(T1, T2);
+
+            // Right slope
+            if (cutStartX <= R2.X && cutEndX >= R1.X)
+                AddClipped(R1, R2);
+
+            // 4. Insert cutEnd intersection
+            var endHit = hits.OrderBy(h => Math.Abs(h.X - cutEndX)).First();
+            result.Add(new Vector2(endHit.X, endHit.Y));
+
+            // 5. Ground right of cutEndX
+            foreach (var p in pts)
+                if (p.X > cutEndX)
+                    result.Add(p);
+
+            // 6. Sort by X (stable)
+            result.Sort((a, b) => a.X.CompareTo(b.X));
+
+            return new Ground(result);
+        }
+
 
         public void SetupRigging(World collisionWorld)
         {

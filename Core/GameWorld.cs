@@ -37,7 +37,7 @@ namespace VibeSopwith.Game.Core
 
             //Ground = Ground.MakeFlat(0.1f); 
             //Ground = Ground.MakeRandom();
-            Ground = Ground.MakeQuasiRandom1();
+            Ground = Ground.MakeWithPlatforms();
             //Ground = Ground.MakeCustom();
 
             Ground.SetupRigging(collisionWorld);
