@@ -26,6 +26,8 @@ namespace VibeSopwith.Game.Core
         public readonly List<Bomb> Bombs = new List<Bomb>();
         public readonly List<Bullet> Bullets = new List<Bullet>();
 
+        public readonly List<StaticBuilding> Buildings = new List<StaticBuilding>();
+
         private readonly World collisionWorld;
 
         public GameWorld()
@@ -37,8 +39,9 @@ namespace VibeSopwith.Game.Core
 
             //Ground = Ground.MakeFlat(0.1f); 
             //Ground = Ground.MakeRandom();
-            Ground = Ground.MakeWithPlatforms();
             //Ground = Ground.MakeCustom();
+
+            (Ground, Buildings) = Ground.MakeWithPlatforms();
 
             Ground.SetupRigging(collisionWorld);
             Plane = MakeNewPlane();

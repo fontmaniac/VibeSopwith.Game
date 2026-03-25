@@ -1,8 +1,7 @@
-using VibeSopwith.Game.Utils;
 using Microsoft.Xna.Framework;
 using nkast.Aether.Physics2D.Dynamics;
+using VibeSopwith.Game.Utils;
 using Aether = nkast.Aether.Physics2D.Common;
-using System.Dynamic;
 
 namespace VibeSopwith.Game.Core
 {
@@ -181,9 +180,14 @@ namespace VibeSopwith.Game.Core
             return false;
         }
 
-        private static Ground PlaceRandomPlatforms(Ground src, int number, float width, Func<float, bool> accept)
+        private static Ground PlaceRandomPlatforms(Ground src, int number, float width, Func<float, bool> accept, out List<Vector2> platforms)
         {
+            var intPlatforms = new List<Vector2>();
             var result = src;
+
+            var fullAccept = (float x) =>
+                accept(x) &&
+                intPlatforms.All(p => x < p.X - width / 2f || p.X + width / 2f < x);
 
             for (var i = 0; i < number; ++i)
             {
@@ -191,7 +195,7 @@ namespace VibeSopwith.Game.Core
                 do
                 {
                     platformX = (float)GameWorld.WorldSeed.NextDouble() * GameWorld.WorldLength;
-                } while (!accept(platformX));
+                } while (!fullAccept(platformX));
 
                 if (!result.GetSegmentAtOffset(new HOffset.OffLeft(platformX, Units.Met), out var seg))
                     throw new ApplicationException("Logic error!");
@@ -201,9 +205,13 @@ namespace VibeSopwith.Game.Core
                     seg.p2.Y < seg.p1.Y ? (+width / 2f - 0.5f, 0f) :   // Decline. Move half-width to the right.
                     (0f, 1f);
 
-                result = PlacePlatform(result, new HOffset.OffLeft(platformX + shiftX, Units.Met), width, new VOffset.OffFloor(seg.pm.Y + shiftY, Units.Met));
+                var x = platformX + shiftX;
+                var y = seg.pm.Y + shiftY;
+                intPlatforms.Add(new Vector2(x, y));
+                result = PlacePlatform(result, new HOffset.OffLeft(x, Units.Met), width, new VOffset.OffFloor(y, Units.Met));
             }
 
+            platforms = intPlatforms;
             return result;
         }
 
@@ -274,18 +282,37 @@ namespace VibeSopwith.Game.Core
                 .Segment(OffRight(0f, Units.Pct), OffCeiling(0f, Units.Met))
                 .Build();
 
-        public static Ground MakeWithPlatforms()
+        public static (Ground, List<StaticBuilding>) MakeWithPlatforms()
         {
             var result = MakeQuasiRandom1();
-            result = PlacePlatform(result, OffLeft(11, Units.Met), 5, OffFloor(60, Units.Pct), float.Pi / 4f);
-            result = PlacePlatform(result, OffLeft(26, Units.Met), 5, OffFloor(40, Units.Pct), float.Pi / 4f);
-            result = PlacePlatform(result, OffLeft(300, Units.Met), 40, OffFloor(50, Units.Pct), float.Pi / 6f);
-            result = PlacePlatform(result, OffLeft(600-26, Units.Met), 5, OffFloor(40, Units.Pct), float.Pi / 4f);
-            result = PlacePlatform(result, OffLeft(600-11, Units.Met), 5, OffFloor(60, Units.Pct), float.Pi / 4f);
+            result = PlacePlatform(result, OffLeft(11, Units.Met), 5, OffFloor(30, Units.Met), float.Pi / 4f);
+            result = PlacePlatform(result, OffLeft(26, Units.Met), 5, OffFloor(20, Units.Met), float.Pi / 4f);
+            result = PlacePlatform(result, OffLeft(300, Units.Met), 40, OffFloor(25, Units.Met), float.Pi / 6f);
+            result = PlacePlatform(result, OffLeft(600-26, Units.Met), 5, OffFloor(20, Units.Met), float.Pi / 4f);
+            result = PlacePlatform(result, OffLeft(600-11, Units.Met), 5, OffFloor(30, Units.Met), float.Pi / 4f);
 
-            result = PlaceRandomPlatforms(result, 20, 5, (x) => x > 50 && x < GameWorld.WorldLength-50 && (x < 250f || x > 350f));
+            result = PlaceRandomPlatforms(result, 20, 5, (x) => x > 50 && x < GameWorld.WorldLength-50 && (x < 250f || x > 350f), out var platforms);
 
-            return result;
+            var buildings = new List<StaticBuilding>();
+            buildings.Add(new StaticBuilding(StaticBuilding.BuildingType.Factory, new Vector2(11, 30f), BasisSpin.Up));
+            buildings.Add(new StaticBuilding(StaticBuilding.BuildingType.Cistern, new Vector2(26, 20f), BasisSpin.Up));
+
+            foreach (var platform in platforms)
+            {
+                var dice = GameWorld.WorldSeed.Next(2);
+                var buildingType = 
+                    dice == 0 ? StaticBuilding.BuildingType.Factory :
+                    dice == 1 ? StaticBuilding.BuildingType.Cistern :
+                    StaticBuilding.BuildingType.Factory;
+
+                var spin = GameWorld.WorldSeed.Next(2) == 0 ? BasisSpin.Down : BasisSpin.Up;
+                buildings.Add(new StaticBuilding(buildingType, new Vector2(platform.X, platform.Y), spin));
+            }
+
+            buildings.Add(new StaticBuilding(StaticBuilding.BuildingType.Factory, new Vector2(600-26, 20f), BasisSpin.Down));
+            buildings.Add(new StaticBuilding(StaticBuilding.BuildingType.Cistern, new Vector2(600-11, 30f), BasisSpin.Down));
+
+            return (result, buildings);
         }
 
         public static string ReverseBuild(Ground ground, Units horzUnits, Units vertUnits, bool useOffPrev = false, float flatThreshold = 0.03f)
