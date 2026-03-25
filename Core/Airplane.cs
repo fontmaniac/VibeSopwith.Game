@@ -175,7 +175,8 @@ namespace VibeSopwith.Game.Core
 
 
         private const float Acceleration = 0.025f;  // meters per second^2
-        private const float MaxSpeed = 0.4f;        // meters per second
+        private const float MaxSpeed = 0.5f;        // meters per second
+        private const float MinSpeed = 0.099f;      // meters per second
         private const float PitchAngle = 4.0f;
         private const float RollGracePeriod = 1f / 4f;  // Time in seconds before subsequent roll input is accepted.
         private const float BombGracePeriod = 0.25f;    // Time in seconds before subsequent bomb can be spawned.
@@ -197,10 +198,15 @@ namespace VibeSopwith.Game.Core
 
         public State ApplyInputs(GameTime gameTime)
         {
-            var newSpeed = MathHelper.Clamp((
+            var newSpeedRaw =
                 Throttle == ThrottleInput.Throttling ? Speed + Acceleration :
                 Throttle == ThrottleInput.Reversing ? Speed - Acceleration :
-                Speed), 0f, MaxSpeed);
+                Speed;
+            var lowSpeedLimit =
+                Throttle == ThrottleInput.Throttling ? 0f :                                 // Throttling - low limit irrelevant
+                Throttle == ThrottleInput.Reversing && newSpeedRaw < MinSpeed ? Speed :     // Reversing and slipped below MinSpeed - stay at minimum
+                0f; 
+            var newSpeed = MathHelper.Clamp(newSpeedRaw, lowSpeedLimit, MaxSpeed);
 
             var nowTime = DateTime.UtcNow;
 
@@ -220,8 +226,8 @@ namespace VibeSopwith.Game.Core
             var rollFactor = newSpin == BasisSpin.Down ? +1f : -1f;
 
             var newDirection = Speed == 0f ? Direction : Vector2.TransformNormal(Direction,
-                Pitch == PitchInput.Backward ? Matrix.CreateRotationZ(rollFactor * MathHelper.ToRadians(PitchAngle)) :
-                Pitch == PitchInput.Forward  ? Matrix.CreateRotationZ(-rollFactor * MathHelper.ToRadians(PitchAngle)) :
+                Pitch == PitchInput.Backward ? Matrix.CreateRotationZ(rollFactor * MathHelper.ToRadians(PitchAngle * Speed * 2f)) :
+                Pitch == PitchInput.Forward  ? Matrix.CreateRotationZ(-rollFactor * MathHelper.ToRadians(PitchAngle * Speed * 2f)) :
                 Matrix.Identity);
 
             var newPosition = Position + newDirection * newSpeed;

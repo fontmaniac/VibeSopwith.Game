@@ -18,6 +18,7 @@ namespace VibeSopwith.Game.Core
         public BuildingType TheType { get; }
 
         public bool Exploded = false;
+        public int Hits = 0;
 
         private float FlipFactor { get => Spin == BasisSpin.Down ? +1f : -1f; }
 

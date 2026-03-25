@@ -5,22 +5,20 @@ using VibeSopwith.Game.Graphics;
 
 namespace VibeSopwith.Game.Components
 {
-    internal class ExplosionRender(Microsoft.Xna.Framework.Game game, int variant) : DrawableGameComponent(game)
+    internal class ExplosionRender(Microsoft.Xna.Framework.Game game) : DrawableGameComponent(game)
     {
-        private Texture2D _spriteSheet = null!;
+        public record struct TextureInfo(Explosion.ExplosionVariant Variant, string TexturePath, int SheetRows, int SheetCols, Func<Vector2, Vector2> GetOrigin);
 
-        public record struct SpriteInfo(string TexturePath, int SheetRows, int SheetCols, Func<Vector2, Vector2> GetOrigin);
-
-        private static SpriteInfo[] Variants = new SpriteInfo[]
+        private static TextureInfo[] Textures = new TextureInfo[]
         {
-            new("Textures\\Explosion_1.png", 5, 10, m => new Vector2(m.X / 2f, 0f)),
-            new("Textures\\Explosion_2.png", 4, 4, m => new Vector2(m.X / 2f, m.Y / 2f)),
-            new("Textures\\Explosion_3.png", 8, 5, m => new Vector2(m.X / 2f, m.Y / 2f)),
+            new(Explosion.ExplosionVariant.Based1, "Textures\\Explosion_1.png", 5, 10, m => new Vector2(m.X / 2f, 0f)),
+            new(Explosion.ExplosionVariant.Centered1,"Textures\\Explosion_2.png", 4, 4, m => new Vector2(m.X / 2f, m.Y / 2f)),
+            new(Explosion.ExplosionVariant.BluePlasma, "Textures\\Explosion_3.png", 8, 5, m => new Vector2(m.X / 2f, m.Y / 2f)),
         };
 
-        private SpriteInfo _si = Variants[variant];
+        private record struct VariantInfo(TextureInfo Info, Texture2D SpriteSheet, Animation.IPhase<Explosion>[] Phases);
 
-        private Animation.IPhase<Explosion>[] _phases = null!;
+        private IDictionary<Explosion.ExplosionVariant, VariantInfo> Variants = null!;
 
         private record ExplosionPhase(int phaseNumber, Texture2D spriteSheet, Rectangle sheetRect, Vector2 origin) : Animation.IPhase<Explosion>
         {
@@ -46,30 +44,38 @@ namespace VibeSopwith.Game.Components
         {
             base.LoadContent();
 
-            using var tex = Game.Content.Load<Texture2D>(_si.TexturePath);
-            _spriteSheet = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, tex);
-
-            var frameWidth = _spriteSheet.Width / _si.SheetCols;
-            var frameHeight = _spriteSheet.Height / _si.SheetRows;
-            var phaseNumber = _si.SheetRows * _si.SheetCols;
-
-            _phases =
-                Enumerable.Range(0, phaseNumber)
-                .Select(i =>
+            Variants = Textures
+                .Select(si =>
                 {
-                    var texX = (i % _si.SheetCols) * frameWidth;
-                    var texY = (i / _si.SheetCols) * frameHeight;
-                    var srcRect = new Rectangle(texX + 1, texY + 1, frameWidth - 2, frameHeight - 2);
-                    var origin = _si.GetOrigin(new Vector2(frameWidth, frameHeight));
+                    using var tex = Game.Content.Load<Texture2D>(si.TexturePath);
+                    var spriteSheet = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, tex);
 
-                    return new ExplosionPhase(phaseNumber, _spriteSheet, srcRect, origin);
+                    var frameWidth = spriteSheet.Width / si.SheetCols;
+                    var frameHeight = spriteSheet.Height / si.SheetRows;
+                    var phaseNumber = si.SheetRows * si.SheetCols;
+
+                    var phases =
+                        Enumerable.Range(0, phaseNumber)
+                        .Select(i =>
+                        {
+                            var texX = (i % si.SheetCols) * frameWidth;
+                            var texY = (i / si.SheetCols) * frameHeight;
+                            var srcRect = new Rectangle(texX + 1, texY + 1, frameWidth - 2, frameHeight - 2);
+                            var origin = si.GetOrigin(new Vector2(frameWidth, frameHeight));
+
+                            return new ExplosionPhase(phaseNumber, spriteSheet, srcRect, origin);
+                        })
+                        .ToArray();
+
+                    return (new VariantInfo(si, spriteSheet, phases), si.Variant);
                 })
-                .ToArray();
+                .ToDictionary(x => x.Item2, x => x.Item1);
         }
 
         public void Draw(Explosion explosion, GameTime gameTime)
         {
-            Animation.Draw(explosion, explosion.StartTime, _phases, false, gameTime, TheGame.SpriteBatch);
+            var variant = Variants[explosion.Variant];
+            Animation.Draw(explosion, explosion.StartTime, variant.Phases, false, gameTime, TheGame.SpriteBatch);
         }
     }
 }

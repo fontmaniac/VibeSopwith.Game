@@ -182,12 +182,13 @@ namespace VibeSopwith.Game.Core
 
         private static Ground PlaceRandomPlatforms(Ground src, int number, float width, Func<float, bool> accept, out List<Vector2> platforms)
         {
+            var halfWidth = width / 2f;
             var intPlatforms = new List<Vector2>();
             var result = src;
 
             var fullAccept = (float x) =>
                 accept(x) &&
-                intPlatforms.All(p => x < p.X - width / 2f || p.X + width / 2f < x);
+                intPlatforms.All(p => x < p.X - halfWidth || p.X + halfWidth < x);
 
             for (var i = 0; i < number; ++i)
             {
@@ -201,8 +202,8 @@ namespace VibeSopwith.Game.Core
                     throw new ApplicationException("Logic error!");
 
                 var (shiftX, shiftY) =
-                    seg.p1.Y < seg.p2.Y ? (-width / 2f + 0.5f, 0f) :   // Incline. Move half-width to the left.
-                    seg.p2.Y < seg.p1.Y ? (+width / 2f - 0.5f, 0f) :   // Decline. Move half-width to the right.
+                    seg.p1.Y < seg.p2.Y ? (-halfWidth + 0.5f, 0f) :   // Incline. Move half-width to the left.
+                    seg.p2.Y < seg.p1.Y ? (+halfWidth - 0.5f, 0f) :   // Decline. Move half-width to the right.
                     (0f, 1f);
 
                 var x = platformX + shiftX;
@@ -282,7 +283,7 @@ namespace VibeSopwith.Game.Core
                 .Segment(OffRight(0f, Units.Pct), OffCeiling(0f, Units.Met))
                 .Build();
 
-        public static (Ground, List<StaticBuilding>) MakeWithPlatforms()
+        public static (Ground, List<StaticBuilding>) MakeWithBuildings()
         {
             var result = MakeQuasiRandom1();
             result = PlacePlatform(result, OffLeft(11, Units.Met), 5, OffFloor(30, Units.Met), float.Pi / 4f);
@@ -407,7 +408,7 @@ namespace VibeSopwith.Game.Core
                     ? GameWorld.WorldHeight * (o.Value / 100f)
                     : o.Value;
 
-            bool IntersectSegSeg(Vector2 a, Vector2 b, Vector2 c, Vector2 d, out Vector2 hit)
+            bool IntersectSegments(Vector2 a, Vector2 b, Vector2 c, Vector2 d, out Vector2 hit)
             {
                 hit = default;
 
@@ -490,37 +491,19 @@ namespace VibeSopwith.Game.Core
             var T1 = topLeft; var T2 = topRight;
             var R1 = topRight; var R2 = bottomRight;
 
-            float TrapezoidYAt(float x)
+            bool x_within(float x, Vector2 p1, Vector2 p2) => x >= p1.X && x <= p2.X;
+            float y_within(float x, Vector2 p1, Vector2 p2) =>
+                p1.Y + ((x - p1.X) / (p2.X - p1.X)) * (p2.Y - p1.Y);
+
+            float trapezoidYAt(float x) =>
+                x_within(x, L1, L2) ? y_within(x, L1, L2) :
+                x_within(x, T1, T2) ? y_within(x, T1, T2) :
+                x_within(x, R1, R2) ? y_within(x, R1, R2) :
+                float.NegativeInfinity;
+
+            bool shouldCut(Vector2 hit)
             {
-                float y = float.NegativeInfinity;
-
-                // Left slope
-                if (x >= L1.X && x <= L2.X)
-                {
-                    float t = (x - L1.X) / (L2.X - L1.X);
-                    y = MathF.Max(y, L1.Y + t * (L2.Y - L1.Y));
-                }
-
-                // Top
-                if (x >= T1.X && x <= T2.X)
-                {
-                    float t = (x - T1.X) / (T2.X - T1.X);
-                    y = MathF.Max(y, T1.Y + t * (T2.Y - T1.Y));
-                }
-
-                // Right slope
-                if (x >= R1.X && x <= R2.X)
-                {
-                    float t = (x - R1.X) / (R2.X - R1.X);
-                    y = MathF.Max(y, R1.Y + t * (R2.Y - R1.Y));
-                }
-
-                return y;
-            }
-
-            bool ShouldCut(Vector2 hit)
-            {
-                float trapY = TrapezoidYAt(hit.X);
+                float trapY = trapezoidYAt(hit.X);
                 float groundY = hit.Y;
 
                 const float eps = 1e-3f;
@@ -537,13 +520,13 @@ namespace VibeSopwith.Game.Core
                 var g1 = pts[i];
                 var g2 = pts[i + 1];
 
-                if (IntersectSegSeg(g1, g2, L1, L2, out var hL) && ShouldCut(hL))
+                if (IntersectSegments(g1, g2, L1, L2, out var hL) && shouldCut(hL))
                     hits.Add((hL.X, hL.Y, 'L'));
 
-                if (IntersectSegSeg(g1, g2, T1, T2, out var hT) && ShouldCut(hT))
+                if (IntersectSegments(g1, g2, T1, T2, out var hT) && shouldCut(hT))
                     hits.Add((hT.X, hT.Y, 'T'));
 
-                if (IntersectSegSeg(g1, g2, R1, R2, out var hR) && ShouldCut(hR))
+                if (IntersectSegments(g1, g2, R1, R2, out var hR) && shouldCut(hR))
                     hits.Add((hR.X, hR.Y, 'R'));
             }
 
@@ -574,7 +557,6 @@ namespace VibeSopwith.Game.Core
             result.Add(new Vector2(startHit.X, startHit.Y));
 
             // 3. Insert trapezoid edges clipped to [cutStartX, cutEndX]
-
             void AddClipped(Vector2 a, Vector2 b)
             {
                 foreach (var p in ClipSegmentToRange(a, b, cutStartX, cutEndX))
