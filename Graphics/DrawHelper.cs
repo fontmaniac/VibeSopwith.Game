@@ -27,7 +27,6 @@ namespace VibeSopwith.Game.Graphics
                 centered.Spin == BasisSpin.Down ? SpriteEffects.FlipVertically : SpriteEffects.None,
                 0f
             );
-
         }
 
         public static void DrawCentered(this ICentered centered, Texture2D texture, SpriteBatch spriteBatch) =>

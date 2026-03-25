@@ -2,6 +2,7 @@ using VibeSopwith.Game.Utils;
 using Microsoft.Xna.Framework;
 using nkast.Aether.Physics2D.Dynamics;
 using Aether = nkast.Aether.Physics2D.Common;
+using System.Dynamic;
 
 namespace VibeSopwith.Game.Core
 {
@@ -89,6 +90,124 @@ namespace VibeSopwith.Game.Core
         private static VOffset.OffCeiling OffCeiling(float v, Units u) => new VOffset.OffCeiling(v, u);
         private static VOffset.OffPrev OffPrevY(float v, Units u) => new VOffset.OffPrev(v, u);
 
+        private bool GetSegmentAtOffset(HOffset.OffLeft offset, out (Vector2 p1, Vector2 pm, Vector2 p2) result)
+        {
+            result = default;
+
+            float x = Resolve(offset, null);
+
+            var pts = Points;
+            int n = pts.Count;
+            if (n < 2) return false;
+
+            const float eps = 1e-5f;
+
+            // --- 1. Detect strictly vertical segments at X = x -------------------------
+
+            var verticals = new List<(Vector2 a, Vector2 b)>();
+
+            for (int i = 0; i < n - 1; i++)
+            {
+                var a = pts[i];
+                var b = pts[i + 1];
+
+                if (Math.Abs(a.X - b.X) < eps && Math.Abs(a.X - x) < eps)
+                {
+                    // This segment is vertical and sits exactly at X = x
+                    // Normalize ordering: a.Y <= b.Y
+                    if (a.Y <= b.Y) verticals.Add((a, b));
+                    else verticals.Add((b, a));
+                }
+            }
+
+            if (verticals.Count > 0)
+            {
+                // Combine all vertical segments into one continuous vertical span
+                float minY = float.PositiveInfinity;
+                float maxY = float.NegativeInfinity;
+
+                foreach (var (a, b) in verticals)
+                {
+                    if (a.Y < minY) minY = a.Y;
+                    if (b.Y > maxY) maxY = b.Y;
+                }
+
+                var p1 = new Vector2(x, minY);
+                var p2 = new Vector2(x, maxY);
+                var pm = new Vector2(x, (minY + maxY) * 0.5f);
+
+                result = (p1, pm, p2);
+                return true;
+            }
+
+            // --- 2. Find the segment whose X-range contains x -------------------------
+
+            for (int i = 0; i < n - 1; i++)
+            {
+                var a = pts[i];
+                var b = pts[i + 1];
+
+                // Check if x lies between a.X and b.X (inclusive)
+                bool inRange =
+                    (a.X <= x + eps && b.X >= x - eps) ||
+                    (b.X <= x + eps && a.X >= x - eps);
+
+                if (!inRange)
+                    continue;
+
+                // --- 3. Interpolate Y at X = x ----------------------------------------
+
+                float dx = b.X - a.X;
+
+                // Horizontal segment (flat)
+                if (Math.Abs(dx) < eps)
+                {
+                    // Not vertical (we handled vertical above), so treat as a point
+                    float y = 0.5f * (a.Y + b.Y);
+                    var pm = new Vector2(x, y);
+                    result = (a, pm, b);
+                    return true;
+                }
+
+                float t = (x - a.X) / dx;
+                float yInterp = a.Y + t * (b.Y - a.Y);
+                var pm2 = new Vector2(x, yInterp);
+
+                result = (a, pm2, b);
+                return true;
+            }
+
+            // No segment found
+            return false;
+        }
+
+        private static Ground PlaceRandomPlatforms(Ground src, int number, float width, Func<float, bool> accept)
+        {
+            var result = src;
+
+            for (var i = 0; i < number; ++i)
+            {
+                var platformX = 0f;
+                do
+                {
+                    platformX = (float)GameWorld.WorldSeed.NextDouble() * GameWorld.WorldLength;
+                } while (!accept(platformX));
+
+                if (!result.GetSegmentAtOffset(new HOffset.OffLeft(platformX, Units.Met), out var seg))
+                    throw new ApplicationException("Logic error!");
+
+                var (shiftX, shiftY) =
+                    seg.p1.Y < seg.p2.Y ? (-width / 2f + 0.5f, 0f) :   // Incline. Move half-width to the left.
+                    seg.p2.Y < seg.p1.Y ? (+width / 2f - 0.5f, 0f) :   // Decline. Move half-width to the right.
+                    (0f, 1f);
+
+                result = PlacePlatform(result, new HOffset.OffLeft(platformX + shiftX, Units.Met), width, new VOffset.OffFloor(seg.pm.Y + shiftY, Units.Met));
+            }
+
+            return result;
+        }
+
+
         public static Ground MakeCustom()
         {
             return
@@ -158,11 +277,13 @@ namespace VibeSopwith.Game.Core
         public static Ground MakeWithPlatforms()
         {
             var result = MakeQuasiRandom1();
-            result = PlacePlatform(result, OffLeft(11, Units.Met), 4, OffFloor(60, Units.Pct), float.Pi / 4f);
-            result = PlacePlatform(result, OffLeft(25, Units.Met), 4, OffFloor(40, Units.Pct), float.Pi / 4f);
+            result = PlacePlatform(result, OffLeft(11, Units.Met), 5, OffFloor(60, Units.Pct), float.Pi / 4f);
+            result = PlacePlatform(result, OffLeft(26, Units.Met), 5, OffFloor(40, Units.Pct), float.Pi / 4f);
             result = PlacePlatform(result, OffLeft(300, Units.Met), 40, OffFloor(50, Units.Pct), float.Pi / 6f);
-            result = PlacePlatform(result, OffLeft(600-25, Units.Met), 4, OffFloor(40, Units.Pct), float.Pi / 4f);
-            result = PlacePlatform(result, OffLeft(600-11, Units.Met), 4, OffFloor(60, Units.Pct), float.Pi / 4f);
+            result = PlacePlatform(result, OffLeft(600-26, Units.Met), 5, OffFloor(40, Units.Pct), float.Pi / 4f);
+            result = PlacePlatform(result, OffLeft(600-11, Units.Met), 5, OffFloor(60, Units.Pct), float.Pi / 4f);
+
+            result = PlaceRandomPlatforms(result, 20, 5, (x) => x > 50 && x < GameWorld.WorldLength-50 && (x < 250f || x > 350f));
 
             return result;
         }

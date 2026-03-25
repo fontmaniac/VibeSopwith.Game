@@ -15,7 +15,6 @@ namespace VibeSopwith.Game.Components
 
             using var tex1 = Game.Content.Load<Texture2D>("Textures\\Plane_1.png");
             _airplaneTexture = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, tex1);
-
         }
 
         public void Draw(Airplane airplane, GameTime gameTime)

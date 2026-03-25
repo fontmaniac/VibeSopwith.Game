@@ -37,7 +37,8 @@ namespace VibeSopwith.Game.Components
         {
             base.LoadContent();
 
-            _spriteSheet = Game.Content.Load<Texture2D>("Textures\\Explosion_2.png");
+            using var tex = Game.Content.Load<Texture2D>("Textures\\Explosion_2.png");
+            _spriteSheet = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, tex);
 
             var frameWidth = _spriteSheet.Width / SheetCols;
             var frameHeight = _spriteSheet.Height / SheetRows;
@@ -49,7 +50,7 @@ namespace VibeSopwith.Game.Components
                 {
                     var texX = (i % SheetCols) * frameWidth;
                     var texY = (i / SheetCols) * frameHeight;
-                    var srcRect = new Rectangle(texX + 1, texY + 1, frameWidth, frameHeight);
+                    var srcRect = new Rectangle(texX + 1, texY + 1, frameWidth - 2, frameHeight - 2);
                     var origin = new Vector2(frameWidth / 2f, frameHeight / 2f);
 
                     return new ExplosionPhase(phaseNumber, _spriteSheet, srcRect, origin);
