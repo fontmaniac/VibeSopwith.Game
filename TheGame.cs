@@ -93,7 +93,7 @@ namespace VibeSopwith.Game
 
                 // Adjust throttle if flipped.
                 _world.Plane.Throttle =
-                    _world.Plane.CurrentState.NormalDown == Winding.Clockwise ? _world.Plane.Throttle :
+                    _world.Plane.CurrentState.Spin == BasisSpin.Down ? _world.Plane.Throttle :
                     _world.Plane.Throttle == Airplane.ThrottleInput.Throttling ? Airplane.ThrottleInput.Reversing :
                     _world.Plane.Throttle == Airplane.ThrottleInput.Reversing ? Airplane.ThrottleInput.Throttling :
                     Airplane.ThrottleInput.None;

@@ -39,17 +39,17 @@ namespace VibeSopwith.Game.Core
                 _ => throw new ArgumentOutOfRangeException()
             };
 
-        private static float Resolve(HOffset o, Vector2 prev) => o switch
+        private static float Resolve(HOffset o, Vector2? prev) => o switch
             {
-                HOffset.OffPrev  => Resolve(o.Units, prev.X,                o.Value, GameWorld.WorldLength, 1f),
+                HOffset.OffPrev  => Resolve(o.Units, prev!.Value.X,         o.Value, GameWorld.WorldLength, 1f),
                 HOffset.OffLeft  => Resolve(o.Units, 0f,                    o.Value, GameWorld.WorldLength, 1f),
                 HOffset.OffRight => Resolve(o.Units, GameWorld.WorldLength, o.Value, GameWorld.WorldLength, -1f),
                 _ => throw new ArgumentOutOfRangeException()
             };
 
-        private static float Resolve(VOffset o, Vector2 prev) => o switch
+        private static float Resolve(VOffset o, Vector2? prev) => o switch
         {
-            VOffset.OffPrev    => Resolve(o.Units, prev.Y,                o.Value, GameWorld.WorldHeight, 1f),
+            VOffset.OffPrev    => Resolve(o.Units, prev!.Value.Y,         o.Value, GameWorld.WorldHeight, 1f),
             VOffset.OffFloor   => Resolve(o.Units, 0f,                    o.Value, GameWorld.WorldHeight, 1f),
             VOffset.OffCeiling => Resolve(o.Units, GameWorld.WorldHeight, o.Value, GameWorld.WorldHeight, -1f),
             _ => throw new ArgumentOutOfRangeException()
@@ -58,25 +58,23 @@ namespace VibeSopwith.Game.Core
         private sealed class GroundBuilder
         {
             private readonly List<Vector2> _points = new();
-            private Vector2 _prev;
+            private Vector2? _prev = null;
 
             public GroundBuilder()
             {
-                _prev = new Vector2(0, 0);
-                _points.Add(_prev);
             }
 
             public GroundBuilder Segment(HOffset x, VOffset y)
             {
                 _prev = new Vector2(Resolve(x, _prev), Resolve(y, _prev));
-                _points.Add(_prev);
+                _points.Add(_prev!.Value);
                 return this;
             }
 
             public GroundBuilder SegmentFlat(HOffset x)
             {
-                _prev = new Vector2(Resolve(x, _prev), _prev.Y);
-                _points.Add(_prev);
+                _prev = new Vector2(Resolve(x, _prev), _prev!.Value.Y);
+                _points.Add(_prev!.Value);
                 return this;
             }
 
@@ -126,13 +124,13 @@ namespace VibeSopwith.Game.Core
             // Final point at right ceiling
             var result =  b.Segment(OffRight(0f, Units.Pct), OffCeiling(0f, Units.Pct)).Build();
             
-            Console.WriteLine(ReverseEngineer(result, Units.Pct, Units.Met));
+            Console.WriteLine(ReverseBuild(result, Units.Pct, Units.Met));
             return result;
         }
 
         public static Ground MakeQuasiRandom1() =>
             new GroundBuilder()
-                .Segment(OffLeft(0f, Units.Pct), OffFloor(50f, Units.Met))
+                .Segment(OffLeft(0f, Units.Pct), OffCeiling(0f, Units.Met))
                 .Segment(OffLeft(2.5f, Units.Pct), OffFloor(14.169f, Units.Met))
                 .SegmentFlat(OffLeft(7.25f, Units.Pct))
                 .Segment(OffLeft(12f, Units.Pct), OffFloor(31.869f, Units.Met))
@@ -154,20 +152,22 @@ namespace VibeSopwith.Game.Core
                 .SegmentFlat(OffLeft(88f, Units.Pct))
                 .Segment(OffLeft(92.75f, Units.Pct), OffFloor(21.472f, Units.Met))
                 .Segment(OffLeft(97.5f, Units.Pct), OffFloor(15.093f, Units.Met))
-                .Segment(OffRight(0f, Units.Pct), OffFloor(50f, Units.Met))
+                .Segment(OffRight(0f, Units.Pct), OffCeiling(0f, Units.Met))
                 .Build();
 
         public static Ground MakeWithPlatforms()
         {
             var result = MakeQuasiRandom1();
-            //result = PlacePlatform(result, OffLeft(50, Units.Pct), 20, OffFloor(50, Units.Pct));
             result = PlacePlatform(result, OffLeft(11, Units.Met), 4, OffFloor(60, Units.Pct), float.Pi / 4f);
-            result = PlacePlatform(result, OffLeft(50, Units.Pct), 80, OffFloor(42, Units.Pct));
+            result = PlacePlatform(result, OffLeft(25, Units.Met), 4, OffFloor(40, Units.Pct), float.Pi / 4f);
+            result = PlacePlatform(result, OffLeft(300, Units.Met), 40, OffFloor(50, Units.Pct), float.Pi / 6f);
+            result = PlacePlatform(result, OffLeft(600-25, Units.Met), 4, OffFloor(40, Units.Pct), float.Pi / 4f);
+            result = PlacePlatform(result, OffLeft(600-11, Units.Met), 4, OffFloor(60, Units.Pct), float.Pi / 4f);
 
             return result;
         }
 
-        public static string ReverseEngineer(Ground ground, Units horzUnits, Units vertUnits, bool useOffPrev = false, float flatThreshold = 0.03f)
+        public static string ReverseBuild(Ground ground, Units horzUnits, Units vertUnits, bool useOffPrev = false, float flatThreshold = 0.03f)
         {
             var sb = new System.Text.StringBuilder();
             var pts = ground.Points;
@@ -177,9 +177,9 @@ namespace VibeSopwith.Game.Core
 
             sb.AppendLine("new GroundBuilder()");
 
-            Vector2 prev = pts[0];
+            Vector2? prev = null;
 
-            for (int i = 1; i < pts.Count; i++)
+            for (int i = 0; i < pts.Count; i++)
             {
                 var p = pts[i];
 
@@ -187,8 +187,8 @@ namespace VibeSopwith.Game.Core
                 bool isLast = p.X > GameWorld.WorldLength || (i == pts.Count - 1 && p.X <= GameWorld.WorldLength);
 
                 bool isMiddle = !isFirst && !isLast;
-                var dx = Math.Abs(p.X - prev.X);
-                bool isFlat = (dx != 0.0f) && Math.Abs(p.Y - prev.Y) / dx < flatThreshold;
+                var dx = prev != null ? Math.Abs(p.X - prev.Value.X) : 0.0f;
+                bool isFlat = (dx != 0.0f) && Math.Abs(p.Y - prev!.Value.Y) / dx < flatThreshold;
 
                 // Horizontal offset (func, value)
                 (string horzFunc, float horzVal) =
@@ -200,11 +200,11 @@ namespace VibeSopwith.Game.Core
                         horzUnits == Units.Pct
                             ? ((GameWorld.WorldLength - p.X) / GameWorld.WorldLength) * 100f
                             : (GameWorld.WorldLength - p.X))
-                    : useOffPrev        // Middle
+                    : useOffPrev && prev != null       // Middle
                         ? ("OffPrev", 
                             horzUnits == Units.Pct
-                                ? ((p.X - prev.X) / GameWorld.WorldLength) * 100f
-                                : (p.X - prev.X)) 
+                                ? ((p.X - prev.Value.X) / GameWorld.WorldLength) * 100f
+                                : (p.X - prev.Value.X)) 
                         : ("OffLeft",
                             horzUnits == Units.Pct
                                 ? (p.X / GameWorld.WorldLength) * 100f
@@ -280,13 +280,21 @@ namespace VibeSopwith.Game.Core
 
             Vector2? ClipToX(Vector2 p1, Vector2 p2, float x)
             {
-                if ((p1.X <= x && p2.X <= x) || (p1.X >= x && p2.X >= x))
+                const float eps = 1e-4f;
+
+                // If both points are strictly on one side of x, no intersection.
+                if ((p1.X < x - eps && p2.X < x - eps) ||
+                    (p1.X > x + eps && p2.X > x + eps))
                     return null;
 
                 float t = (x - p1.X) / (p2.X - p1.X);
-                if (t < 0 || t > 1) return null;
+                if (t < 0 - eps || t > 1 + eps)
+                    return null;
 
-                return new Vector2(x, p1.Y + t * (p2.Y - p1.Y));
+                return new Vector2(
+                    x,
+                    p1.Y + t * (p2.Y - p1.Y)
+                );
             }
 
             IEnumerable<Vector2> ClipSegmentToRange(Vector2 p1, Vector2 p2, float xMin, float xMax)
@@ -334,6 +342,43 @@ namespace VibeSopwith.Game.Core
             var T1 = topLeft; var T2 = topRight;
             var R1 = topRight; var R2 = bottomRight;
 
+            float TrapezoidYAt(float x)
+            {
+                float y = float.NegativeInfinity;
+
+                // Left slope
+                if (x >= L1.X && x <= L2.X)
+                {
+                    float t = (x - L1.X) / (L2.X - L1.X);
+                    y = MathF.Max(y, L1.Y + t * (L2.Y - L1.Y));
+                }
+
+                // Top
+                if (x >= T1.X && x <= T2.X)
+                {
+                    float t = (x - T1.X) / (T2.X - T1.X);
+                    y = MathF.Max(y, T1.Y + t * (T2.Y - T1.Y));
+                }
+
+                // Right slope
+                if (x >= R1.X && x <= R2.X)
+                {
+                    float t = (x - R1.X) / (R2.X - R1.X);
+                    y = MathF.Max(y, R1.Y + t * (R2.Y - R1.Y));
+                }
+
+                return y;
+            }
+
+            bool ShouldCut(Vector2 hit)
+            {
+                float trapY = TrapezoidYAt(hit.X);
+                float groundY = hit.Y;
+
+                const float eps = 1e-3f;
+                return groundY + eps >= trapY;
+            }
+
             // --- Collect intersections ---------------------------------------------
 
             var hits = new List<(float X, float Y, char Edge)>();
@@ -341,18 +386,16 @@ namespace VibeSopwith.Game.Core
 
             for (int i = 0; i < pts.Count - 1; i++)
             {
-                bool isBoundarySegment = (i == 0) || (i == pts.Count - 2);
-
                 var g1 = pts[i];
                 var g2 = pts[i + 1];
 
-                if (!isBoundarySegment && IntersectSegSeg(g1, g2, L1, L2, out var hL))
+                if (IntersectSegSeg(g1, g2, L1, L2, out var hL) && ShouldCut(hL))
                     hits.Add((hL.X, hL.Y, 'L'));
 
-                if (!isBoundarySegment && IntersectSegSeg(g1, g2, T1, T2, out var hT))
+                if (IntersectSegSeg(g1, g2, T1, T2, out var hT) && ShouldCut(hT))
                     hits.Add((hT.X, hT.Y, 'T'));
 
-                if (!isBoundarySegment && IntersectSegSeg(g1, g2, R1, R2, out var hR))
+                if (IntersectSegSeg(g1, g2, R1, R2, out var hR) && ShouldCut(hR))
                     hits.Add((hR.X, hR.Y, 'R'));
             }
 
@@ -360,6 +403,9 @@ namespace VibeSopwith.Game.Core
 
             if (hits.Count == 0)
                 return new Ground(new List<Vector2>(src.Points));
+
+            foreach (var h in hits)
+                Console.WriteLine($"hit: X={h.X}, Y={h.Y}, Edge={h.Edge}");
 
             // --- Determine cut region ----------------------------------------------
 
@@ -411,7 +457,19 @@ namespace VibeSopwith.Game.Core
             // 6. Sort by X (stable)
             result.Sort((a, b) => a.X.CompareTo(b.X));
 
-            return new Ground(result);
+            // Remove consecutive points with identical X (within epsilon)
+            var cleaned = new List<Vector2>();
+            const float eps = 1e-4f;
+
+            foreach (var p in result)
+            {
+                if (cleaned.Count == 0 || Math.Abs(cleaned[^1].X - p.X) > eps)
+                    cleaned.Add(p);
+                else if (p.Y > cleaned[^1].Y)   // Keep the one with the higher Y (visible contour)
+                    cleaned[^1] = p;
+            }
+
+            return new Ground(cleaned);
         }
 
 

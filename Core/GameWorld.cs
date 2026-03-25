@@ -47,7 +47,7 @@ namespace VibeSopwith.Game.Core
         private Airplane MakeNewPlane()
         {
             var plane = new Airplane();
-            plane.Place(new Vector2(WorldLength / 2f, WorldHeight * 0.9f), Winding.Clockwise);
+            plane.Place(new Vector2(WorldLength / 2f, WorldHeight * 0.9f), BasisSpin.Down);
             plane.SetupRigging(collisionWorld);
             plane.Body.Position = plane.Position.ToAether();
             plane.Body.Rotation = plane.Direction.ToAngle();

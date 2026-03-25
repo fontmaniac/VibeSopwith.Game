@@ -2,13 +2,13 @@
 
 namespace VibeSopwith.Game;
 
-public enum Winding { Clockwise, CounterClockwise }
+public enum BasisSpin { Down, Up }
 
 public interface ICentered
 {
     Vector2 Position { get; }   // In world
     Vector2 Direction { get; }
-    Winding NormalDown { get; }
+    BasisSpin Spin { get; }
     float Length { get; }       // Measurement along X-axis 
     float Height { get; }       // Measurement along Y-axis 
 }
@@ -16,14 +16,14 @@ public interface ICentered
 public record Centered(
     Vector2 Position,
     Vector2 Direction,
-    Winding NormalDown,
+    BasisSpin Spin,
     float Length,
     float Height) : ICentered
 {
     public static Centered OffInterface(ICentered src) => new Centered(
         src.Position,
         src.Direction,
-        src.NormalDown,
+        src.Spin,
         src.Length,
         src.Height);
 }

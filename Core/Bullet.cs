@@ -12,7 +12,7 @@ namespace VibeSopwith.Game.Core
 
         public Vector2 Position { get => CurrentState.Position; }
         public Vector2 Direction { get => CurrentState.Direction; }
-        public Winding NormalDown => Winding.Clockwise;
+        public BasisSpin Spin => BasisSpin.Down;
         public TimeSpan StartTime;
 
         public const float BulletLength = 0.05f;

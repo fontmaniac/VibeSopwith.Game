@@ -9,15 +9,15 @@ namespace VibeSopwith.Game.Core
     {
         public Body Body = null!;
 
-        public record State(Vector2 Position, Vector2 Direction, Winding NormalDown, float Speed, Bomb? Bomb, Bullet? Bullet, DateTime RollTime, DateTime BombTime, DateTime BulletTime);
+        public record State(Vector2 Position, Vector2 Direction, BasisSpin Spin, float Speed, Bomb? Bomb, Bullet? Bullet, DateTime RollTime, DateTime BombTime, DateTime BulletTime);
 
-        public State CurrentState = new State(Vector2.Zero, Vector2.UnitX, Winding.Clockwise, 0f, null, null, DateTime.MinValue, DateTime.MinValue, DateTime.MinValue);
+        public State CurrentState = new State(Vector2.Zero, Vector2.UnitX, BasisSpin.Down, 0f, null, null, DateTime.MinValue, DateTime.MinValue, DateTime.MinValue);
         public float Speed { get => CurrentState.Speed; }
 
         public Vector2 Position { get => CurrentState.Position; }       // World position of the plane in meters. 
         public Vector2 Direction { get => CurrentState.Direction; }     // Direction where plane is facing.
-        public Winding NormalDown { get => CurrentState.NormalDown; }   // Orientation of normal pointing towards bottom of the plane.
-        private float FlipFactor { get => NormalDown == Winding.Clockwise ? +1f : -1f; }
+        public BasisSpin Spin { get => CurrentState.Spin; }             // Orientation of basis spin. Up is Y-up.
+        private float FlipFactor { get => Spin == BasisSpin.Down ? +1f : -1f; }
         public float Length => 3.46f;
         public float Height => 2.0f;
 
@@ -25,7 +25,7 @@ namespace VibeSopwith.Game.Core
 
         public bool Exploded = false;
 
-        public void Place(Vector2 pos, Winding normalDown) => CurrentState = CurrentState with { Position = pos, NormalDown = normalDown };
+        public void Place(Vector2 pos, BasisSpin normalDown) => CurrentState = CurrentState with { Position = pos, Spin = normalDown };
 
         public void RemoveRigging(World collisionWorld)
         {
@@ -212,12 +212,12 @@ namespace VibeSopwith.Game.Core
                 ? (null, CurrentState.BulletTime)
                 : (SpawnBullet(gameTime.TotalGameTime), nowTime);
 
-            var (newWinding, newRollTime) = (Roll == RollInput.None || (nowTime - CurrentState.RollTime).TotalSeconds < RollGracePeriod) ? (NormalDown, CurrentState.RollTime) :
-                NormalDown == Winding.Clockwise
-                ? (Winding.CounterClockwise, nowTime)
-                : (Winding.Clockwise, nowTime);
+            var (newSpin, newRollTime) = (Roll == RollInput.None || (nowTime - CurrentState.RollTime).TotalSeconds < RollGracePeriod) ? (Spin, CurrentState.RollTime) :
+                Spin == BasisSpin.Down
+                ? (BasisSpin.Up, nowTime)
+                : (BasisSpin.Down, nowTime);
 
-            var rollFactor = newWinding == Winding.Clockwise ? +1f : -1f;
+            var rollFactor = newSpin == BasisSpin.Down ? +1f : -1f;
 
             var newDirection = Speed == 0f ? Direction : Vector2.TransformNormal(Direction,
                 Pitch == PitchInput.Backward ? Matrix.CreateRotationZ(rollFactor * MathHelper.ToRadians(PitchAngle)) :
@@ -226,7 +226,7 @@ namespace VibeSopwith.Game.Core
 
             var newPosition = Position + newDirection * newSpeed;
 
-            return new State(newPosition, newDirection, newWinding, newSpeed, newBomb, newBullet, newRollTime, newBombTime, newBulletTime);
+            return new State(newPosition, newDirection, newSpin, newSpeed, newBomb, newBullet, newRollTime, newBombTime, newBulletTime);
         }
 
         public void ClearInputs()
@@ -245,11 +245,11 @@ namespace VibeSopwith.Game.Core
 
         public void PostSimulationUpdate(State projected)
         {
-            var wasNormalDown = NormalDown; 
+            var wasNormalDown = Spin; 
 
             CurrentState = projected;
 
-            if (wasNormalDown != NormalDown)
+            if (wasNormalDown != Spin)
             {
                 // Executing a roll/flip.
                 // Reflect position across horizontal midline.

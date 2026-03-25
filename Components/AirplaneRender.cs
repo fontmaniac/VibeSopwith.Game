@@ -20,7 +20,7 @@ namespace VibeSopwith.Game.Components
 
         public void Draw(Airplane airplane, GameTime gameTime)
         {
-            DrawHelper.DrawOriginated(airplane, _airplaneTexture, new Vector2(115, airplane.NormalDown == Winding.Clockwise ? 100 : 0), TheGame.SpriteBatch);
+            DrawHelper.DrawOriginated(airplane, _airplaneTexture, new Vector2(115, airplane.Spin == BasisSpin.Down ? 100 : 0), TheGame.SpriteBatch);
         }
     }
 }

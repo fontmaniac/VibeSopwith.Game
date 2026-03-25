@@ -24,7 +24,7 @@ namespace VibeSopwith.Game.Graphics
                 rotation,
                 adjOrigin,
                 new Vector2(scaleX, scaleY), // in world units
-                centered.NormalDown == Winding.Clockwise ? SpriteEffects.FlipVertically : SpriteEffects.None,
+                centered.Spin == BasisSpin.Down ? SpriteEffects.FlipVertically : SpriteEffects.None,
                 0f
             );
 
