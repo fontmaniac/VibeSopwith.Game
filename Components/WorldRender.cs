@@ -82,7 +82,10 @@ namespace VibeSopwith.Game.Components
 
             _groundRender.Draw(world.Ground, groundThicknessPx, scaleVert, TheGame.SpriteBatch);
             foreach (var building in world.Buildings)
+            {
                 _buildingRender.Draw(building, gameTime);
+                _bodyRender.Draw(building.Body, gameTime);
+            }
 
             _airplaneRender.Draw(world.Plane, gameTime);
 

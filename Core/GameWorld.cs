@@ -44,6 +44,8 @@ namespace VibeSopwith.Game.Core
             (Ground, Buildings) = Ground.MakeWithPlatforms();
 
             Ground.SetupRigging(collisionWorld);
+            foreach (var building in Buildings)
+                building.SetupRigging(collisionWorld);
             Plane = MakeNewPlane();
         }
 
