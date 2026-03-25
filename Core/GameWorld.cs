@@ -59,11 +59,14 @@ namespace VibeSopwith.Game.Core
             return plane;
         }
 
+        private static Explosion MakeBasedExplosion(GameTime gameTime, Aether.Vector2 pt) =>
+            new Explosion(0, 16f, 16f, gameTime.TotalGameTime) { RootPosition = pt.ToXna() };
+
         private static Explosion MakeBigExplosion(GameTime gameTime, Aether.Vector2 pt) =>
-            new Explosion(16f, 16f, gameTime.TotalGameTime) { RootPosition = pt.ToXna() };
+            new Explosion(1, 16f, 16f, gameTime.TotalGameTime) { RootPosition = pt.ToXna() };
 
         private static Explosion MakeSmallExplosion(GameTime gameTime, Aether.Vector2 pt) =>
-            new Explosion(1f, 1f, gameTime.TotalGameTime) { RootPosition = pt.ToXna() };
+            new Explosion(1, 11f, 1f, gameTime.TotalGameTime) { RootPosition = pt.ToXna() };
 
         private record struct CollisionContext(Aether.Vector2 cp, GameTime gameTime, Stack<Action> postCheckActions);
 
@@ -105,6 +108,15 @@ namespace VibeSopwith.Game.Core
             Bombs.Remove(bomb1);
             Bombs.Remove(bomb2);
             explosions.Add(MakeBigExplosion(ctx.gameTime, ctx.cp));
+        }
+
+        private void ExecuteExplosion(CollisionContext ctx, Bomb bomb, StaticBuilding building)
+        {
+            ctx.postCheckActions.Push(() => { collisionWorld.Remove(bomb.Body); });
+            ctx.postCheckActions.Push(() => { building.RemoveRigging(collisionWorld); });
+            building.Exploded = true;
+            Bombs.Remove(bomb);
+            explosions.Add(MakeBasedExplosion(ctx.gameTime, building.Position.ToAether()));
         }
 
         public void Simulate(GameTime gameTime)
@@ -184,13 +196,16 @@ namespace VibeSopwith.Game.Core
                 var bulletAlive = (Bullet bullet)  => Bullets.Exists(b => bullet == b);
                 var groundAlive = (Ground ground)  => true;
                 var planeAlive  = (Airplane plane) => !plane.Exploded;
+                var buildingAlive = (StaticBuilding building) => !building.Exploded;
+
 
                 var _ = 
-                    Physics.OnCollision(ct, "Plane-Ground",  planeAlive,  groundAlive, (cp, p, g)   => ExecuteCollision(makeCtx(cp), p,  g))  ||
-                    Physics.OnCollision(ct, "Bomb-Ground",   bombAlive,   groundAlive, (cp, b, g)   => ExecuteExplosion(makeCtx(cp), b,  g))  ||
-                    Physics.OnCollision(ct, "Bomb-Bomb",     bombAlive,   bombAlive,   (cp, b1, b2) => ExecuteExplosion(makeCtx(cp), b1, b2)) ||
-                    Physics.OnCollision(ct, "Bomb-Plane",    bombAlive,   planeAlive,  (cp, b, p)   => ExecuteExplosion(makeCtx(cp), b,  p))  ||
-                    Physics.OnCollision(ct, "Bullet-Ground", bulletAlive, groundAlive, (cp, b, g)   => ExecuteExplosion(makeCtx(cp), b,  g))  ||
+                    Physics.OnCollision(ct, "Plane-Ground",  planeAlive,  groundAlive,   (cp, p, g)   => ExecuteCollision(makeCtx(cp), p,  g))  ||
+                    Physics.OnCollision(ct, "Bomb-Ground",   bombAlive,   groundAlive,   (cp, b, g)   => ExecuteExplosion(makeCtx(cp), b,  g))  ||
+                    Physics.OnCollision(ct, "Bomb-Bomb",     bombAlive,   bombAlive,     (cp, b1, b2) => ExecuteExplosion(makeCtx(cp), b1, b2)) ||
+                    Physics.OnCollision(ct, "Bomb-Plane",    bombAlive,   planeAlive,    (cp, b, p)   => ExecuteExplosion(makeCtx(cp), b,  p))  ||
+                    Physics.OnCollision(ct, "Bullet-Ground", bulletAlive, groundAlive,   (cp, b, g)   => ExecuteExplosion(makeCtx(cp), b,  g))  ||
+                    Physics.OnCollision(ct, "Bomb-Building", bombAlive,   buildingAlive, (cp, b, bb)  => ExecuteExplosion(makeCtx(cp), b,  bb)) ||
                     false;
             }
 

@@ -17,6 +17,8 @@ namespace VibeSopwith.Game.Core
         public enum BuildingType { Factory, Cistern };
         public BuildingType TheType { get; }
 
+        public bool Exploded = false;
+
         private float FlipFactor { get => Spin == BasisSpin.Down ? +1f : -1f; }
 
         public StaticBuilding(BuildingType buildingType, Vector2 position, BasisSpin spin)
@@ -26,6 +28,13 @@ namespace VibeSopwith.Game.Core
             Spin = spin;
             Direction = Vector2.UnitX * (spin == BasisSpin.Down ? +1f : -1f);
         }
+
+        public void RemoveRigging(World collisionWorld)
+        {
+            collisionWorld.Remove(Body);
+            Body = null!;
+        }
+
 
         private Body SetupRigging_Cistern(World collisionWorld)
         {

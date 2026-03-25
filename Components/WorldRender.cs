@@ -10,7 +10,8 @@ namespace VibeSopwith.Game.Components
         private AetherBodyRender _bodyRender = null!;
 
         private AirplaneRender _airplaneRender = null!;
-        private ExplosionRender _explosionRender = null!;
+        private ExplosionRender _explosionRenderCentered = null!;
+        private ExplosionRender _explosionRenderBased = null!;
         private BombRender _bombRender = null!;
         private BulletRender _bulletRender = null!;
         private StaticBuildingRender _buildingRender = null!;
@@ -31,8 +32,11 @@ namespace VibeSopwith.Game.Components
             _airplaneRender = new AirplaneRender(Game);
             _airplaneRender.LoadContent();
 
-            _explosionRender = new ExplosionRender(Game);
-            _explosionRender.LoadContent();
+            _explosionRenderCentered = new ExplosionRender(Game, 1);
+            _explosionRenderCentered.LoadContent();
+
+            _explosionRenderBased = new ExplosionRender(Game, 0);
+            _explosionRenderBased.LoadContent();
 
             _bombRender = new BombRender(Game);
             _bombRender.LoadContent();
@@ -54,7 +58,8 @@ namespace VibeSopwith.Game.Components
             _bombRender?.Dispose();
             _airplaneRender?.Dispose();
             _groundRender?.Dispose();
-            _explosionRender?.Dispose();
+            _explosionRenderCentered?.Dispose();
+            _explosionRenderBased?.Dispose();
         }
 
         private void DrawStraight(GameWorld world, GameTime gameTime, float scaleHorz, float scaleVert, bool drawBullets, float groundThicknessPx, float cameraPositionX)
@@ -97,7 +102,10 @@ namespace VibeSopwith.Game.Components
                     _bulletRender.Draw(bullet, scaleVert, gameTime);
 
             foreach (var explosion in world.GetExplosions())
-                _explosionRender.Draw(explosion, gameTime);
+            {
+                if (explosion.Variant == 1) _explosionRenderCentered.Draw(explosion, gameTime);
+                if (explosion.Variant == 0) _explosionRenderBased.Draw(explosion, gameTime);
+            }
 
             _bodyRender.Draw(world.Plane.Body, gameTime);
             _bodyRender.Draw(world.Ground.Body, gameTime);

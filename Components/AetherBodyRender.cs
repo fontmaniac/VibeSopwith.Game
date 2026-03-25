@@ -18,8 +18,9 @@ namespace VibeSopwith.Game.Components
             _pixel.SetData(new[] { Color.White });
 
         }
-        public void Draw(Body body, GameTime gameTime)
+        public void Draw(Body? body, GameTime gameTime)
         {
+            if (body == null) return;
             foreach (var fixture in body.FixtureList)
             {
                 DrawFixture(fixture, Color.Red);

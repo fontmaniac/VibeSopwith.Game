@@ -6,17 +6,19 @@ namespace VibeSopwith.Game.Core
     {
         public Vector2 RootPosition { get; set; } = Vector2.Zero;   // World position of explosion "root" - point in the middle of the bottom edge of the texture.
         public TimeSpan Duration { get; set; } = TimeSpan.FromSeconds(1);
+        public int Variant { get; }
 
         public float Length;
         public float Height;
 
         public TimeSpan StartTime;
 
-        public Explosion(float length, float height, TimeSpan startTime)
+        public Explosion(int variant, float length, float height, TimeSpan startTime)
         {
             Length = length;
             Height = height;
             StartTime = startTime;
+            Variant = variant;
         }
 
         public bool IsExpired(TimeSpan gameTime) => StartTime + Duration < gameTime; 

@@ -5,11 +5,20 @@ using VibeSopwith.Game.Graphics;
 
 namespace VibeSopwith.Game.Components
 {
-    internal class ExplosionRender(Microsoft.Xna.Framework.Game game) : DrawableGameComponent(game)
+    internal class ExplosionRender(Microsoft.Xna.Framework.Game game, int variant) : DrawableGameComponent(game)
     {
         private Texture2D _spriteSheet = null!;
-        private const int SheetRows = 4;
-        private const int SheetCols = 4;
+
+        public record struct SpriteInfo(string TexturePath, int SheetRows, int SheetCols, Func<Vector2, Vector2> GetOrigin);
+
+        private static SpriteInfo[] Variants = new SpriteInfo[]
+        {
+            new("Textures\\Explosion_1.png", 5, 10, m => new Vector2(m.X / 2f, 0f)),
+            new("Textures\\Explosion_2.png", 4, 4, m => new Vector2(m.X / 2f, m.Y / 2f)),
+            new("Textures\\Explosion_3.png", 8, 5, m => new Vector2(m.X / 2f, m.Y / 2f)),
+        };
+
+        private SpriteInfo _si = Variants[variant];
 
         private Animation.IPhase<Explosion>[] _phases = null!;
 
@@ -37,21 +46,21 @@ namespace VibeSopwith.Game.Components
         {
             base.LoadContent();
 
-            using var tex = Game.Content.Load<Texture2D>("Textures\\Explosion_2.png");
+            using var tex = Game.Content.Load<Texture2D>(_si.TexturePath);
             _spriteSheet = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, tex);
 
-            var frameWidth = _spriteSheet.Width / SheetCols;
-            var frameHeight = _spriteSheet.Height / SheetRows;
-            var phaseNumber = SheetRows * SheetCols;
+            var frameWidth = _spriteSheet.Width / _si.SheetCols;
+            var frameHeight = _spriteSheet.Height / _si.SheetRows;
+            var phaseNumber = _si.SheetRows * _si.SheetCols;
 
             _phases =
                 Enumerable.Range(0, phaseNumber)
                 .Select(i =>
                 {
-                    var texX = (i % SheetCols) * frameWidth;
-                    var texY = (i / SheetCols) * frameHeight;
+                    var texX = (i % _si.SheetCols) * frameWidth;
+                    var texY = (i / _si.SheetCols) * frameHeight;
                     var srcRect = new Rectangle(texX + 1, texY + 1, frameWidth - 2, frameHeight - 2);
-                    var origin = new Vector2(frameWidth / 2f, frameHeight / 2f);
+                    var origin = _si.GetOrigin(new Vector2(frameWidth, frameHeight));
 
                     return new ExplosionPhase(phaseNumber, _spriteSheet, srcRect, origin);
                 })
