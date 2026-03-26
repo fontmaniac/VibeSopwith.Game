@@ -11,7 +11,7 @@ namespace VibeSopwith.Game.Core
 
         public record State(Vector2 Position, Vector2 Direction, BasisSpin Spin, float Speed, Bomb? Bomb, Bullet? Bullet, DateTime RollTime, DateTime BombTime, DateTime BulletTime);
 
-        public State CurrentState = new State(Vector2.Zero, Vector2.UnitX, BasisSpin.Down, 0f, null, null, DateTime.MinValue, DateTime.MinValue, DateTime.MinValue);
+        public State CurrentState;
         public float Speed { get => CurrentState.Speed; }
 
         public Vector2 Position { get => CurrentState.Position; }       // World position of the plane in meters. 
@@ -25,7 +25,11 @@ namespace VibeSopwith.Game.Core
 
         public bool Exploded = false;
 
-        public void Place(Vector2 pos, BasisSpin normalDown) => CurrentState = CurrentState with { Position = pos, Spin = normalDown };
+        public Airplane(Vector2 pos, BasisSpin spin)
+        {
+            CurrentState = new State(pos, Vector2.UnitX, spin, 0f, null, null, DateTime.MinValue, DateTime.MinValue, DateTime.MinValue);
+            CurrentState = CurrentState with { Direction = Direction * FlipFactor };
+        }
 
         public void RemoveRigging(World collisionWorld)
         {

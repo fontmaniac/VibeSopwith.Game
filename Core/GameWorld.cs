@@ -26,7 +26,8 @@ namespace VibeSopwith.Game.Core
         public readonly List<Bomb> Bombs = new List<Bomb>();
         public readonly List<Bullet> Bullets = new List<Bullet>();
 
-        public readonly List<StaticBuilding> Buildings = new List<StaticBuilding>();
+        public readonly List<StaticBuilding> Buildings;
+        public readonly List<Ground.Runway> Runways;
 
         private readonly World collisionWorld;
 
@@ -41,7 +42,7 @@ namespace VibeSopwith.Game.Core
             //Ground = Ground.MakeRandom();
             //Ground = Ground.MakeCustom();
 
-            (Ground, Buildings) = Ground.MakeWithBuildings();
+            (Ground, Buildings, Runways) = Ground.MakeWithBuildings();
 
             Ground.SetupRigging(collisionWorld);
             foreach (var building in Buildings)
@@ -51,9 +52,11 @@ namespace VibeSopwith.Game.Core
 
         private Airplane MakeNewPlane()
         {
-            var plane = new Airplane();
-            //plane.Place(new Vector2(WorldLength / 2f, WorldHeight * 0.9f), BasisSpin.Down);
-            plane.Place(new Vector2(WorldLength / 2f - 15f, WorldHeight * 0.501f), BasisSpin.Down);
+            var runway = Runways[0];
+            var spin = runway.End > runway.Start ? BasisSpin.Down : BasisSpin.Up;
+            var parkingPos = runway.End > runway.Start ? runway.Start + runway.ParkingOffset : runway.Start - runway.ParkingOffset;
+            var plane = new Airplane(new Vector2(parkingPos, runway.Level + 0.05f), spin);
+
             plane.SetupRigging(collisionWorld);
             plane.Body.Position = plane.Position.ToAether();
             plane.Body.Rotation = plane.Direction.ToAngle();

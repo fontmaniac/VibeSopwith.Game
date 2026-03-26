@@ -180,6 +180,16 @@ namespace VibeSopwith.Game.Core
             return false;
         }
 
+        public record struct Runway(float Level, float Start, float End, float ParkingOffset);
+
+        public (Runway, Ground) WithRunway(float level, float start, float end, float parkingOffset)
+        {
+            // Place physical platform.
+            var withPlatform = PlacePlatform(this, new HOffset.OffLeft((start + end) / 2f, Units.Met), Math.Abs(end - start), new VOffset.OffFloor(level, Units.Met));
+            // Create runway.
+            return (new Runway(level, start, end, parkingOffset), withPlatform);
+        }
+
         private static Ground PlaceRandomPlatforms(Ground src, int number, float width, Func<float, bool> accept, out List<Vector2> platforms)
         {
             var halfWidth = width / 2f;
@@ -192,6 +202,13 @@ namespace VibeSopwith.Game.Core
 
             for (var i = 0; i < number; ++i)
             {
+                float tryUntilSuccess()
+                {
+                    var res = (float)GameWorld.WorldSeed.NextDouble() * GameWorld.WorldLength;
+                    return fullAccept(res) ? res : tryUntilSuccess();
+                }
+                var pfX = tryUntilSuccess();
+
                 var platformX = 0f;
                 do
                 {
@@ -215,7 +232,6 @@ namespace VibeSopwith.Game.Core
             platforms = intPlatforms;
             return result;
         }
-
 
         public static Ground MakeCustom()
         {
@@ -283,12 +299,11 @@ namespace VibeSopwith.Game.Core
                 .Segment(OffRight(0f, Units.Pct), OffCeiling(0f, Units.Met))
                 .Build();
 
-        public static (Ground, List<StaticBuilding>) MakeWithBuildings()
+        public static (Ground, List<StaticBuilding>, List<Runway>) MakeWithBuildings()
         {
             var result = MakeQuasiRandom1();
             result = PlacePlatform(result, OffLeft(11, Units.Met), 5, OffFloor(30, Units.Met), float.Pi / 4f);
             result = PlacePlatform(result, OffLeft(26, Units.Met), 5, OffFloor(20, Units.Met), float.Pi / 4f);
-            result = PlacePlatform(result, OffLeft(300, Units.Met), 40, OffFloor(25, Units.Met), float.Pi / 6f);
             result = PlacePlatform(result, OffLeft(600-26, Units.Met), 5, OffFloor(20, Units.Met), float.Pi / 4f);
             result = PlacePlatform(result, OffLeft(600-11, Units.Met), 5, OffFloor(30, Units.Met), float.Pi / 4f);
 
@@ -313,7 +328,11 @@ namespace VibeSopwith.Game.Core
             buildings.Add(new StaticBuilding(StaticBuilding.BuildingType.Factory, new Vector2(600-26, 20f), BasisSpin.Down));
             buildings.Add(new StaticBuilding(StaticBuilding.BuildingType.Cistern, new Vector2(600-11, 30f), BasisSpin.Down));
 
-            return (result, buildings);
+            var runways = new List<Runway>();
+            var (runway, withRunwayPlatform) = result.WithRunway(25, 300-20, 300+20, 5);
+            runways.Add(runway);
+
+            return (withRunwayPlatform, buildings, runways);
         }
 
         public static string ReverseBuild(Ground ground, Units horzUnits, Units vertUnits, bool useOffPrev = false, float flatThreshold = 0.03f)
