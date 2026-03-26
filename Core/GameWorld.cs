@@ -55,7 +55,8 @@ namespace VibeSopwith.Game.Core
             var runway = Runways[0];
             var spin = runway.End > runway.Start ? BasisSpin.Down : BasisSpin.Up;
             var parkingPos = runway.End > runway.Start ? runway.Start + runway.ParkingOffset : runway.Start - runway.ParkingOffset;
-            var plane = new Airplane(new Vector2(parkingPos, runway.Level + 0.05f), spin);
+            var plane = new Airplane(new Vector2(parkingPos, runway.Level), spin);
+            plane.CheckAndSetLandingMode(runway);
 
             plane.SetupRigging(collisionWorld);
             plane.Body.Position = plane.Position.ToAether();
@@ -163,6 +164,7 @@ namespace VibeSopwith.Game.Core
                 }
                 else
                 {
+                    Plane.CheckAndSetLandingMode(Runways[0]);
                     var planeProjected = Plane.ApplyInputs(gameTime);
 
                     if (planeProjected.Bomb != null)

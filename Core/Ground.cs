@@ -198,17 +198,10 @@ namespace VibeSopwith.Game.Core
 
             var fullAccept = (float x) =>
                 accept(x) &&
-                intPlatforms.All(p => x < p.X - halfWidth || p.X + halfWidth < x);
+                intPlatforms.All(p => x < p.X - width || p.X + width < x);
 
             for (var i = 0; i < number; ++i)
             {
-                float tryUntilSuccess()
-                {
-                    var res = (float)GameWorld.WorldSeed.NextDouble() * GameWorld.WorldLength;
-                    return fullAccept(res) ? res : tryUntilSuccess();
-                }
-                var pfX = tryUntilSuccess();
-
                 var platformX = 0f;
                 do
                 {
