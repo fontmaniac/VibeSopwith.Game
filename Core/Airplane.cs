@@ -180,7 +180,7 @@ namespace VibeSopwith.Game.Core
         private const float Acceleration = 0.01f;           // meters per second^2
         private const float MaxSpeed = 0.5f;                // meters per second
         private const float MinSpeed = 0.099f;              // meters per second
-        private const float MaxLandingSpeed = 0.25f;        // meters per second
+        public  const float MaxLandingSpeed = 0.25f;        // meters per second
         private const float MaxLandingAngle = 30f;          // Degrees
         private const float LandingProximityMax = 0.25f;    // Meters
         private const float LandingProximityMin = 0.05f;    // Meters
@@ -202,14 +202,24 @@ namespace VibeSopwith.Game.Core
             PitchInput Pitch,
             RollInput Roll,
             BombInput BombLaunch,
-            GunInput GunFire);
-
-        public Inputs Input = new Inputs();
+            GunInput GunFire)
+        { 
+            public static Inputs Clean() => new Inputs(ThrottleInput.None, PitchInput.None, RollInput.None, BombInput.Inactive, GunInput.Inactive);
+        }
 
         public bool Landing = false;
 
+        public Inputs Input = new Inputs();
+
         public State ApplyInputs(Inputs input, GameTime gameTime)
         {
+            var nowTime = DateTime.UtcNow;
+
+            var (newSpin, newRollTime) = (Landing || input.Roll == RollInput.None || (nowTime - CurrentState.RollTime).TotalSeconds < RollGracePeriod) ? (Spin, CurrentState.RollTime) :
+                Spin == BasisSpin.Down
+                ? (BasisSpin.Up, nowTime)
+                : (BasisSpin.Down, nowTime);
+
             var newSpeedRaw =
                 input.Throttle == ThrottleInput.Throttling ? Speed + Acceleration :
                 input.Throttle == ThrottleInput.Reversing ? Speed - Acceleration :
@@ -220,8 +230,6 @@ namespace VibeSopwith.Game.Core
                 0f; 
             var newSpeed = MathHelper.Clamp(newSpeedRaw, lowSpeedLimit, MaxSpeed);
 
-            var nowTime = DateTime.UtcNow;
-
             var (newBomb, newBombTime) = (Landing || input.BombLaunch == BombInput.Inactive || (nowTime - CurrentState.BombTime).TotalSeconds < BombGracePeriod) 
                 ? (null, CurrentState.BombTime) 
                 : (SpawnBomb(), nowTime);
@@ -229,11 +237,6 @@ namespace VibeSopwith.Game.Core
             var (newBullet, newBulletTime) = (input.GunFire == GunInput.Inactive || (nowTime - CurrentState.BulletTime).TotalSeconds < BulletGracePeriod)
                 ? (null, CurrentState.BulletTime)
                 : (SpawnBullet(gameTime.TotalGameTime), nowTime);
-
-            var (newSpin, newRollTime) = (Landing || input.Roll == RollInput.None || (nowTime - CurrentState.RollTime).TotalSeconds < RollGracePeriod) ? (Spin, CurrentState.RollTime) :
-                Spin == BasisSpin.Down
-                ? (BasisSpin.Up, nowTime)
-                : (BasisSpin.Down, nowTime);
 
             var rollFactor = newSpin == BasisSpin.Down ? +1f : -1f;
 
@@ -249,14 +252,7 @@ namespace VibeSopwith.Game.Core
 
         public void ClearInputs()
         {
-            Input = Input with
-            {
-                Throttle = ThrottleInput.None,
-                Pitch = PitchInput.None,
-                Roll = RollInput.None,
-                BombLaunch = BombInput.Inactive,
-                GunFire = GunInput.Inactive,
-            };
+            Input = Inputs.Clean();
         }
 
         public bool CheckAndSetLandingMode(Ground.Runway runway)
