@@ -86,31 +86,40 @@ namespace VibeSopwith.Game
                 if (kc.IsKeyPressed(Keys.Escape))
                     this.Exit();
 
-                _world.Plane.Throttle =
+                var throttle =
                     (kc.IsKeyDown(Keys.A) && !kc.IsKeyDown(Keys.D)) ? Airplane.ThrottleInput.Reversing :
                     (!kc.IsKeyDown(Keys.A) && kc.IsKeyDown(Keys.D)) ? Airplane.ThrottleInput.Throttling :
                     Airplane.ThrottleInput.None;
 
                 // Adjust throttle if flipped.
-                _world.Plane.Throttle =
-                    _world.Plane.CurrentState.Spin == BasisSpin.Down ? _world.Plane.Throttle :
-                    _world.Plane.Throttle == Airplane.ThrottleInput.Throttling ? Airplane.ThrottleInput.Reversing :
-                    _world.Plane.Throttle == Airplane.ThrottleInput.Reversing ? Airplane.ThrottleInput.Throttling :
+                throttle =
+                    _world.Plane.CurrentState.Spin == BasisSpin.Down ? throttle :
+                    throttle == Airplane.ThrottleInput.Throttling ? Airplane.ThrottleInput.Reversing :
+                    throttle == Airplane.ThrottleInput.Reversing ? Airplane.ThrottleInput.Throttling :
                     Airplane.ThrottleInput.None;
 
-                _world.Plane.Pitch =
+                var pitch =
                     (kc.IsKeyDown(Keys.W) && !kc.IsKeyDown(Keys.S)) ? Airplane.PitchInput.Backward :
                     (!kc.IsKeyDown(Keys.W) && kc.IsKeyDown(Keys.S)) ? Airplane.PitchInput.Forward :
                     Airplane.PitchInput.None;
 
-                _world.Plane.Roll =
+                var roll =
                     kc.IsKeyDown(Keys.X) ? Airplane.RollInput.Roll : Airplane.RollInput.None;
 
-                _world.Plane.BombLaunch =
+                var bombLaunch =
                     kc.IsKeyDown(Keys.B) ? Airplane.BombInput.Active : Airplane.BombInput.Inactive;
 
-                _world.Plane.GunFire =
+                var gunFire =
                     kc.IsKeyDown(Keys.Space) ? Airplane.GunInput.Active : Airplane.GunInput.Inactive;
+
+                _world.Plane.Input = _world.Plane.Input with
+                {
+                    Throttle = throttle,
+                    Pitch = pitch,
+                    Roll = roll,
+                    BombLaunch = bombLaunch,
+                    GunFire = gunFire,
+                };
             });
 
             _world.Simulate(gameTime);

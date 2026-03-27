@@ -165,7 +165,7 @@ namespace VibeSopwith.Game.Core
                 else
                 {
                     Plane.CheckAndSetLandingMode(Runways[0]);
-                    var planeProjected = Plane.ApplyInputs(gameTime);
+                    var planeProjected = Plane.ApplyInputs(Plane.Input, gameTime);
 
                     if (planeProjected.Bomb != null)
                         Bombs.Add(planeProjected.Bomb.SetupRigging(collisionWorld));

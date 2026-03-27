@@ -23,7 +23,20 @@ namespace VibeSopwith.Game.Utils
         public static Vector2 ToXna(this (float x, float y) v) => new Vector2(v.x, v.y);
         public static Aether.Vector2 ToAether(this (float x, float y) v) => new Aether.Vector2(v.x, v.y);
 
+        // (-Pi; +Pi]
         public static float ToAngle(this Vector2 v) => (float)Math.Atan2(v.Y, v.X);
+
+        // [0; +2*Pi) when isNegative = false
+        // (-2*Pi; 0] when isNegative = true
+        public static float ToAngle(this Vector2 v, bool isNegative)
+        {
+            var a = v.ToAngle();
+
+            return !isNegative
+                ? a >= 0 ? a : a + MathF.Tau
+                : a <= 0 ? a : a - MathF.Tau;
+        }
+
 
         public static Vector2 ToNormal(this float radAngle) => new Vector2((float)Math.Cos(radAngle), (float)Math.Sin(radAngle));
 

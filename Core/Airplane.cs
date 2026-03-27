@@ -177,19 +177,19 @@ namespace VibeSopwith.Game.Core
             return new Bullet(new Bullet.State(spawnPos.ToXna(), Vector2.Normalize(velocityVector), velocityVector), startTime);
         }
 
-        private const float Acceleration = 0.01f;       // meters per second^2
-        private const float MaxSpeed = 0.5f;            // meters per second
-        private const float MinSpeed = 0.099f;          // meters per second
-        private const float MaxLandingSpeed = 0.25f;    // meters per second
-        private const float MaxLandingAngle = 30f;      // Degrees
-        private const float LandingProximityMax = 0.25f;// Meters
-        private const float LandingProximityMin = 0.05f;// Meters
-        private const float PitchAngle = 4.0f;          // Degrees
-        private const float RollGracePeriod = 1f / 4f;  // Time in seconds before subsequent roll input is accepted.
-        private const float BombGracePeriod = 0.25f;    // Time in seconds before subsequent bomb can be spawned.
-        private const float BombLaunchSpeed = 0.1f;     // meters per second
-        private const float BulletGracePeriod = 1f / 8f;   // Time in seconds before subsequent bullet can be spawned.
-        private const float BulletSpeed = 0.35f;           // meters per second
+        private const float Acceleration = 0.01f;           // meters per second^2
+        private const float MaxSpeed = 0.5f;                // meters per second
+        private const float MinSpeed = 0.099f;              // meters per second
+        private const float MaxLandingSpeed = 0.25f;        // meters per second
+        private const float MaxLandingAngle = 30f;          // Degrees
+        private const float LandingProximityMax = 0.25f;    // Meters
+        private const float LandingProximityMin = 0.05f;    // Meters
+        private const float PitchAngle = 4.0f;              // Degrees
+        private const float RollGracePeriod = 1f / 4f;      // Time in seconds before subsequent roll input is accepted.
+        private const float BombGracePeriod = 0.25f;        // Time in seconds before subsequent bomb can be spawned.
+        private const float BombLaunchSpeed = 0.1f;         // meters per second
+        private const float BulletGracePeriod = 1f / 8f;    // Time in seconds before subsequent bullet can be spawned.
+        private const float BulletSpeed = 0.35f;            // meters per second
 
         public enum ThrottleInput { Throttling, None, Reversing }
         public enum PitchInput { Forward, None, Backward }
@@ -197,37 +197,40 @@ namespace VibeSopwith.Game.Core
         public enum BombInput { Active, Inactive }
         public enum GunInput { Active, Inactive }
 
-        public ThrottleInput Throttle;
-        public PitchInput Pitch;
-        public RollInput Roll;
-        public BombInput BombLaunch;
-        public GunInput GunFire;
+        public record struct Inputs(
+            ThrottleInput Throttle,
+            PitchInput Pitch,
+            RollInput Roll,
+            BombInput BombLaunch,
+            GunInput GunFire);
+
+        public Inputs Input = new Inputs();
 
         public bool Landing = false;
 
-        public State ApplyInputs(GameTime gameTime)
+        public State ApplyInputs(Inputs input, GameTime gameTime)
         {
             var newSpeedRaw =
-                Throttle == ThrottleInput.Throttling ? Speed + Acceleration :
-                Throttle == ThrottleInput.Reversing ? Speed - Acceleration :
+                input.Throttle == ThrottleInput.Throttling ? Speed + Acceleration :
+                input.Throttle == ThrottleInput.Reversing ? Speed - Acceleration :
                 Speed;
             var lowSpeedLimit =
-                Throttle == ThrottleInput.Throttling ? 0f :                                         // Throttling - low limit irrelevant
-                !Landing && Throttle == ThrottleInput.Reversing && newSpeedRaw < MinSpeed ? Speed : // Reversing and slipped below MinSpeed - stay at minimum
+                input.Throttle == ThrottleInput.Throttling ? 0f :                                         // Throttling - low limit irrelevant
+                !Landing && input.Throttle == ThrottleInput.Reversing && newSpeedRaw < MinSpeed ? Speed : // Reversing and slipped below MinSpeed - stay at minimum, except when Landing
                 0f; 
             var newSpeed = MathHelper.Clamp(newSpeedRaw, lowSpeedLimit, MaxSpeed);
 
             var nowTime = DateTime.UtcNow;
 
-            var (newBomb, newBombTime) = (Landing || BombLaunch == BombInput.Inactive || (nowTime - CurrentState.BombTime).TotalSeconds < BombGracePeriod) 
+            var (newBomb, newBombTime) = (Landing || input.BombLaunch == BombInput.Inactive || (nowTime - CurrentState.BombTime).TotalSeconds < BombGracePeriod) 
                 ? (null, CurrentState.BombTime) 
                 : (SpawnBomb(), nowTime);
 
-            var (newBullet, newBulletTime) = (GunFire == GunInput.Inactive || (nowTime - CurrentState.BulletTime).TotalSeconds < BulletGracePeriod)
+            var (newBullet, newBulletTime) = (input.GunFire == GunInput.Inactive || (nowTime - CurrentState.BulletTime).TotalSeconds < BulletGracePeriod)
                 ? (null, CurrentState.BulletTime)
                 : (SpawnBullet(gameTime.TotalGameTime), nowTime);
 
-            var (newSpin, newRollTime) = (Landing || Roll == RollInput.None || (nowTime - CurrentState.RollTime).TotalSeconds < RollGracePeriod) ? (Spin, CurrentState.RollTime) :
+            var (newSpin, newRollTime) = (Landing || input.Roll == RollInput.None || (nowTime - CurrentState.RollTime).TotalSeconds < RollGracePeriod) ? (Spin, CurrentState.RollTime) :
                 Spin == BasisSpin.Down
                 ? (BasisSpin.Up, nowTime)
                 : (BasisSpin.Down, nowTime);
@@ -235,8 +238,8 @@ namespace VibeSopwith.Game.Core
             var rollFactor = newSpin == BasisSpin.Down ? +1f : -1f;
 
             var newDirection = Speed == 0f ? Direction : Vector2.TransformNormal(Direction,
-                Pitch == PitchInput.Backward ? Matrix.CreateRotationZ(rollFactor * MathHelper.ToRadians(PitchAngle * Speed * 2f)) :
-                !Landing && Pitch == PitchInput.Forward ? Matrix.CreateRotationZ(-rollFactor * MathHelper.ToRadians(PitchAngle * Speed * 2f)) :
+                input.Pitch == PitchInput.Backward ? Matrix.CreateRotationZ(rollFactor * MathHelper.ToRadians(PitchAngle * Speed * 2f)) :
+                !Landing && input.Pitch == PitchInput.Forward ? Matrix.CreateRotationZ(-rollFactor * MathHelper.ToRadians(PitchAngle * Speed * 2f)) :
                 Matrix.Identity);
 
             var newPosition = Position + newDirection * newSpeed;
@@ -246,11 +249,14 @@ namespace VibeSopwith.Game.Core
 
         public void ClearInputs()
         {
-            Throttle = ThrottleInput.None;
-            Pitch = PitchInput.None;
-            Roll = RollInput.None;
-            BombLaunch = BombInput.Inactive;
-            GunFire = GunInput.Inactive;
+            Input = Input with
+            {
+                Throttle = ThrottleInput.None,
+                Pitch = PitchInput.None,
+                Roll = RollInput.None,
+                BombLaunch = BombInput.Inactive,
+                GunFire = GunInput.Inactive,
+            };
         }
 
         public bool CheckAndSetLandingMode(Ground.Runway runway)
