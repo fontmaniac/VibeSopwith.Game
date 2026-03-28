@@ -112,6 +112,9 @@ namespace VibeSopwith.Game
                 var gunFire =
                     kc.IsKeyDown(Keys.Space) ? Airplane.GunInput.Active : Airplane.GunInput.Inactive;
 
+                var autoLand =
+                    kc.IsKeyDown(Keys.H) && _world.Plane.CurrentState.AutoLanding == null ? Airplane.AutoLandToggle.Active : Airplane.AutoLandToggle.Inactive;
+
                 _world.Plane.Input = _world.Plane.Input with
                 {
                     Throttle = throttle,
@@ -119,6 +122,7 @@ namespace VibeSopwith.Game
                     Roll = roll,
                     BombLaunch = bombLaunch,
                     GunFire = gunFire,
+                    AutoLand = autoLand,
                 };
             });
 

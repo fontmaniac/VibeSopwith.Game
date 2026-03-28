@@ -9,7 +9,7 @@ namespace VibeSopwith.Game.Core
     {
         public Body Body = null!;
 
-        public record State(Vector2 Position, Vector2 Direction, BasisSpin Spin, float Speed, Bomb? Bomb, Bullet? Bullet, DateTime RollTime, DateTime BombTime, DateTime BulletTime);
+        public record State(Vector2 Position, Vector2 Direction, BasisSpin Spin, float Speed, Bomb? Bomb, Bullet? Bullet, Autopilot.ApproachPhase? AutoLanding, DateTime RollTime, DateTime BombTime, DateTime BulletTime);
 
         public State CurrentState;
         public float Speed { get => CurrentState.Speed; }
@@ -27,7 +27,7 @@ namespace VibeSopwith.Game.Core
 
         public Airplane(Vector2 pos, BasisSpin spin)
         {
-            CurrentState = new State(pos, Vector2.UnitX, spin, 0f, null, null, DateTime.MinValue, DateTime.MinValue, DateTime.MinValue);
+            CurrentState = new State(pos, Vector2.UnitX, spin, 0f, null, null, null, DateTime.MinValue, DateTime.MinValue, DateTime.MinValue);
             CurrentState = CurrentState with { Direction = Direction * FlipFactor };
         }
 
@@ -196,22 +196,24 @@ namespace VibeSopwith.Game.Core
         public enum RollInput { Roll, None }
         public enum BombInput { Active, Inactive }
         public enum GunInput { Active, Inactive }
+        public enum AutoLandToggle { Active, Inactive }
 
         public record struct Inputs(
             ThrottleInput Throttle,
             PitchInput Pitch,
             RollInput Roll,
             BombInput BombLaunch,
-            GunInput GunFire)
+            GunInput GunFire,
+            AutoLandToggle AutoLand)
         { 
-            public static Inputs Clean() => new Inputs(ThrottleInput.None, PitchInput.None, RollInput.None, BombInput.Inactive, GunInput.Inactive);
+            public static Inputs Clean() => new Inputs(ThrottleInput.None, PitchInput.None, RollInput.None, BombInput.Inactive, GunInput.Inactive, AutoLandToggle.Inactive);
         }
 
         public bool Landing = false;
 
         public Inputs Input = new Inputs();
 
-        public State ApplyInputs(Inputs input, GameTime gameTime)
+        public State ApplyInputs(Inputs input, Func<Autopilot.ApproachPhase> initiateAutoland, GameTime gameTime)
         {
             var nowTime = DateTime.UtcNow;
 
@@ -247,7 +249,14 @@ namespace VibeSopwith.Game.Core
 
             var newPosition = Position + newDirection * newSpeed;
 
-            return new State(newPosition, newDirection, newSpin, newSpeed, newBomb, newBullet, newRollTime, newBombTime, newBulletTime);
+            var autoLand =
+                !Landing && input.AutoLand == AutoLandToggle.Active
+                ? (CurrentState.AutoLanding != null 
+                    ? null      // Drop
+                    : initiateAutoland())     // Initiate
+                : CurrentState.AutoLanding; // Keep
+
+            return new State(newPosition, newDirection, newSpin, newSpeed, newBomb, newBullet, autoLand, newRollTime, newBombTime, newBulletTime);
         }
 
         public void ClearInputs()

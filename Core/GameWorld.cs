@@ -28,6 +28,7 @@ namespace VibeSopwith.Game.Core
 
         public readonly List<StaticBuilding> Buildings;
         public readonly List<Ground.Runway> Runways;
+        public readonly List<Autopilot.Approach> Approaches = new List<Autopilot.Approach>();
 
         private readonly World collisionWorld;
 
@@ -48,6 +49,26 @@ namespace VibeSopwith.Game.Core
             foreach (var building in Buildings)
                 building.SetupRigging(collisionWorld);
             Plane = MakeNewPlane();
+
+            Autopilot.Approach makeApproach(Ground.Runway rw, float farX, float rwEnd, float rwLevel, float df)
+            {
+                var preTouchZone = new Autopilot.ApproachZone(rwEnd+5f*df, rwEnd-25f*df, rwLevel+2.5f, rwLevel+7.5f, (-Vector2.UnitX*df).Rotate(MathHelper.ToRadians(+29f*df)), (-Vector2.UnitX*df).Rotate(MathHelper.ToRadians(+15f*df)));
+                var finalZone = new Autopilot.ApproachZone(rwEnd+35f*df, rwEnd+25f*df, rwLevel+10f, rwLevel+20f, (-Vector2.UnitX*df).Rotate(MathHelper.ToRadians(+30f*df)), (-Vector2.UnitX*df).Rotate(MathHelper.ToRadians(-30f*df)));
+                var preFinalZone = new Autopilot.ApproachZone(rwEnd+95f*df, farX, rwLevel+10f, rwLevel+20f, (Vector2.UnitX*df).Rotate(MathHelper.ToRadians(-45f*df)), (Vector2.UnitX*df).Rotate(MathHelper.ToRadians(+45f*df)));
+                var approach = new Autopilot.Approach(rw, preFinalZone, finalZone, preTouchZone, 34f, 10f);
+
+                return approach;
+            }
+
+            // For each runaway construct an approach
+            foreach (var rw in Runways)
+            {
+                var eastApproach = makeApproach(rw, 550, rw.End, rw.Level, +1f);
+                var westApproach = makeApproach(rw, 50, rw.Start, rw.Level, -1f);
+
+                Approaches.Add(eastApproach);
+                Approaches.Add(westApproach);
+            }
         }
 
         private Airplane MakeNewPlane()
@@ -164,8 +185,23 @@ namespace VibeSopwith.Game.Core
                 }
                 else
                 {
+                    if (Plane.CurrentState.AutoLanding != null)
+                    {
+                        // Compute new ApproachPhase & set new inputs.
+                        var (phase, input) = Plane.Transition(Plane.CurrentState.AutoLanding);
+                        if (phase == Autopilot.ApproachPhase.Fail)
+                        {
+                            Plane.CurrentState = Plane.CurrentState with { AutoLanding = null };
+                        }
+                        else
+                        {
+                            Plane.Input = input;
+                            Plane.CurrentState = Plane.CurrentState with { AutoLanding = phase };
+                        }
+                    }
+
                     Plane.CheckAndSetLandingMode(Runways[0]);
-                    var planeProjected = Plane.ApplyInputs(Plane.Input, gameTime);
+                    var planeProjected = Plane.ApplyInputs(Plane.Input, () => Autopilot.InitiateAutoLanding(Plane, Approaches), gameTime);
 
                     if (planeProjected.Bomb != null)
                         Bombs.Add(planeProjected.Bomb.SetupRigging(collisionWorld));

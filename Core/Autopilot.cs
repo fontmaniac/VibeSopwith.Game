@@ -20,7 +20,7 @@ namespace VibeSopwith.Game.Core
 
         public record struct ApproachZone(float EntryX, float ExitX, float BottomEntryY, float TopEntryY, Vector2 FunnelBottom, Vector2 FunnelTop);
 
-        public enum LoopDirection { PitchUp, PitchDown }
+        public enum LoopDirection { NoLoop, PitchUp, PitchDown }
 
         // Zones as per diagram above
         // Preferred loop direction is always UP if not above certain threshold, otherwise DOWN.
@@ -40,7 +40,7 @@ namespace VibeSopwith.Game.Core
         {
             public sealed record Failure() : ApproachPhase;
             public sealed record Initial(Approach Approach, ApproachZone TargetZone) : ApproachPhase;
-            public sealed record PreFinal(Approach Approach, ApproachZone FinalZone) : ApproachPhase;
+            public sealed record PreFinal(Approach Approach, ApproachZone FinalZone, LoopDirection Loop) : ApproachPhase;
             public sealed record Final(Approach Approach, ApproachZone PreTouchZone) : ApproachPhase;
             public sealed record PreTouch(Approach Approach) : ApproachPhase;
             public sealed record Touchdown(Approach Approach) : ApproachPhase;
@@ -164,14 +164,13 @@ namespace VibeSopwith.Game.Core
         // According to the chosenLoop, computed Pe and Ve, current plane.Direction and computed `Se` spin emit Pitch input.
         // 
         // Speed is to be kept at current level until we are (horizontally only) within approach.LandingSpeedDistance from approach.PreTouchZone.EntryX - i.e. no Throttle input.
-        // When we ARE within approach.LandingSpeedDistance from approach.PreTouchZone.EntryX and plane.Speed is above Airplane.MaxLandingSpeed, emit Throttle.Reversing input
         // 
         // Return chosen loop direction and record of emitted inputs as a tuple.
 
         /// <summary>
         /// Returns a set of inputs which, when applied to plane would move it closer to entry into a given "zone" 
         /// </summary>
-        public static (LoopDirection? ChosenLoop, Airplane.Inputs Inputs) SteerTowards(this Airplane plane, Approach approach, ApproachZone zone, LoopDirection? chosenLoop)
+        public static (LoopDirection ChosenLoop, Airplane.Inputs Inputs) SteerTowards(this Airplane plane, Approach approach, ApproachZone zone, LoopDirection chosenLoop)
         {
             // Default: no inputs, preserve chosenLoop
             var inputs = Airplane.Inputs.Clean();
@@ -199,12 +198,13 @@ namespace VibeSopwith.Game.Core
 
             // 5. Choose / maintain loop direction
             var newLoop = chosenLoop;
-            if (flyingAway && chosenLoop == null)
+            if (flyingAway && chosenLoop == LoopDirection.NoLoop)
             {
                 // Preferred loop direction is always UP if not above certain threshold, otherwise DOWN.
+                // But the plane here is inverted so UP and DOWN swapped.
                 newLoop = plane.Position.Y < approach.LoopHeightThreshold
-                    ? LoopDirection.PitchUp
-                    : LoopDirection.PitchDown;
+                    ? LoopDirection.PitchDown
+                    : LoopDirection.PitchUp;
             }
 
             // 6. Compute Pitch input
@@ -212,7 +212,7 @@ namespace VibeSopwith.Game.Core
             var spinForPitch = desiredSpin;
             var rollFactor = spinForPitch == BasisSpin.Down ? +1f : -1f;
 
-            if (flyingAway && newLoop != null)  // newLoop != null is redundant here, but let it be.
+            if (flyingAway && newLoop != LoopDirection.NoLoop)  // newLoop != null is redundant here, but let it be.
             {
                 // Looping: always pitch in loop direction
                 inputs.Pitch = newLoop == LoopDirection.PitchUp ? Airplane.PitchInput.Backward : Airplane.PitchInput.Forward;
@@ -231,15 +231,82 @@ namespace VibeSopwith.Game.Core
                 }
             }
 
-            // 7. Throttle logic (landing speed management)
-            float dxToPreTouch = MathF.Abs(plane.Position.X - approach.PreTouch.EntryX);
-
-            inputs.Throttle =
-                dxToPreTouch <= approach.LandingSpeedDistance && plane.Speed > Airplane.MaxLandingSpeed
-                ? Airplane.ThrottleInput.Reversing
-                : Airplane.ThrottleInput.None;
-
             return (newLoop, inputs);
+        }
+
+        private enum ZoneMatch { BeforeZone, InZone, AfterZone }
+
+        public static (ApproachPhase Phase, Airplane.Inputs Inputs) Transition(this Airplane plane, ApproachPhase phase)
+        {
+            var inZone = (ApproachZone zone) => 
+                zone.EntryX < zone.ExitX
+                ? (plane.Position.X < zone.EntryX ? ZoneMatch.BeforeZone :
+                    plane.Position.X < zone.ExitX ? ZoneMatch.InZone :
+                    ZoneMatch.AfterZone)
+                : (plane.Position.X > zone.EntryX ? ZoneMatch.BeforeZone :
+                    plane.Position.X > zone.ExitX ? ZoneMatch.InZone :
+                    ZoneMatch.AfterZone);
+
+            (ApproachPhase Phase, Airplane.Inputs Inputs) steerToFinal(ApproachPhase.PreFinal x) 
+            {
+                var (loop, inputs) = plane.SteerTowards(x.Approach, x.Approach.Final, x.Loop);
+                return (x with { Loop = loop }, inputs);
+            }
+
+            (ApproachPhase Phase, Airplane.Inputs Inputs) steerToPreTouch(ApproachPhase.Final x)
+            {
+                var (loop, inputs) = plane.SteerTowards(x.Approach, x.Approach.PreTouch, LoopDirection.NoLoop);
+                if (plane.Speed > Airplane.MaxLandingSpeed && Math.Abs(plane.Position.X - x.Approach.PreTouch.EntryX) < x.Approach.LandingSpeedDistance)
+                    inputs = inputs with { Throttle = Airplane.ThrottleInput.Reversing };
+                return (x, inputs);
+            }
+
+            var approachFail = () => (ApproachPhase.Fail, Airplane.Inputs.Clean());
+
+            return phase switch
+            {
+                ApproachPhase.Initial x when x.TargetZone == x.Approach.PreFinal =>
+                    inZone(x.TargetZone) switch
+                    {
+                        ZoneMatch.BeforeZone => (x, plane.SteerTowards(x.Approach, x.Approach.PreFinal, LoopDirection.NoLoop).Inputs),
+                        ZoneMatch.InZone => steerToFinal(new ApproachPhase.PreFinal(x.Approach, x.Approach.Final, LoopDirection.NoLoop)),
+                        ZoneMatch.AfterZone => steerToFinal(new ApproachPhase.PreFinal(x.Approach, x.Approach.Final, LoopDirection.NoLoop)),
+                        _ => approachFail(),
+                    },
+                ApproachPhase.Initial x when x.TargetZone == x.Approach.Final =>
+                    inZone(x.TargetZone) switch
+                    {
+                        ZoneMatch.BeforeZone => steerToFinal(new ApproachPhase.PreFinal(x.Approach, x.Approach.Final, LoopDirection.NoLoop)),
+                        ZoneMatch.InZone => steerToPreTouch(new ApproachPhase.Final(x.Approach, x.Approach.PreTouch)),
+                        ZoneMatch.AfterZone => approachFail(),
+                        _ => approachFail(),
+                    },
+                ApproachPhase.PreFinal x =>
+                    inZone(x.FinalZone) switch
+                    {
+                        ZoneMatch.BeforeZone => steerToFinal(x),
+                        ZoneMatch.InZone => steerToPreTouch(new ApproachPhase.Final(x.Approach, x.Approach.PreTouch)),
+                        ZoneMatch.AfterZone => approachFail(),
+                        _ => approachFail(),
+                    },
+                ApproachPhase.Final x =>
+                    inZone(x.PreTouchZone) switch
+                    {
+                        ZoneMatch.BeforeZone => steerToPreTouch(x),
+                        ZoneMatch.InZone => (new ApproachPhase.PreTouch(x.Approach), Airplane.Inputs.Clean()),
+                        ZoneMatch.AfterZone => approachFail(),
+                        _ => approachFail(),
+                    },
+                ApproachPhase.PreTouch x =>
+                    inZone(x.Approach.PreTouch) switch
+                    {
+                        ZoneMatch.InZone when plane.Landing => (new ApproachPhase.Touchdown(x.Approach), Airplane.Inputs.Clean()),
+                        ZoneMatch.InZone when !plane.Landing => (x, Airplane.Inputs.Clean()),
+                        _ => approachFail(),
+                    },
+                ApproachPhase.Touchdown x when plane.Speed > 0 => (x, Airplane.Inputs.Clean() with { Throttle = Airplane.ThrottleInput.Reversing }),
+                _ => approachFail(),
+            };
         }
     }
 }
