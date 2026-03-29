@@ -181,6 +181,7 @@ namespace VibeSopwith.Game.Core
         private const float MaxSpeed = 0.6f;                // meters per second
         public  const float MinSpeed = 0.099f;              // meters per second
         public  const float MaxLandingSpeed = 0.25f;        // meters per second
+        public  const float CruiseSpeed = 0.4f;            // meters per second
         private const float MaxLandingAngle = 30f;          // Degrees
         private const float LandingProximityMax = 0.25f;    // Meters
         private const float LandingProximityMin = 0.05f;    // Meters
@@ -190,6 +191,8 @@ namespace VibeSopwith.Game.Core
         private const float BombLaunchSpeed = 0.1f;         // meters per second
         private const float BulletGracePeriod = 1f / 8f;    // Time in seconds before subsequent bullet can be spawned.
         private const float BulletSpeed = 0.35f;            // meters per second
+        private const float AccelerationGravityFactor = 0.5f;
+        private const float AccelerationReverseFactor = 1.2f;
 
         public enum ThrottleInput { Throttling, None, Reversing }
         public enum PitchInput { Forward, None, Backward }
@@ -224,12 +227,13 @@ namespace VibeSopwith.Game.Core
 
             var newSpeedRaw =
                 input.Throttle == ThrottleInput.Throttling ? Speed + Acceleration :
-                input.Throttle == ThrottleInput.Reversing ? Speed - Acceleration :
+                input.Throttle == ThrottleInput.Reversing ? Speed - Acceleration * AccelerationReverseFactor :
                 Speed;
             var lowSpeedLimit =
                 input.Throttle == ThrottleInput.Throttling ? 0f :                                         // Throttling - low limit irrelevant
                 !Landing && input.Throttle == ThrottleInput.Reversing && newSpeedRaw < MinSpeed ? Speed : // Reversing and slipped below MinSpeed - stay at minimum, except when Landing
-                0f; 
+                0f;
+            newSpeedRaw = newSpeedRaw < MinSpeed ? newSpeedRaw : newSpeedRaw + Acceleration * -Direction.Y * AccelerationGravityFactor;
             var newSpeed = MathHelper.Clamp(newSpeedRaw, lowSpeedLimit, MaxSpeed);
 
             var (newBomb, newBombTime) = (Landing || input.BombLaunch == BombInput.Inactive || (nowTime - CurrentState.BombTime).TotalSeconds < BombGracePeriod) 

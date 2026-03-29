@@ -148,6 +148,16 @@ namespace VibeSopwith.Game.Core
             return (Pe, Ve);
         }
 
+        private static Airplane.Inputs throttleForCruise(Airplane plane, Airplane.Inputs inputs) =>
+            plane.Speed > Airplane.CruiseSpeed
+            ? inputs
+            : inputs with { Throttle = Airplane.ThrottleInput.Throttling };
+
+        private static Airplane.Inputs brakeForLanding(Airplane plane, Airplane.Inputs inputs) =>
+            plane.Speed <= Airplane.MaxLandingSpeed
+            ? inputs
+            : inputs with { Throttle = Airplane.ThrottleInput.Reversing };
+
         // Schematic implementation of SteerTowards:
         // public static (LoopDirection? ChosenLoop, Airplane.Inputs Inputs) SteerTowards(this Airplane plane, Approach approach, ApproachZone zone, LoopDirection? chosenLoop)
         //
@@ -231,7 +241,7 @@ namespace VibeSopwith.Game.Core
                     Airplane.PitchInput.None;   
             }
 
-            return (newLoop, inputs);
+            return (newLoop, throttleForCruise(plane, inputs));
         }
 
         private enum ZoneMatch { BeforeZone, InZone, AfterZone }
@@ -256,8 +266,8 @@ namespace VibeSopwith.Game.Core
             (ApproachPhase Phase, Airplane.Inputs Inputs) steerToPreTouch(ApproachPhase.Final x)
             {
                 var (loop, inputs) = plane.SteerTowards(x.Approach, x.Approach.PreTouch, LoopDirection.NoLoop);
-                if (plane.Speed > Airplane.MaxLandingSpeed && Math.Abs(plane.Position.X - x.Approach.PreTouch.EntryX) < x.Approach.LandingSpeedDistance)
-                    inputs = inputs with { Throttle = Airplane.ThrottleInput.Reversing };
+                if (Math.Abs(plane.Position.X - x.Approach.PreTouch.EntryX) < x.Approach.LandingSpeedDistance)
+                    inputs = brakeForLanding(plane, inputs);
                 return (x, inputs);
             }
 
@@ -278,7 +288,6 @@ namespace VibeSopwith.Game.Core
                     {
                         ZoneMatch.BeforeZone => steerToFinal(new ApproachPhase.PreFinal(x.Approach, x.Approach.Final, LoopDirection.NoLoop)),
                         ZoneMatch.InZone => steerToPreTouch(new ApproachPhase.Final(x.Approach, x.Approach.PreTouch)),
-                        ZoneMatch.AfterZone => approachFail(),
                         _ => approachFail(),
                     },
                 ApproachPhase.PreFinal x =>
@@ -286,7 +295,6 @@ namespace VibeSopwith.Game.Core
                     {
                         ZoneMatch.BeforeZone => steerToFinal(x),
                         ZoneMatch.InZone => steerToPreTouch(new ApproachPhase.Final(x.Approach, x.Approach.PreTouch)),
-                        ZoneMatch.AfterZone => approachFail(),
                         _ => approachFail(),
                     },
                 ApproachPhase.Final x =>
@@ -294,13 +302,12 @@ namespace VibeSopwith.Game.Core
                     {
                         ZoneMatch.BeforeZone => steerToPreTouch(x),
                         ZoneMatch.InZone => (new ApproachPhase.PreTouch(x.Approach), Airplane.Inputs.Clean()),
-                        ZoneMatch.AfterZone => approachFail(),
                         _ => approachFail(),
                     },
                 ApproachPhase.PreTouch x =>
                     inZone(x.Approach.PreTouch) switch
                     {
-                        ZoneMatch.InZone when !plane.Landing => (x, Airplane.Inputs.Clean()),
+                        ZoneMatch.InZone when !plane.Landing => (x, brakeForLanding(plane, Airplane.Inputs.Clean())),
                         ZoneMatch.InZone when plane.Landing => (new ApproachPhase.Touchdown(x.Approach), Airplane.Inputs.Clean()),
                         _ => approachFail(),
                     },
