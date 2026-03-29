@@ -14,6 +14,7 @@ namespace VibeSopwith.Game.Core
         public static readonly Random WorldSeed = new Random(12345);
 
         public readonly Ground Ground;
+        public readonly Ceiling Ceiling;
         public Airplane Plane;
         private readonly List<Explosion> explosions = new List<Explosion>();
         private Explosion? planeExplosion = null; 
@@ -43,19 +44,21 @@ namespace VibeSopwith.Game.Core
             //Ground = Ground.MakeRandom();
             //Ground = Ground.MakeCustom();
 
+            Ceiling = new Ceiling();
             (Ground, Buildings, Runways) = Ground.MakeWithBuildings();
 
             Ground.SetupRigging(collisionWorld);
+            Ceiling.SetupRigging(collisionWorld);
             foreach (var building in Buildings)
                 building.SetupRigging(collisionWorld);
             Plane = MakeNewPlane();
 
             Autopilot.Approach makeApproach(Ground.Runway rw, float farX, float rwEnd, float rwLevel, float df)
             {
-                var preTouchZone = new Autopilot.ApproachZone(rwEnd+5f*df, rwEnd-25f*df, rwLevel+2.5f, rwLevel+7.5f, (-Vector2.UnitX*df).Rotate(MathHelper.ToRadians(+29f*df)), (-Vector2.UnitX*df).Rotate(MathHelper.ToRadians(+15f*df)));
+                var preTouchZone = new Autopilot.ApproachZone(rwEnd+5f*df, rwEnd-15f*df, rwLevel+2.5f, rwLevel+7.5f, (-Vector2.UnitX*df).Rotate(MathHelper.ToRadians(+29f*df)), (-Vector2.UnitX*df).Rotate(MathHelper.ToRadians(+15f*df)));
                 var finalZone = new Autopilot.ApproachZone(rwEnd+35f*df, rwEnd+25f*df, rwLevel+10f, rwLevel+20f, (-Vector2.UnitX*df).Rotate(MathHelper.ToRadians(+30f*df)), (-Vector2.UnitX*df).Rotate(MathHelper.ToRadians(-30f*df)));
                 var preFinalZone = new Autopilot.ApproachZone(rwEnd+95f*df, farX, rwLevel+10f, rwLevel+20f, (Vector2.UnitX*df).Rotate(MathHelper.ToRadians(-45f*df)), (Vector2.UnitX*df).Rotate(MathHelper.ToRadians(+45f*df)));
-                var approach = new Autopilot.Approach(rw, preFinalZone, finalZone, preTouchZone, 34f, 10f);
+                var approach = new Autopilot.Approach(rw, preFinalZone, finalZone, preTouchZone, 34f, 20f);
 
                 return approach;
             }
@@ -169,6 +172,18 @@ namespace VibeSopwith.Game.Core
             explosions.Add(MakeBasedExplosion(ctx.gameTime, building.Position.ToAether()));
         }
 
+        private void ExecuteBounce(CollisionContext ctx, Airplane plane, Ceiling ceiling)
+        {
+            // Position plane facing direct down and with minimal speed.
+            plane.CurrentState = plane.CurrentState with 
+            { 
+                Direction = -Vector2.UnitY, 
+                Speed = Airplane.MinSpeed, 
+                Position = new Vector2(ctx.cp.X, ctx.cp.Y - plane.Length / 2f - 0.1f) ,
+            };
+        }
+
+
         public void Simulate(GameTime gameTime)
         {
             var doBeforeSimulation = () =>
@@ -263,6 +278,7 @@ namespace VibeSopwith.Game.Core
                 var groundAlive   = (Ground ground)  => true;
                 var planeAlive    = (Airplane plane) => !plane.Exploded;
                 var buildingAlive = (StaticBuilding building) => !building.Exploded;
+                var ceilingAlive  = (Ceiling ceiling) => true;
 
 
                 var _ = 
@@ -274,6 +290,7 @@ namespace VibeSopwith.Game.Core
                     Physics.OnCollision(ct, "Bomb-Building",   bombAlive,   buildingAlive, (cp, b, bb)  => ExecuteExplosion(makeCtx(cp), b,  bb)) ||
                     Physics.OnCollision(ct, "Plane-Building",  planeAlive,  buildingAlive, (cp, p, b)   => ExecuteCollision(makeCtx(cp), p,  b)) ||
                     Physics.OnCollision(ct, "Bullet-Building", bulletAlive, buildingAlive, (cp, b, bb)  => ExecuteExplosion(makeCtx(cp), b,  bb)) ||
+                    Physics.OnCollision(ct, "Plane-Ceiling",   planeAlive,  ceilingAlive,  (cp, p, c)   => ExecuteBounce   (makeCtx(cp), p,  c)) ||
                     false;
             }
 

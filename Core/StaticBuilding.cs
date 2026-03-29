@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using nkast.Aether.Physics2D.Dynamics;
+using System.Diagnostics.Metrics;
 using VibeSopwith.Game.Utils;
 
 namespace VibeSopwith.Game.Core
@@ -14,7 +15,7 @@ namespace VibeSopwith.Game.Core
         public float Length => 4f;
         public float Height => 4f;
 
-        public enum BuildingType { Factory, Cistern };
+        public enum BuildingType { Factory, Cistern, ArmyBase };
         public BuildingType TheType { get; }
 
         public bool Exploded = false;
@@ -99,11 +100,42 @@ namespace VibeSopwith.Game.Core
             return body;
         }
 
+        public Body SetupRigging_ArmyBase(World collisionWorld)
+        {
+            var body = collisionWorld.CreateBody(Position.ToAether(), 0f, BodyType.Static);
+            body.Rotation = Direction.ToAngle();
+            body.Tag = this;
+            body.FixedRotation = true;
+            body.Mass = 500f;
+            body.Inertia = 0f;
+            body.LinearDamping = 0.0f;
+            body.AngularDamping = 0.0f;
+
+            var ff = FlipFactor;
+
+            // Add fixture 0
+            var vertices0 = new[]
+            {
+                (-1.9961f, ff * 0.0039f),
+                (-2f, ff * 2.8633f),
+                (0.0508f, ff * 2.8867f),
+                (0.0273f, ff * 1.5977f),
+                (1.8086f, ff * 1.6094f),
+                (1.8594f, ff * 0f)
+            };
+
+            var fixture0 = vertices0.ToPolygon(body);
+            fixture0.Friction = 0.0f;
+            fixture0.Restitution = 0.0f;
+
+            return body;
+        }
         public void SetupRigging(World collisionWorld)
         {
             Body =
-                TheType == BuildingType.Factory ? SetupRigging_Factory(collisionWorld) :
-                TheType == BuildingType.Cistern ? SetupRigging_Cistern(collisionWorld) :
+                TheType == BuildingType.Factory  ? SetupRigging_Factory(collisionWorld) :
+                TheType == BuildingType.Cistern  ? SetupRigging_Cistern(collisionWorld) :
+                TheType == BuildingType.ArmyBase ? SetupRigging_ArmyBase(collisionWorld) :
                 throw new ApplicationException("Unsupported building type");
         }
 

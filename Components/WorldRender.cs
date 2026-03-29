@@ -8,12 +8,14 @@ namespace VibeSopwith.Game.Components
     {
         private GroundRender _groundRender = null!;
         private AetherBodyRender _bodyRender = null!;
+        private ApproachRender _approachRender = null!;
 
         private AirplaneRender _airplaneRender = null!;
         private ExplosionRender _explosionRender = null!;
         private BombRender _bombRender = null!;
         private BulletRender _bulletRender = null!;
         private StaticBuildingRender _buildingRender = null!;
+
 
 
         public override void Initialize()
@@ -45,10 +47,15 @@ namespace VibeSopwith.Game.Components
 
             _bodyRender = new AetherBodyRender(Game);
             _bodyRender.LoadContent();
+
+            _approachRender = new ApproachRender(Game);
+            _approachRender.LoadContent();
         }
 
         protected override void UnloadContent()
         {
+            _approachRender?.Dispose();
+            _bodyRender?.Dispose();
             _buildingRender?.Dispose();
             _bulletRender?.Dispose();
             _bombRender?.Dispose();
@@ -81,6 +88,11 @@ namespace VibeSopwith.Game.Components
                 transform);
 
             _groundRender.Draw(world.Ground, groundThicknessPx, scaleVert, TheGame.SpriteBatch);
+            _bodyRender.Draw(world.Ceiling.Body, gameTime);
+
+            foreach (var approach in world.Approaches)
+                _approachRender.Draw(approach, gameTime);
+
             foreach (var building in world.Buildings)
             {
                 _buildingRender.Draw(building, gameTime);

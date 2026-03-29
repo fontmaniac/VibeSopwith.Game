@@ -1,9 +1,6 @@
-MANIFEST-2026-03-25T15:28:05Z-master-dbad131a375a43f0b835b3015860a0fd
+MANIFEST-2026-03-29T04:09:30Z-master-fa3c2418ea0743f8a5d46ca01a813d2f
 Content
 https://github.com/fontmaniac/VibeSopwith.Content.git
 
-* Textures/Bomb_1.png
-* Textures/Cistern_1.png
-* Textures/Cistern_1_Exploded.png
-* Textures/Factory_1_Exploded.png
-* Textures/Plane_2.png
++ Textures/Army_Base_1.png
++ Textures/Army_Base_1_Exploded.png

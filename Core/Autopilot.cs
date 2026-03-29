@@ -220,15 +220,15 @@ namespace VibeSopwith.Game.Core
             else    
             {
                 // Not flying away hence not looping: steer shortest arc towards Ve
-                const float angleEpsilon = 0.02f; // small deadzone to avoid jitter
+                var threshold = MathHelper.ToRadians(Airplane.PitchAngle);
 
-                if (MathF.Abs(diff) > angleEpsilon)
-                {
-                    // Backward rotates by +rollFactor * angle, Forward by -rollFactor * angle
-                    inputs.Pitch = (rollFactor * diff > 0f)
-                        ? Airplane.PitchInput.Backward
-                        : Airplane.PitchInput.Forward;
-                }
+                inputs.Pitch =
+                    // Ve is to the left of nose → need to pitch "backward" relative to spin
+                    diff > threshold ? (rollFactor > 0f ? Airplane.PitchInput.Backward : Airplane.PitchInput.Forward) :
+                    // Ve is to the right of nose → need to pitch "forward" relative to spin
+                    diff < -threshold ? (rollFactor > 0f ? Airplane.PitchInput.Forward : Airplane.PitchInput.Backward) :
+                    // Within PitchAngle -> hold pitch steady (no jitter)
+                    Airplane.PitchInput.None;   
             }
 
             return (newLoop, inputs);
@@ -269,8 +269,8 @@ namespace VibeSopwith.Game.Core
                     inZone(x.TargetZone) switch
                     {
                         ZoneMatch.BeforeZone => (x, plane.SteerTowards(x.Approach, x.Approach.PreFinal, LoopDirection.NoLoop).Inputs),
-                        ZoneMatch.InZone => steerToFinal(new ApproachPhase.PreFinal(x.Approach, x.Approach.Final, LoopDirection.NoLoop)),
-                        ZoneMatch.AfterZone => steerToFinal(new ApproachPhase.PreFinal(x.Approach, x.Approach.Final, LoopDirection.NoLoop)),
+                        ZoneMatch.InZone or 
+                        ZoneMatch.AfterZone => steerToFinal(new ApproachPhase.PreFinal(x.Approach, x.Approach.Final, LoopDirection.NoLoop)),       
                         _ => approachFail(),
                     },
                 ApproachPhase.Initial x when x.TargetZone == x.Approach.Final =>
@@ -300,8 +300,8 @@ namespace VibeSopwith.Game.Core
                 ApproachPhase.PreTouch x =>
                     inZone(x.Approach.PreTouch) switch
                     {
-                        ZoneMatch.InZone when plane.Landing => (new ApproachPhase.Touchdown(x.Approach), Airplane.Inputs.Clean()),
                         ZoneMatch.InZone when !plane.Landing => (x, Airplane.Inputs.Clean()),
+                        ZoneMatch.InZone when plane.Landing => (new ApproachPhase.Touchdown(x.Approach), Airplane.Inputs.Clean()),
                         _ => approachFail(),
                     },
                 ApproachPhase.Touchdown x when plane.Speed > 0 => (x, Airplane.Inputs.Clean() with { Throttle = Airplane.ThrottleInput.Reversing }),

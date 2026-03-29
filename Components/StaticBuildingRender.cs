@@ -11,6 +11,7 @@ namespace VibeSopwith.Game.Components
         {
             { StaticBuilding.BuildingType.Factory, ("Textures\\Factory_1.png", "Textures\\Factory_1_Exploded.png") },
             { StaticBuilding.BuildingType.Cistern, ("Textures\\Cistern_1.png", "Textures\\Cistern_1_Exploded.png") },
+            { StaticBuilding.BuildingType.ArmyBase, ("Textures\\Army_Base_1.png", "Textures\\Army_Base_1_Exploded.png") },
         };
 
         private Dictionary<StaticBuilding.BuildingType, Texture2D> _textures = new Dictionary<StaticBuilding.BuildingType, Texture2D>();

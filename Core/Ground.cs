@@ -265,40 +265,42 @@ namespace VibeSopwith.Game.Core
             return result;
         }
 
-        public static Ground MakeQuasiRandom1() =>
+        public static Ground MakeQuasiRandom1(float shift = 0f) =>
             new GroundBuilder()
                 .Segment(OffLeft(0f, Units.Pct), OffCeiling(0f, Units.Met))
-                .Segment(OffLeft(2.5f, Units.Pct), OffFloor(14.169f, Units.Met))
+                .Segment(OffLeft(2.5f, Units.Pct), OffFloor(14.169f+shift, Units.Met))
                 .SegmentFlat(OffLeft(7.25f, Units.Pct))
-                .Segment(OffLeft(12f, Units.Pct), OffFloor(31.869f, Units.Met))
-                .Segment(OffLeft(16.75f, Units.Pct), OffFloor(25.278f, Units.Met))
-                .Segment(OffLeft(21.5f, Units.Pct), OffFloor(32.437f, Units.Met))
+                .Segment(OffLeft(12f, Units.Pct), OffFloor(31.869f+shift, Units.Met))
+                .Segment(OffLeft(16.75f, Units.Pct), OffFloor(25.278f+shift, Units.Met))
+                .Segment(OffLeft(21.5f, Units.Pct), OffFloor(32.437f+shift, Units.Met))
                 .SegmentFlat(OffLeft(26.25f, Units.Pct))
-                .Segment(OffLeft(31f, Units.Pct), OffFloor(16.649f, Units.Met))
-                .Segment(OffLeft(35.75f, Units.Pct), OffFloor(30.903f, Units.Met))
-                .Segment(OffLeft(40.5f, Units.Pct), OffFloor(19.005f, Units.Met))
-                .Segment(OffLeft(45.25f, Units.Pct), OffFloor(25.15f, Units.Met))
-                .Segment(OffLeft(50f, Units.Pct), OffFloor(18.257f, Units.Met))
-                .Segment(OffLeft(54.75f, Units.Pct), OffFloor(22.179f, Units.Met))
-                .Segment(OffLeft(59.5f, Units.Pct), OffFloor(17.9f, Units.Met))
-                .Segment(OffLeft(64.25f, Units.Pct), OffFloor(13.02f, Units.Met))
-                .Segment(OffLeft(69f, Units.Pct), OffFloor(15.871f, Units.Met))
-                .Segment(OffLeft(73.75f, Units.Pct), OffFloor(31.021f, Units.Met))
-                .Segment(OffLeft(78.5f, Units.Pct), OffFloor(17.377f, Units.Met))
-                .Segment(OffLeft(83.25f, Units.Pct), OffFloor(34.676f, Units.Met))
+                .Segment(OffLeft(31f, Units.Pct), OffFloor(16.649f+shift, Units.Met))
+                .Segment(OffLeft(35.75f, Units.Pct), OffFloor(30.903f+shift, Units.Met))
+                .Segment(OffLeft(40.5f, Units.Pct), OffFloor(19.005f+shift, Units.Met))
+                .Segment(OffLeft(45.25f, Units.Pct), OffFloor(25.15f+shift, Units.Met))
+                .Segment(OffLeft(50f, Units.Pct), OffFloor(18.257f+shift, Units.Met))
+                .Segment(OffLeft(54.75f, Units.Pct), OffFloor(22.179f+shift, Units.Met))
+                .Segment(OffLeft(59.5f, Units.Pct), OffFloor(17.9f+shift, Units.Met))
+                .Segment(OffLeft(64.25f, Units.Pct), OffFloor(13.02f+shift, Units.Met))
+                .Segment(OffLeft(69f, Units.Pct), OffFloor(15.871f+shift, Units.Met))
+                .Segment(OffLeft(73.75f, Units.Pct), OffFloor(31.021f+shift, Units.Met))
+                .Segment(OffLeft(78.5f, Units.Pct), OffFloor(17.377f+shift, Units.Met))
+                .Segment(OffLeft(83.25f, Units.Pct), OffFloor(34.676f+shift, Units.Met))
                 .SegmentFlat(OffLeft(88f, Units.Pct))
-                .Segment(OffLeft(92.75f, Units.Pct), OffFloor(21.472f, Units.Met))
-                .Segment(OffLeft(97.5f, Units.Pct), OffFloor(15.093f, Units.Met))
+                .Segment(OffLeft(92.75f, Units.Pct), OffFloor(21.472f+shift, Units.Met))
+                .Segment(OffLeft(97.5f, Units.Pct), OffFloor(15.093f+shift, Units.Met))
                 .Segment(OffRight(0f, Units.Pct), OffCeiling(0f, Units.Met))
                 .Build();
 
         public static (Ground, List<StaticBuilding>, List<Runway>) MakeWithBuildings()
         {
-            var result = MakeQuasiRandom1();
+            var result = MakeQuasiRandom1(-5f);
             result = PlacePlatform(result, OffLeft(11, Units.Met), 5, OffFloor(30, Units.Met), float.Pi / 4f);
             result = PlacePlatform(result, OffLeft(26, Units.Met), 5, OffFloor(20, Units.Met), float.Pi / 4f);
             result = PlacePlatform(result, OffLeft(600-26, Units.Met), 5, OffFloor(20, Units.Met), float.Pi / 4f);
             result = PlacePlatform(result, OffLeft(600-11, Units.Met), 5, OffFloor(30, Units.Met), float.Pi / 4f);
+
+            result = PlacePlatform(result, OffLeft(270, Units.Met), 20, OffFloor(25, Units.Met), float.Pi / 8f);
 
             result = PlaceRandomPlatforms(result, 20, 5, (x) => x > 50 && x < GameWorld.WorldLength-50 && (x < 250f || x > 350f), out var platforms);
 
@@ -317,6 +319,8 @@ namespace VibeSopwith.Game.Core
                 var spin = GameWorld.WorldSeed.Next(2) == 0 ? BasisSpin.Down : BasisSpin.Up;
                 buildings.Add(new StaticBuilding(buildingType, new Vector2(platform.X, platform.Y), spin));
             }
+            // Army base
+            buildings.Add(new StaticBuilding(StaticBuilding.BuildingType.ArmyBase, new Vector2(265f, 25f), BasisSpin.Down));
 
             buildings.Add(new StaticBuilding(StaticBuilding.BuildingType.Factory, new Vector2(600-26, 20f), BasisSpin.Down));
             buildings.Add(new StaticBuilding(StaticBuilding.BuildingType.Cistern, new Vector2(600-11, 30f), BasisSpin.Down));

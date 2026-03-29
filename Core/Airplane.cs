@@ -178,13 +178,13 @@ namespace VibeSopwith.Game.Core
         }
 
         private const float Acceleration = 0.01f;           // meters per second^2
-        private const float MaxSpeed = 0.5f;                // meters per second
-        private const float MinSpeed = 0.099f;              // meters per second
+        private const float MaxSpeed = 0.6f;                // meters per second
+        public  const float MinSpeed = 0.099f;              // meters per second
         public  const float MaxLandingSpeed = 0.25f;        // meters per second
         private const float MaxLandingAngle = 30f;          // Degrees
         private const float LandingProximityMax = 0.25f;    // Meters
         private const float LandingProximityMin = 0.05f;    // Meters
-        private const float PitchAngle = 4.0f;              // Degrees
+        public  const float PitchAngle = 4.0f;              // Degrees
         private const float RollGracePeriod = 1f / 4f;      // Time in seconds before subsequent roll input is accepted.
         private const float BombGracePeriod = 0.25f;        // Time in seconds before subsequent bomb can be spawned.
         private const float BombLaunchSpeed = 0.1f;         // meters per second
