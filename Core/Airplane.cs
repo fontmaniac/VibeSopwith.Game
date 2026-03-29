@@ -59,6 +59,16 @@ namespace VibeSopwith.Game.Core
 
             var ff = FlipFactor;
 
+            Fixture tagFixture(object tag, Fixture fix)
+            {
+                fix.Tag = tag;
+                fix.Friction = 0.0f;
+                fix.Restitution = 0.0f;
+                fix.CollisionCategories = GameWorld.WorldCollider.AddCategories("Airplane");
+                fix.CollidesWith = GameWorld.WorldCollider.GetAll();
+                return fix;
+            }
+
             // Add fixture 0
             var vertices0 = new[]
             {
@@ -71,12 +81,7 @@ namespace VibeSopwith.Game.Core
                 (-0.715f, ff * 1.565f)
             };
 
-            var fixture0 = vertices0.ToPolygon(body);
-            fixture0.Tag = "Wing";
-            fixture0.Friction = 0.0f;
-            fixture0.Restitution = 0.0f;
-            fixture0.CollisionCategories = Category.Cat1;
-            fixture0.CollidesWith = Category.All;
+            var fixture0 = tagFixture("Wing", vertices0.ToPolygon(body));
 
             // Add fixture 1
             var vertices1 = new[]
@@ -89,12 +94,7 @@ namespace VibeSopwith.Game.Core
                 (0.2325f, ff * 0.5925f)
             };
 
-            var fixture1 = vertices1.ToPolygon(body);
-            fixture1.Tag = "Cowling";
-            fixture1.Friction = 0.0f;
-            fixture1.Restitution = 0.0f;
-            fixture1.CollisionCategories = Category.Cat1;
-            fixture1.CollidesWith = Category.All;
+            var fixture1 = tagFixture("Cowling", vertices1.ToPolygon(body));
 
             // Add fixture 2
             var vertices2 = new[]
@@ -108,12 +108,7 @@ namespace VibeSopwith.Game.Core
                 (-2.3025f, ff * 1.2075f)
             };
 
-            var fixture2 = vertices2.ToPolygon(body);
-            fixture2.Tag = "Tail";
-            fixture2.Friction = 0.0f;
-            fixture2.Restitution = 0.0f;
-            fixture2.CollisionCategories = Category.Cat1;
-            fixture2.CollidesWith = Category.All;
+            var fixture2 = tagFixture("Tail", vertices2.ToPolygon(body));
 
             // Add fixture 3
             var vertices3 = new[]
@@ -127,12 +122,7 @@ namespace VibeSopwith.Game.Core
                 (-2.14f, ff * 0.685f)
             };
 
-            var fixture3 = vertices3.ToPolygon(body);
-            fixture3.Tag = "TWheel";
-            fixture3.Friction = 0.0f;
-            fixture3.Restitution = 0.0f;
-            fixture3.CollisionCategories = Category.Cat1;
-            fixture3.CollidesWith = Category.All;
+            var fixture3 = tagFixture("TWheel", vertices3.ToPolygon(body));
 
             return (new[] { fixture0, fixture1, fixture2, fixture3 }, refPoints["midPoint"].ToXna() * ff);
         }

@@ -49,8 +49,8 @@ namespace VibeSopwith.Game.Core
 
             fixture0.Friction = 0.2f;
             fixture0.Restitution = 0.0f;
-            fixture0.CollisionCategories = Category.Cat10;
-            fixture0.CollidesWith = Category.All;// & ~Category.Cat10;
+            fixture0.CollisionCategories = GameWorld.WorldCollider.AddCategories("Bomb");
+            fixture0.CollidesWith = GameWorld.WorldCollider.GetAll(); // & ~GameWorld.WorldCollider.GetCategories("Bomb");
 
             // Add fixture 1
             var fixture1 = new[]
@@ -65,8 +65,8 @@ namespace VibeSopwith.Game.Core
 
             fixture1.Friction = 0.2f;
             fixture1.Restitution = 0.0f;
-            fixture1.CollisionCategories = Category.Cat10;
-            fixture1.CollidesWith = Category.All & ~Category.Cat10;
+            fixture1.CollisionCategories = GameWorld.WorldCollider.AddCategories("Bomb");
+            fixture1.CollidesWith = GameWorld.WorldCollider.GetAll(); // & ~GameWorld.WorldCollider.GetCategories("Bomb");
 
             this.Body = body;
 

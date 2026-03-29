@@ -12,6 +12,7 @@ namespace VibeSopwith.Game.Core
         public const int WorldHeight = 50;
 
         public static readonly Random WorldSeed = new Random(12345);
+        public static readonly Collider<string> WorldCollider = new Collider<string>();
 
         public readonly Ground Ground;
         public readonly Ceiling Ceiling;

@@ -642,7 +642,7 @@ namespace VibeSopwith.Game.Core
 
                 var shape = new nkast.Aether.Physics2D.Collision.Shapes.PolygonShape(vertices, 1.0f);
                 var fixture = groundBody.CreateFixture(shape);
-                fixture.CollisionCategories = Category.Cat2;
+                fixture.CollisionCategories = GameWorld.WorldCollider.AddCategories("Ground");
             }
 
             Body = groundBody;
