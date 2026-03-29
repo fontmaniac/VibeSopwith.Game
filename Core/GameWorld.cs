@@ -174,13 +174,14 @@ namespace VibeSopwith.Game.Core
 
         private void ExecuteBounce(CollisionContext ctx, Airplane plane, Ceiling ceiling)
         {
+            var newY = ctx.cp.Y - plane.Length + 0.9f;
             // Position plane facing direct down and with minimal speed.
-            plane.CurrentState = plane.CurrentState with 
+            plane.PostSimulationUpdate(plane.CurrentState with 
             { 
                 Direction = -Vector2.UnitY, 
                 Speed = Airplane.MinSpeed, 
-                Position = new Vector2(ctx.cp.X, ctx.cp.Y - plane.Length / 2f - 0.1f) ,
-            };
+                Position = new Vector2(ctx.cp.X, newY) ,
+            });
         }
 
 

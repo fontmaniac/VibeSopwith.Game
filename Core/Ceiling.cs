@@ -14,7 +14,7 @@ namespace VibeSopwith.Game.Core
             body.IgnoreGravity = true;
             body.Mass = float.MaxValue;
 
-            var fixture = body.CreateRectangle(GameWorld.WorldLength+10f, 2f, 1f, new Aether.Vector2(GameWorld.WorldLength/2f, GameWorld.WorldHeight+1f));
+            var fixture = body.CreateRectangle(GameWorld.WorldLength+10f, 2f, 1f, new Aether.Vector2(GameWorld.WorldLength/2f, GameWorld.WorldHeight+2f));
             fixture.CollisionCategories = Category.Cat2;
 
             Body = body;
