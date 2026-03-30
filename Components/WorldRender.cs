@@ -16,6 +16,8 @@ namespace VibeSopwith.Game.Components
         private BulletRender _bulletRender = null!;
         private StaticBuildingRender _buildingRender = null!;
 
+        private RenderTarget2D _postTarget = null!;
+        private Effect _postEffect = null!;
 
 
         public override void Initialize()
@@ -50,6 +52,27 @@ namespace VibeSopwith.Game.Components
 
             _approachRender = new ApproachRender(Game);
             _approachRender.LoadContent();
+
+            _postEffect = Game.Content.Load<Effect>("Shaders/PostGreenOnBlack");
+
+            EnsurePostTarget();
+        }
+
+        private void EnsurePostTarget()
+        {
+            var vp = GraphicsDevice.Viewport;
+            if (_postTarget == null || _postTarget.Width != vp.Width || _postTarget.Height != vp.Height)
+            {
+                _postTarget?.Dispose();
+                _postTarget = new RenderTarget2D(
+                    GraphicsDevice,
+                    GraphicsDevice.Viewport.Width,
+                    GraphicsDevice.Viewport.Height,
+                    false,
+                    SurfaceFormat.Color,
+                    DepthFormat.None
+                );
+            }
         }
 
         protected override void UnloadContent()
@@ -123,9 +146,22 @@ namespace VibeSopwith.Game.Components
         {
             base.Draw(gameTime);
 
+            var vp = GraphicsDevice.Viewport;
+            EnsurePostTarget();
+            GraphicsDevice.SetRenderTarget(_postTarget);
+            GraphicsDevice.Clear(Color.Black);
+
             float scaleVertFactor = (float)GraphicsDevice.Viewport.Height / GameWorld.WorldHeight;
 
             DrawStraight(world, gameTime, scaleVertFactor, scaleVertFactor, true, 4f, cameraPositionX);
+
+            GraphicsDevice.SetRenderTarget(null);
+            GraphicsDevice.Clear(Color.Black);
+            GraphicsDevice.Viewport = vp;
+
+            TheGame.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, null, null, null, effect:_postEffect);
+            TheGame.SpriteBatch.Draw(_postTarget, Vector2.Zero, Color.White);
+            TheGame.SpriteBatch.End();
         }
 
         public void DrawMinimap(GameWorld world, GameTime gameTime)

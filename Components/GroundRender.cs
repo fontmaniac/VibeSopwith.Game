@@ -59,7 +59,7 @@ namespace VibeSopwith.Game.Components
                 var start = ground.Points[i - 1];
                 var end = ground.Points[i];
 
-                FillUnderLineTexture(gd, start, end, 0, _pixelBlack, 64);
+                FillUnderLineTexture(gd, start, end, 0, _groundTexture, 8);
                 FillUnderLineTexture(gd, start, end, GameWorld.WorldHeight, _pixelBlack, 64);
                 DrawLine(spriteBatch, start, end, Color.White, thickness, scaleVert);
             }

@@ -1,7 +1,6 @@
-MANIFEST-2026-03-30T03:54:50Z-master-2e4e9098de824b85b2e5d2fff5e44376
+MANIFEST-2026-03-30T04:36:03Z-master-780fc221ae884bc4867fcb406b5eb38a
 Content
 https://github.com/fontmaniac/VibeSopwith.Content.git
 
-+ Textures/Rock_Tile.jpg
-+ Textures/Rock_Tile.png
-+ Textures/Rock_Tile_Huge.png
++ Shaders/PostGreenOnBlack.fx
++ Shaders/PostGreenOnBlack.fxb
