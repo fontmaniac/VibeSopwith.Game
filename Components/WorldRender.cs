@@ -53,7 +53,9 @@ namespace VibeSopwith.Game.Components
             _approachRender = new ApproachRender(Game);
             _approachRender.LoadContent();
 
-            _postEffect = Game.Content.Load<Effect>("Shaders/PostGreenOnBlack");
+            //_postEffect = Game.Content.Load<Effect>("Shaders/PostGreenOnBlack");
+            //_postEffect = Game.Content.Load<Effect>("Shaders/PostBarrelDistortion");
+            _postEffect = Game.Content.Load<Effect>("Shaders/PostBDandGOB");
 
             EnsurePostTarget();
         }

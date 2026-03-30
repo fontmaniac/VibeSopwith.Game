@@ -1,6 +1,8 @@
-MANIFEST-2026-03-30T04:36:03Z-master-780fc221ae884bc4867fcb406b5eb38a
+MANIFEST-2026-03-30T05:37:49Z-master-39597a08403d47c99dcd0d2080a9a5e2
 Content
 https://github.com/fontmaniac/VibeSopwith.Content.git
 
-+ Shaders/PostGreenOnBlack.fx
-+ Shaders/PostGreenOnBlack.fxb
++ Shaders/PostBDandGOB.fx
++ Shaders/PostBDandGOB.fxb
++ Shaders/PostBarrelDistortion.fx
++ Shaders/PostBarrelDistortion.fxb
