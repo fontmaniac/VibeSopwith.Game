@@ -56,7 +56,7 @@ namespace VibeSopwith.Game.Components
             //_postEffect = Game.Content.Load<Effect>("Shaders/PostGreenOnBlack");
             //_postEffect = Game.Content.Load<Effect>("Shaders/PostBarrelDistortion");
             //_postEffect = Game.Content.Load<Effect>("Shaders/PostBDandGOB");
-            _postEffect = Game.Content.Load<Effect>("Shaders/PostPixelated");
+            //_postEffect = Game.Content.Load<Effect>("Shaders/PostPixelated");
 
             EnsurePostTarget();
         }
@@ -155,7 +155,7 @@ namespace VibeSopwith.Game.Components
             GraphicsDevice.Clear(Color.Black);
 
             float scaleVertFactor = (float)GraphicsDevice.Viewport.Height / GameWorld.WorldHeight;
-            float worldPixelSize = (1f / scaleVertFactor) * 4f;
+            float worldPixelSize = (1f / scaleVertFactor) * 1f;
 
             DrawStraight(world, gameTime, scaleVertFactor, scaleVertFactor, true, 4f, cameraPositionX, new Vector2(worldPixelSize, worldPixelSize));
 
@@ -163,12 +163,12 @@ namespace VibeSopwith.Game.Components
             GraphicsDevice.Clear(Color.Black);
             GraphicsDevice.Viewport = vp;
 
-            _postEffect.Parameters["worldToScreenScale"].SetValue(scaleVertFactor);
-            _postEffect.Parameters["cameraWorldPos"].SetValue(new Vector2(cameraPositionX, 0f));
-            _postEffect.Parameters["worldPixelSize"].SetValue(new Vector2(worldPixelSize, worldPixelSize));
-            _postEffect.Parameters["screenSize"].SetValue(new Vector2(vp.Width, vp.Height));
+            //_postEffect.Parameters["worldToScreenScale"].SetValue(scaleVertFactor);
+            //_postEffect.Parameters["cameraWorldPos"].SetValue(new Vector2(cameraPositionX, 0f));
+            //_postEffect.Parameters["worldPixelSize"].SetValue(new Vector2(worldPixelSize, worldPixelSize));
+            //_postEffect.Parameters["screenSize"].SetValue(new Vector2(vp.Width, vp.Height));
 
-            TheGame.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, null, null, null, effect:_postEffect);
+            TheGame.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, null, null, null, effect:null);
             TheGame.SpriteBatch.Draw(_postTarget, Vector2.Zero, Color.White);
             TheGame.SpriteBatch.End();
         }
