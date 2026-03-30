@@ -9,6 +9,7 @@ namespace VibeSopwith.Game.Components
     {
         private Texture2D _pixel = null!;
         private Texture2D _pixelBlue = null!;
+        private Texture2D _pixelBlack = null!;
         private Texture2D _groundTexture = null!;
 
         private BasicEffect _effect = null!;
@@ -21,6 +22,9 @@ namespace VibeSopwith.Game.Components
 
             _pixelBlue = new Texture2D(graphicsDevice, 1, 1);
             _pixelBlue.SetData(new[] { Color.DarkBlue });
+
+            _pixelBlack = new Texture2D(graphicsDevice, 1, 1);
+            _pixelBlack.SetData(new[] { Color.Black });
 
             var tex = Game.Content.Load<Texture2D>("Textures\\Rock_Tile.png");
             _groundTexture = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, tex);
@@ -55,8 +59,8 @@ namespace VibeSopwith.Game.Components
                 var start = ground.Points[i - 1];
                 var end = ground.Points[i];
 
-                FillUnderLineTexture(gd, start, end, 0, _groundTexture, 8);
-                FillUnderLineTexture(gd, start, end, GameWorld.WorldHeight, _pixelBlue, 64);
+                FillUnderLineTexture(gd, start, end, 0, _pixelBlack, 64);
+                FillUnderLineTexture(gd, start, end, GameWorld.WorldHeight, _pixelBlack, 64);
                 DrawLine(spriteBatch, start, end, Color.White, thickness, scaleVert);
             }
         }
