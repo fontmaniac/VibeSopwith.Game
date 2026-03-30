@@ -21,5 +21,11 @@ namespace VibeSopwith.Game.Components
         {
             DrawHelper.DrawOriginated(airplane, _airplaneTexture, new Vector2(115, airplane.Spin == BasisSpin.Down ? 100 : 0), TheGame.SpriteBatch);
         }
+
+        public void DrawSnapped(Airplane airplane, GameTime gameTime, Vector2 worldPixelSize)
+        {
+            DrawHelper.DrawOriginated(airplane, _airplaneTexture, new Vector2(115, airplane.Spin == BasisSpin.Down ? 100 : 0), TheGame.SpriteBatch, worldPixelSize);
+        }
+
     }
 }

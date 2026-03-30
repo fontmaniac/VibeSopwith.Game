@@ -35,5 +35,12 @@ namespace VibeSopwith.Game.Components
             var texture = building.Exploded ? _texturesExploded[building.TheType] : _textures[building.TheType];
             DrawHelper.DrawOriginated(building, texture, new Vector2(64, building.Spin == BasisSpin.Down ? 128 : 0), TheGame.SpriteBatch);
         }
+
+        public void DrawSnapped(StaticBuilding building, GameTime gameTime, Vector2 worldPixelSize)
+        {
+            var texture = building.Exploded ? _texturesExploded[building.TheType] : _textures[building.TheType];
+            DrawHelper.DrawOriginated(building, texture, new Vector2(64, building.Spin == BasisSpin.Down ? 128 : 0), TheGame.SpriteBatch, worldPixelSize);
+        }
+
     }
 }
