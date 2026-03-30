@@ -145,9 +145,11 @@ namespace VibeSopwith.Game.Components
         }
 
 
-        public void Draw(GameWorld world, GameTime gameTime, float cameraPositionX, float scaleHorz)
+        public void Draw(GameWorld world, GameTime gameTime, float cameraPositionX)
         {
             base.Draw(gameTime);
+
+            float scaleFactor = (float)GraphicsDevice.Viewport.Height / GameWorld.WorldHeight;
 
             var vp = GraphicsDevice.Viewport;
             EnsurePostTarget();
@@ -162,8 +164,13 @@ namespace VibeSopwith.Game.Components
             GraphicsDevice.Clear(Color.Black);
             GraphicsDevice.Viewport = vp;
 
+            _postEffect.Parameters["cameraX"].SetValue(cameraPositionX);
+            _postEffect.Parameters["worldPixelSize"].SetValue(1f / scaleFactor * 4);
+            _postEffect.Parameters["worldToScreenScale"].SetValue(scaleFactor);
             _postEffect.Parameters["screenSize"].SetValue(new Vector2(vp.Width, vp.Height));
-            _postEffect.Parameters["virtualResolution"].SetValue(new Vector2(vp.Width/4f, vp.Height/4f)); 
+
+            //_postEffect.Parameters["screenSize"].SetValue(new Vector2(vp.Width, vp.Height));
+            //_postEffect.Parameters["virtualResolution"].SetValue(new Vector2(vp.Width/4f, vp.Height/4f)); 
 
             TheGame.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, null, null, null, effect:_postEffect);
             TheGame.SpriteBatch.Draw(_postTarget, Vector2.Zero, Color.White);

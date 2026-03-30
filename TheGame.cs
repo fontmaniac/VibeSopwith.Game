@@ -167,7 +167,7 @@ namespace VibeSopwith.Game
 
                 var cameraPositionX = MathHelper.Clamp(_world.Plane.MidPoint.X, minCameraX, maxCameraX);
 
-                _worldRender.Draw(_world, gameTime, cameraPositionX - minCameraX, scale);
+                _worldRender.Draw(_world, gameTime, cameraPositionX - minCameraX);
             });
 
             DrawInViewport(dashViewport, full, () =>
