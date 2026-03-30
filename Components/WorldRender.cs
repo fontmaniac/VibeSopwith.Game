@@ -87,7 +87,7 @@ namespace VibeSopwith.Game.Components
                 null,
                 transform);
 
-            _groundRender.Draw(world.Ground, groundThicknessPx, scaleVert, TheGame.SpriteBatch);
+            _groundRender.Draw(world.Ground, groundThicknessPx, scaleVert, TheGame.SpriteBatch, transform);
             _bodyRender.Draw(world.Ceiling.Body, gameTime);
 
             foreach (var approach in world.Approaches)

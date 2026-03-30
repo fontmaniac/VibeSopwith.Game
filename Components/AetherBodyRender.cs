@@ -32,7 +32,7 @@ namespace VibeSopwith.Game.Components
         {
             var edge = end - start;
             var angle = (float)Math.Atan2(edge.Y, edge.X);
-            TheGame.SpriteBatch.Draw(_pixel, start, null, color, angle, Vector2.Zero, new Vector2(edge.Length(), 0.05f), SpriteEffects.None, 0f);
+            TheGame.SpriteBatch.Draw(_pixel, start, null, color, angle, new Vector2(0, 0.5f), new Vector2(edge.Length(), 0.05f), SpriteEffects.None, 0f);
         }
 
 
