@@ -55,7 +55,8 @@ namespace VibeSopwith.Game.Components
 
             //_postEffect = Game.Content.Load<Effect>("Shaders/PostGreenOnBlack");
             //_postEffect = Game.Content.Load<Effect>("Shaders/PostBarrelDistortion");
-            _postEffect = Game.Content.Load<Effect>("Shaders/PostBDandGOB");
+            //_postEffect = Game.Content.Load<Effect>("Shaders/PostBDandGOB");
+            _postEffect = Game.Content.Load<Effect>("Shaders/PostPixelated");
 
             EnsurePostTarget();
         }
@@ -144,7 +145,7 @@ namespace VibeSopwith.Game.Components
         }
 
 
-        public void Draw(GameWorld world, GameTime gameTime, float cameraPositionX)
+        public void Draw(GameWorld world, GameTime gameTime, float cameraPositionX, float scaleHorz)
         {
             base.Draw(gameTime);
 
@@ -160,6 +161,9 @@ namespace VibeSopwith.Game.Components
             GraphicsDevice.SetRenderTarget(null);
             GraphicsDevice.Clear(Color.Black);
             GraphicsDevice.Viewport = vp;
+
+            _postEffect.Parameters["screenSize"].SetValue(new Vector2(vp.Width, vp.Height));
+            _postEffect.Parameters["virtualResolution"].SetValue(new Vector2(vp.Width/4f, vp.Height/4f)); 
 
             TheGame.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, null, null, null, effect:_postEffect);
             TheGame.SpriteBatch.Draw(_postTarget, Vector2.Zero, Color.White);
