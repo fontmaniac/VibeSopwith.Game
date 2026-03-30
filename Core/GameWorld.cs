@@ -186,7 +186,7 @@ namespace VibeSopwith.Game.Core
         }
 
 
-        public void Simulate(GameTime gameTime)
+        public void Simulate(GameTime gameTime, float ups)
         {
             var doBeforeSimulation = () =>
             {
@@ -205,7 +205,7 @@ namespace VibeSopwith.Game.Core
                     if (Plane.CurrentState.AutoLanding != null)
                     {
                         // Compute new ApproachPhase & set new inputs.
-                        var (phase, input) = Plane.Transition(Plane.CurrentState.AutoLanding);
+                        var (phase, input) = Plane.Transition(Plane.CurrentState.AutoLanding, ups);
                         if (phase == Autopilot.ApproachPhase.Fail)
                         {
                             Plane.CurrentState = Plane.CurrentState with { AutoLanding = null };

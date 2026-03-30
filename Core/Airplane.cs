@@ -167,20 +167,22 @@ namespace VibeSopwith.Game.Core
             return new Bullet(new Bullet.State(spawnPos.ToXna(), Vector2.Normalize(velocityVector), velocityVector), startTime);
         }
 
-        private const float Acceleration = 0.01f;           // meters per second^2
-        private const float MaxSpeed = 0.6f;                // meters per second
-        public  const float MinSpeed = 0.099f;              // meters per second
-        public  const float MaxLandingSpeed = 0.25f;        // meters per second
-        public  const float CruiseSpeed = 0.4f;            // meters per second
+        // Control Constants
+        private const float Acceleration = 36f;             // meters per second^2
+        private const float MaxSpeed = 36f;                 // meters per second
+        public  const float MinSpeed = 5.94f;               // meters per second
+        public  const float MaxLandingSpeed = 15f;          // meters per second
+        public  const float MaxAutoLandingSpeed = 13.8f;    // meters per second
+        public  const float CruiseSpeed = 24f;              // meters per second
         private const float MaxLandingAngle = 30f;          // Degrees
         private const float LandingProximityMax = 0.25f;    // Meters
         private const float LandingProximityMin = 0.05f;    // Meters
-        public  const float PitchAngle = 4.0f;              // Degrees
+        public  const float PitchAngle = 240f;              // Degrees per second
         private const float RollGracePeriod = 1f / 4f;      // Time in seconds before subsequent roll input is accepted.
         private const float BombGracePeriod = 0.25f;        // Time in seconds before subsequent bomb can be spawned.
-        private const float BombLaunchSpeed = 0.1f;         // meters per second
+        private const float BombLaunchSpeed = 6f;           // meters per second
         private const float BulletGracePeriod = 1f / 8f;    // Time in seconds before subsequent bullet can be spawned.
-        private const float BulletSpeed = 0.35f;            // meters per second
+        private const float BulletSpeed = 21f;              // meters per second
         private const float AccelerationGravityFactor = 0.5f;
         private const float AccelerationReverseFactor = 1.2f;
 
@@ -209,6 +211,7 @@ namespace VibeSopwith.Game.Core
         public State ApplyInputs(Inputs input, Func<Autopilot.ApproachPhase> initiateAutoland, GameTime gameTime)
         {
             var nowTime = DateTime.UtcNow;
+            var dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
             var (newSpin, newRollTime) = (Landing || input.Roll == RollInput.None || (nowTime - CurrentState.RollTime).TotalSeconds < RollGracePeriod) ? (Spin, CurrentState.RollTime) :
                 Spin == BasisSpin.Down
@@ -216,14 +219,17 @@ namespace VibeSopwith.Game.Core
                 : (BasisSpin.Down, nowTime);
 
             var newSpeedRaw =
-                input.Throttle == ThrottleInput.Throttling ? Speed + Acceleration :
-                input.Throttle == ThrottleInput.Reversing ? Speed - Acceleration * AccelerationReverseFactor :
+                input.Throttle == ThrottleInput.Throttling ? Speed + Acceleration * dt :
+                input.Throttle == ThrottleInput.Reversing ? Speed - Acceleration * dt * AccelerationReverseFactor :
                 Speed;
+
             var lowSpeedLimit =
                 input.Throttle == ThrottleInput.Throttling ? 0f :                                         // Throttling - low limit irrelevant
                 !Landing && input.Throttle == ThrottleInput.Reversing && newSpeedRaw < MinSpeed ? Speed : // Reversing and slipped below MinSpeed - stay at minimum, except when Landing
                 0f;
-            newSpeedRaw = newSpeedRaw < MinSpeed ? newSpeedRaw : newSpeedRaw + Acceleration * -Direction.Y * AccelerationGravityFactor;
+
+            var gravityAcceleration = Acceleration * -Direction.Y * AccelerationGravityFactor * dt;
+            newSpeedRaw = gravityAcceleration < 0 && newSpeedRaw <= MinSpeed ? newSpeedRaw : newSpeedRaw + gravityAcceleration;
             var newSpeed = MathHelper.Clamp(newSpeedRaw, lowSpeedLimit, MaxSpeed);
 
             var (newBomb, newBombTime) = (Landing || input.BombLaunch == BombInput.Inactive || (nowTime - CurrentState.BombTime).TotalSeconds < BombGracePeriod) 
@@ -237,17 +243,17 @@ namespace VibeSopwith.Game.Core
             var rollFactor = newSpin == BasisSpin.Down ? +1f : -1f;
 
             var newDirection = Speed == 0f ? Direction : Vector2.TransformNormal(Direction,
-                input.Pitch == PitchInput.Backward ? Matrix.CreateRotationZ(rollFactor * MathHelper.ToRadians(PitchAngle * Speed * 2f)) :
-                !Landing && input.Pitch == PitchInput.Forward ? Matrix.CreateRotationZ(-rollFactor * MathHelper.ToRadians(PitchAngle * Speed * 2f)) :
+                input.Pitch == PitchInput.Backward ? Matrix.CreateRotationZ(rollFactor * MathHelper.ToRadians(PitchAngle * Speed * 2f * dt / 60f)) :
+                !Landing && input.Pitch == PitchInput.Forward ? Matrix.CreateRotationZ(-rollFactor * MathHelper.ToRadians(PitchAngle * Speed * 2f * dt / 60f)) :
                 Matrix.Identity);
 
-            var newPosition = Position + newDirection * newSpeed;
+            var newPosition = Position + newDirection * newSpeed * dt;
 
             var autoLand =
                 !Landing && input.AutoLand == AutoLandToggle.Active
                 ? (CurrentState.AutoLanding != null 
                     ? null      // Drop
-                    : initiateAutoland())     // Initiate
+                    : initiateAutoland())   // Initiate
                 : CurrentState.AutoLanding; // Keep
 
             return new State(newPosition, newDirection, newSpin, newSpeed, newBomb, newBullet, autoLand, newRollTime, newBombTime, newBulletTime);

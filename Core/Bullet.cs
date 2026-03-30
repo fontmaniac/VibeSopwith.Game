@@ -33,7 +33,7 @@ namespace VibeSopwith.Game.Core
         public Bullet SetupRigging(World collisionWorld)
         {
             var body = collisionWorld.CreateBody(Position.ToAether(), Direction.ToAngle(), BodyType.Dynamic);
-            body.LinearVelocity = (CurrentState.Velocity * 60f).ToAether();
+            body.LinearVelocity = CurrentState.Velocity.ToAether();
             body.Tag = this;
             body.FixedRotation = true;
             body.Mass = 100f;

@@ -20,6 +20,7 @@ namespace VibeSopwith.Game
         private Components.AirplaneGizmoRender _gizmo = null!;
 
         private readonly Core.GameWorld _world;
+        public readonly static UpsCounter UPS = new UpsCounter();
 
         public const float PlaneGizmoWidth = 4f;
         public const float PlaneGizmoHeight = 4f;
@@ -73,6 +74,8 @@ namespace VibeSopwith.Game
         {
             base.Update(gameTime);
 
+            UPS.Update(gameTime);
+
             _keyboardCustodian.Process(kc =>
             {
                 // F11 - Fullscreen toggle
@@ -85,6 +88,9 @@ namespace VibeSopwith.Game
                 // ESC - Exit
                 if (kc.IsKeyPressed(Keys.Escape))
                     this.Exit();
+
+                if (kc.IsKeyPressed(Keys.F12))
+                    Console.WriteLine($"Updates per second: {UPS.UPS}");
 
                 var throttle =
                     (kc.IsKeyDown(Keys.A) && !kc.IsKeyDown(Keys.D)) ? Airplane.ThrottleInput.Reversing :
@@ -126,7 +132,7 @@ namespace VibeSopwith.Game
                 };
             });
 
-            _world.Simulate(gameTime);
+            _world.Simulate(gameTime, UPS.UPS);
         }
 
         // This is almost cosmetic, as SpriteBatch ignores viewport settings completely.
