@@ -8,16 +8,6 @@ namespace VibeSopwith.Game.Components
 {
     public class AetherBodyRender(Microsoft.Xna.Framework.Game game) : DrawableGameComponent(game)
     {
-        private Texture2D _pixel = null!;
-
-        public new void LoadContent()
-        {
-            base.LoadContent();
-
-            _pixel = new Texture2D(GraphicsDevice, 1, 1);
-            _pixel.SetData(new[] { Color.White });
-
-        }
         public void Draw(Body? body, GameTime gameTime)
         {
             if (body == null) return;
@@ -28,14 +18,6 @@ namespace VibeSopwith.Game.Components
 
         }
 
-        private void DrawLine(Vector2 start, Vector2 end, Color color)
-        {
-            var edge = end - start;
-            var angle = (float)Math.Atan2(edge.Y, edge.X);
-            TheGame.SpriteBatch.Draw(_pixel, start, null, color, angle, new Vector2(0, 0.5f), new Vector2(edge.Length(), 0.05f), SpriteEffects.None, 0f);
-        }
-
-
         private void DrawFixture(Fixture fixture, Color color)
         {
             if (fixture.Shape is PolygonShape poly)
@@ -45,14 +27,14 @@ namespace VibeSopwith.Game.Components
                 foreach (var vertex in poly.Vertices)
                 {
                     var worldPos = fixture.Body.GetWorldPoint(vertex).ToXna();
-                    TheGame.SpriteBatch.Draw(_pixel, worldPos, null, color, 0f, Vector2.Zero, 0.05f, SpriteEffects.None, 0f);
+                    TheGame.SpriteBatch.Draw(TheGame.Primitives.Pixel, worldPos, null, color, 0f, new Vector2(0.5f, 0.5f), 0.1f, SpriteEffects.None, 0f);
                 }
 
                 for (int i = 0; i < poly.Vertices.Count; i++)
                 {
                     var a = fixture.Body.GetWorldPoint(poly.Vertices[i]).ToXna();
                     var b = fixture.Body.GetWorldPoint(poly.Vertices[(i + 1) % poly.Vertices.Count]).ToXna();   
-                    DrawLine(a, b, color);
+                    TheGame.Primitives.DrawLine(a, b, color);
                 }
             }
         }

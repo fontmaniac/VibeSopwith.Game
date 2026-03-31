@@ -1,6 +1,5 @@
-MANIFEST-2026-03-30T07:41:02Z-master-ab0040831e3a4775b03c9de02db72ed4
+MANIFEST-2026-03-31T06:57:08Z-master-ec19b3517a894bf48b9cdd8e3d060409
 Content
 https://github.com/fontmaniac/VibeSopwith.Content.git
 
-* Shaders/PostPixelated.fx
-* Shaders/PostPixelated.fxb
++ Textures/Backround_1.png

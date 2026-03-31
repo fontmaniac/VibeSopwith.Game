@@ -551,9 +551,6 @@ namespace VibeSopwith.Game.Core
             if (hits.Count == 0)
                 return new Ground(new List<Vector2>(src.Points));
 
-            foreach (var h in hits)
-                Console.WriteLine($"hit: X={h.X}, Y={h.Y}, Edge={h.Edge}");
-
             // --- Determine cut region ----------------------------------------------
 
             float cutStartX = hits.Min(h => h.X);

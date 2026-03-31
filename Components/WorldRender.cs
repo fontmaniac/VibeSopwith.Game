@@ -1,6 +1,7 @@
 using VibeSopwith.Game.Core;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using VibeSopwith.Game.Graphics;
 
 namespace VibeSopwith.Game.Components
 {
@@ -16,6 +17,7 @@ namespace VibeSopwith.Game.Components
         private BulletRender _bulletRender = null!;
         private StaticBuildingRender _buildingRender = null!;
 
+        private RenderTarget2D _upscaleTarget = null!;
         private RenderTarget2D _postTarget = null!;
         private Effect _postEffect = null!;
 
@@ -48,26 +50,24 @@ namespace VibeSopwith.Game.Components
             _buildingRender.LoadContent();
 
             _bodyRender = new AetherBodyRender(Game);
-            _bodyRender.LoadContent();
-
             _approachRender = new ApproachRender(Game);
-            _approachRender.LoadContent();
 
             //_postEffect = Game.Content.Load<Effect>("Shaders/PostGreenOnBlack");
             //_postEffect = Game.Content.Load<Effect>("Shaders/PostBarrelDistortion");
-            //_postEffect = Game.Content.Load<Effect>("Shaders/PostBDandGOB");
+            _postEffect = Game.Content.Load<Effect>("Shaders/PostBDandGOB");
             //_postEffect = Game.Content.Load<Effect>("Shaders/PostPixelated");
 
-            EnsurePostTarget();
+            _postTarget = EnsurePostTarget(_postTarget);
+            _upscaleTarget = EnsurePostTarget(_upscaleTarget);
         }
 
-        private void EnsurePostTarget()
+        private RenderTarget2D EnsurePostTarget(RenderTarget2D postTarget)
         {
             var vp = GraphicsDevice.Viewport;
-            if (_postTarget == null || _postTarget.Width != vp.Width || _postTarget.Height != vp.Height)
+            if (postTarget == null || postTarget.Width != vp.Width || postTarget.Height != vp.Height)
             {
-                _postTarget?.Dispose();
-                _postTarget = new RenderTarget2D(
+                postTarget?.Dispose();
+                postTarget = new RenderTarget2D(
                     GraphicsDevice,
                     GraphicsDevice.Viewport.Width,
                     GraphicsDevice.Viewport.Height,
@@ -76,6 +76,8 @@ namespace VibeSopwith.Game.Components
                     DepthFormat.None
                 );
             }
+
+            return postTarget;
         }
 
         protected override void UnloadContent()
@@ -99,7 +101,8 @@ namespace VibeSopwith.Game.Components
             var translateY = Matrix.CreateTranslation(0f, GraphicsDevice.Viewport.Height, 0f);
 
             // 3. Camera X
-            var translateCamera = Matrix.CreateTranslation(-cameraPositionX, 0f, 0f);
+            var camera = new Vector2(-cameraPositionX, 0f).SnapToPixel(worldPixelSize);
+            var translateCamera = Matrix.CreateTranslation(camera.X, 0, 0f);
 
             // Final: world -> camera -> scale+flip -> move to screen
             var transform = translateCamera * scale * translateY;
@@ -113,19 +116,19 @@ namespace VibeSopwith.Game.Components
                 null,
                 transform);
 
-            _groundRender.Draw(world.Ground, groundThicknessPx, scaleVert, TheGame.SpriteBatch, transform);
-            _bodyRender.Draw(world.Ceiling.Body, gameTime);
+            _groundRender.Draw(world.Ground, groundThicknessPx, scaleVert, transform);
+            //_bodyRender.Draw(world.Ceiling.Body, gameTime);
 
             foreach (var approach in world.Approaches)
-                _approachRender.Draw(approach, gameTime);
+                _approachRender.Draw(approach, gameTime, null);
 
             foreach (var building in world.Buildings)
             {
-                _buildingRender.DrawSnapped(building, gameTime, worldPixelSize);
-                _bodyRender.Draw(building.Body, gameTime);
+                _buildingRender.Draw(building, gameTime);
+                //_bodyRender.Draw(building.Body, gameTime);
             }
 
-            _airplaneRender.DrawSnapped(world.Plane, gameTime, worldPixelSize);
+            _airplaneRender.Draw(world.Plane, gameTime);
 
             foreach (var bomb in world.Bombs)
                 _bombRender.Draw(bomb, gameTime);
@@ -150,26 +153,40 @@ namespace VibeSopwith.Game.Components
             base.Draw(gameTime);
 
             var vp = GraphicsDevice.Viewport;
-            EnsurePostTarget();
+            _upscaleTarget = EnsurePostTarget(_upscaleTarget);
+            _postTarget = EnsurePostTarget(_postTarget);
+
             GraphicsDevice.SetRenderTarget(_postTarget);
             GraphicsDevice.Clear(Color.Black);
+
+            var destination = new Rectangle(0, 0, vp.Width, vp.Height);
+            var height = vp.Height/1;
+            var source = new Rectangle(0, 0, (int)(height * vp.AspectRatio), (int)height);
+            GraphicsDevice.Viewport = new Viewport(source.X, source.Y, source.Width, source.Height);
 
             float scaleVertFactor = (float)GraphicsDevice.Viewport.Height / GameWorld.WorldHeight;
             float worldPixelSize = (1f / scaleVertFactor) * 1f;
 
             DrawStraight(world, gameTime, scaleVertFactor, scaleVertFactor, true, 4f, cameraPositionX, new Vector2(worldPixelSize, worldPixelSize));
 
-            GraphicsDevice.SetRenderTarget(null);
+            GraphicsDevice.SetRenderTarget(_upscaleTarget);
             GraphicsDevice.Clear(Color.Black);
-            GraphicsDevice.Viewport = vp;
 
             //_postEffect.Parameters["worldToScreenScale"].SetValue(scaleVertFactor);
             //_postEffect.Parameters["cameraWorldPos"].SetValue(new Vector2(cameraPositionX, 0f));
             //_postEffect.Parameters["worldPixelSize"].SetValue(new Vector2(worldPixelSize, worldPixelSize));
             //_postEffect.Parameters["screenSize"].SetValue(new Vector2(vp.Width, vp.Height));
 
-            TheGame.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, null, null, null, effect:null);
-            TheGame.SpriteBatch.Draw(_postTarget, Vector2.Zero, Color.White);
+            TheGame.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, null, null, null);
+            TheGame.SpriteBatch.Draw(_postTarget, destination, source, Color.White);
+            TheGame.SpriteBatch.End();
+
+            GraphicsDevice.SetRenderTarget(null);
+            GraphicsDevice.Clear(Color.Black);
+            GraphicsDevice.Viewport = vp;
+
+            TheGame.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, null, null, effect: null);
+            TheGame.SpriteBatch.Draw(_upscaleTarget, Vector2.Zero, Color.White);
             TheGame.SpriteBatch.End();
         }
 

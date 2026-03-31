@@ -20,8 +20,6 @@ namespace VibeSopwith.Game.Core
                 _frameCounter = 0;
                 _elapsedTime = 0;
             }
-
-
         }
     }
 }

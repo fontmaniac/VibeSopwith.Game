@@ -2,6 +2,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MLEM.Misc;
+using VibeSopwith.Game.Components;
 using VibeSopwith.Game.Core; 
 using VibeSopwith.Game.Utils;
 
@@ -13,7 +14,8 @@ namespace VibeSopwith.Game
         private KeyboardCustodian _keyboardCustodian = new KeyboardCustodian();
 
         public static SpriteBatch SpriteBatch = null!;
-        private BasicEffect _basicEffect = null!;
+        public static BasicEffect BasicEffect = null!;
+        public static PrimitivesRender Primitives = null!;
 
         private Components.WorldRender _worldRender = null!;
         private Components.Dashboard _dashboard = null!;
@@ -52,7 +54,10 @@ namespace VibeSopwith.Game
             base.LoadContent();
 
             SpriteBatch = new SpriteBatch(GraphicsDevice);
-            _basicEffect = new BasicEffect(GraphicsDevice);
+            BasicEffect = new BasicEffect(GraphicsDevice);
+
+            Primitives = new PrimitivesRender(this);
+            Primitives.LoadContent();
 
             _worldRender = new Components.WorldRender(this);
             _worldRender.LoadContent();
@@ -66,7 +71,7 @@ namespace VibeSopwith.Game
 
         protected override void UnloadContent()
         {
-            _basicEffect?.Dispose();
+            BasicEffect?.Dispose();
             SpriteBatch?.Dispose();
         }
 
