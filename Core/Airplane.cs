@@ -25,10 +25,16 @@ namespace VibeSopwith.Game.Core
 
         public bool Exploded = false;
 
+        public Dial SpeedDial;
+        public Dial AltDial;
+
         public Airplane(Vector2 pos, BasisSpin spin)
         {
             CurrentState = new State(pos, Vector2.UnitX, spin, 0f, null, null, null, DateTime.MinValue, DateTime.MinValue, DateTime.MinValue);
             CurrentState = CurrentState with { Direction = Direction * FlipFactor };
+
+            SpeedDial = new Dial("Spd\r\nm/s", 0, 40f, 20, new[] { 0f, 10f, 20f, 30f }, () => this.Speed);
+            AltDial = new Dial("Alt,m", 0, 60f, 12, new[] { 0f, 15f, 30f, 45f }, () => this.Position.Y);
         }
 
         public void RemoveRigging(World collisionWorld)

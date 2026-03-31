@@ -3,7 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MLEM.Misc;
 using VibeSopwith.Game.Components;
-using VibeSopwith.Game.Core; 
+using VibeSopwith.Game.Core;
 using VibeSopwith.Game.Utils;
 
 namespace VibeSopwith.Game
@@ -20,6 +20,7 @@ namespace VibeSopwith.Game
         private Components.WorldRender _worldRender = null!;
         private Components.Dashboard _dashboard = null!;
         private Components.AirplaneGizmoRender _gizmo = null!;
+        private Components.DialRoundRender _dialRoundRender = null!;
 
         private readonly Core.GameWorld _world;
         public readonly static UpsCounter UPS = new UpsCounter();
@@ -67,6 +68,9 @@ namespace VibeSopwith.Game
 
             _gizmo = new Components.AirplaneGizmoRender(this);
             _gizmo.LoadContent();
+
+            _dialRoundRender = new Components.DialRoundRender(this);
+            _dialRoundRender.LoadContent();
         }
 
         protected override void UnloadContent()
@@ -159,6 +163,7 @@ namespace VibeSopwith.Game
             var mainViewport = new Viewport(0, 0, full.Width, bnd);
             var dashViewport = new Viewport(0, bnd, 200, 120);
             var gizmoViewport = new Viewport(200, bnd, 120, 120);
+            var dialsViewport = new Viewport(320, bnd, 240, 120);
             var minimapViewport = new Viewport(full.Width / 2 + 5, bnd + 20, full.Width / 2 - 10, 120 - 40);
 
             GraphicsDevice.Clear(Color.Black);
@@ -183,6 +188,16 @@ namespace VibeSopwith.Game
             DrawInViewport(gizmoViewport, full, () =>
             {
                 _gizmo.Draw(_world.Plane, gameTime);
+            });
+
+            DrawInViewport(dialsViewport, full, () =>
+            {
+                TheGame.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.PointClamp, DepthStencilState.None,RasterizerState.CullNone, null, Matrix.Identity);
+                
+                _dialRoundRender.Draw(_world.Plane.SpeedDial, new(60, 60), 36, Color.Green, DialRoundRender.DefaultStyle, gameTime);
+                _dialRoundRender.Draw(_world.Plane.AltDial, new(180, 60), 36, Color.Green, DialRoundRender.DefaultStyle, gameTime);
+
+                TheGame.SpriteBatch.End();
             });
 
             DrawInViewport(minimapViewport, full, () =>
