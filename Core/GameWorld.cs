@@ -105,6 +105,8 @@ namespace VibeSopwith.Game.Core
             ctx.postCheckActions.Push(() => { plane.RemoveRigging(collisionWorld); });
             plane.Exploded = true;
             planeExplosion = MakeBigExplosion(ctx.gameTime, ctx.cp);
+            var affectedRange = ground.PlaceDent(ctx.cp.X, 1.5f, 0.8f, segmentsPerMeter: 8);
+            ctx.postCheckActions.Push(() => { ground.ReRigRange(affectedRange.leftX, affectedRange.rightX); });
         }
 
         private void ExecuteExplosion(CollisionContext ctx, Bomb bomb, Ground ground)
@@ -112,6 +114,8 @@ namespace VibeSopwith.Game.Core
             ctx.postCheckActions.Push(() => { collisionWorld.Remove(bomb.Body); });
             Bombs.Remove(bomb);
             explosions.Add(MakeBigExplosion(ctx.gameTime, ctx.cp));
+            var affectedRange = ground.PlaceDent(ctx.cp.X, 1.0f, 0.5f, segmentsPerMeter: 8);
+            ctx.postCheckActions.Push(() => { ground.ReRigRange(affectedRange.leftX, affectedRange.rightX); });
         }
 
         private void ExecuteExplosion(CollisionContext ctx, Bullet bullet, Ground ground)

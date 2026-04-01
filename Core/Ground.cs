@@ -413,8 +413,8 @@ namespace VibeSopwith.Game.Core
 
         public static (Ground, List<StaticBuilding>, List<Runway>) MakeWithBuildings()
         {
-            //var result = MakeQuasiRandom1(-5f);
-            var result = MakeRandomRollingHills(new RestrictionZone(270, 320, 25), segmentsPerMeter:256);
+            var result = MakeQuasiRandom1(-5f);
+            //var result = MakeRandomRollingHills(new RestrictionZone(270, 320, 25), segmentsPerMeter:8);
             result = PlacePlatform(result, OffLeft(11, Units.Met), 5, OffFloor(30, Units.Met), float.Pi / 4f);
             result = PlacePlatform(result, OffLeft(26, Units.Met), 5, OffFloor(20, Units.Met), float.Pi / 4f);
             result = PlacePlatform(result, OffLeft(600-26, Units.Met), 5, OffFloor(20, Units.Met), float.Pi / 4f);
@@ -737,18 +737,99 @@ namespace VibeSopwith.Game.Core
             return new Ground(cleaned);
         }
 
-
-        public void SetupRigging(World collisionWorld)
+        public (float leftX, float rightX) PlaceDent(float x0, float radius, float depth, int segmentsPerMeter)
         {
-            var groundBody = collisionWorld.CreateBody(Aether.Vector2.Zero, 0f, BodyType.Static);
-            groundBody.Tag = this;
-            groundBody.IgnoreGravity = true;
-            groundBody.Mass = float.MaxValue;
+            float worldW = GameWorld.WorldLength;
 
-            for (var i = 0; i < Points.Count-1; ++i)
+            float leftX = Math.Max(0f, x0 - radius);
+            float rightX = Math.Min(worldW, x0 + radius);
+
+            // --- 1. Helper: evaluate f(x) from existing polyline --------------------
+            float Eval(float x)
+            {
+                if (!GetSegmentAtOffset(new HOffset.OffLeft(x, Units.Met), out var seg))
+                    return 0f;
+
+                return seg.pm.Y;
+            }
+
+            // --- 2. Dent function (cosine bowl) -------------------------------------
+            float Dent(float x)
+            {
+                float dx = Math.Abs(x - x0);
+                if (dx >= radius)
+                    return 0f;
+
+                float t = dx / radius; // 0..1
+                return -depth * 0.5f * (1f + MathF.Cos(MathF.PI * t));
+            }
+
+            // --- 3. Build new point list --------------------------------------------
+            var newPts = new List<Vector2>(Points.Count + 32);
+
+            // 3a. Keep all points strictly left of leftX
+            foreach (var p in Points)
+                if (p.X < leftX)
+                    newPts.Add(p);
+
+            // 3b. Insert a boundary point at leftX
+            {
+                float y = Eval(leftX) + Dent(leftX);
+                newPts.Add(new Vector2(leftX, y));
+            }
+
+            // 3c. Resample only the dent range
+            float dxSample = 1f / segmentsPerMeter;
+            int sampleCount = (int)((rightX - leftX) * segmentsPerMeter);
+
+            for (int i = 1; i < sampleCount; i++)
+            {
+                float x = leftX + i * dxSample;
+                float y = Eval(x) + Dent(x);
+                newPts.Add(new Vector2(x, y));
+            }
+
+            // 3d. Insert a boundary point at rightX
+            {
+                float y = Eval(rightX) + Dent(rightX);
+                newPts.Add(new Vector2(rightX, y));
+            }
+
+            // 3e. Keep all points strictly right of rightX
+            foreach (var p in Points)
+                if (p.X > rightX)
+                    newPts.Add(p);
+
+            // 3f. Sort by X (just in case)
+            newPts.Sort((a, b) => a.X.CompareTo(b.X));
+
+            // 3g. Replace ground points
+            Points.Clear();
+            Points.AddRange(newPts);
+
+            return (leftX, rightX);
+        }
+
+        public void ReRigRange(float leftX, float rightX)
+        {
+            // Remove fixtures falling within range.
+            bool fixtureToDelete(Fixture f)
+            {
+                var tag = ((Vector2 p1, Vector2 p2))f.Tag;
+                return tag.p1.X >= leftX && tag.p2.X <= rightX;
+            }
+            var fixturesToDelete = Body.FixtureList.Where(fixtureToDelete).ToList();
+            foreach (var f in fixturesToDelete) Body.Remove(f);
+
+            // Add fixtures for segments within range.
+            for (var i = 0; i < Points.Count - 1; ++i)
             {
                 var p1 = Points[i];
-                var p2 = Points[i+1];
+                var p2 = Points[i + 1];
+
+                if (!(p1.X <= rightX && p2.X >= leftX))
+                    continue;
+
                 var bottomLeft = new Vector2(p1.X, 0);
                 var topLeft = new Vector2(p1.X, p1.Y);
                 var topRight = new Vector2(p2.X, p2.Y);
@@ -760,11 +841,24 @@ namespace VibeSopwith.Game.Core
                 vertices.Add(bottomRight.ToAether());
 
                 var shape = new nkast.Aether.Physics2D.Collision.Shapes.PolygonShape(vertices, 1.0f);
-                var fixture = groundBody.CreateFixture(shape);
+                var fixture = Body.CreateFixture(shape);
+                fixture.Tag = (p1, p2);
                 fixture.CollisionCategories = GameWorld.WorldCollider.AddCategories("Ground");
             }
 
+        }
+
+        public void SetupRigging(World collisionWorld)
+        {
+            var groundBody = collisionWorld.CreateBody(Aether.Vector2.Zero, 0f, BodyType.Static);
+
+            groundBody.Tag = this;
+            groundBody.IgnoreGravity = true;
+            groundBody.Mass = float.MaxValue;
+
             Body = groundBody;
+
+            ReRigRange(0, GameWorld.WorldLength);
         }
     }
 }
