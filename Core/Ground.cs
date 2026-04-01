@@ -226,6 +226,125 @@ namespace VibeSopwith.Game.Core
             return result;
         }
 
+        private static Ground GenerateRollingHillsOnce(RestrictionZone rz, int segmentsPerMeter)
+        {
+            float worldW = GameWorld.WorldLength;
+            float worldH = GameWorld.WorldHeight;
+
+            // --- Parameters ---------------------------------------------------------
+            int bigCount = 6;
+            int smallCount = 12;
+
+            float bigMinH = 0.30f * worldH;
+            float bigMaxH = 0.70f * worldH;
+            float bigMinW = 50f;
+            float bigMaxW = 100f;
+
+            float smallMinH = 0.20f * worldH;
+            float smallMaxH = 0.40f * worldH;
+            float smallMinW = 20f;
+            float smallMaxW = 60f;
+
+            float minFloor = 0.10f * worldH;
+            float maxAllowed = 0.70f * worldH;
+
+            // --- 1. Generate hill descriptors ---------------------------------------
+            var hills = new List<(float cx, float amp, float width)>();
+
+            void AddHills(int count, float minH, float maxH, float minW, float maxW)
+            {
+                for (int i = 0; i < count; i++)
+                {
+                    float cx = (float)GameWorld.WorldSeed.NextDouble() * worldW;
+                    float amp = minH + (float)GameWorld.WorldSeed.NextDouble() * (maxH - minH);
+                    float width = minW + (float)GameWorld.WorldSeed.NextDouble() * (maxW - minW);
+                    hills.Add((cx, amp, width));
+                }
+            }
+
+            AddHills(bigCount, bigMinH, bigMaxH, bigMinW, bigMaxW);
+            AddHills(smallCount, smallMinH, smallMaxH, smallMinW, smallMaxW);
+
+            hills.Sort((a, b) => a.cx.CompareTo(b.cx));
+
+            // --- 2. Sample the world at high resolution -----------------------------
+            float dx = 1f / segmentsPerMeter;
+            int sampleCount = (int)(worldW * segmentsPerMeter) + 1;
+
+            var samples = new List<Vector2>(sampleCount);
+
+            for (int i = 0; i < sampleCount; i++)
+            {
+                float x = i * dx;
+
+                float yRaw = minFloor;
+
+                foreach (var (cx, amp, width) in hills)
+                {
+                    float halfW = width * 0.5f;
+                    float dist = Math.Abs(x - cx);
+
+                    if (dist < halfW)
+                    {
+                        float t = (dist / halfW) * MathF.PI;
+                        float bump = amp * 0.5f * (1f + MathF.Cos(t));
+                        yRaw += bump;
+                    }
+                }
+
+                // Smooth cap at 70%
+                float y = yRaw <= maxAllowed
+                    ? yRaw
+                    : maxAllowed + 0.5f * (yRaw - maxAllowed) / (1f + Math.Abs(yRaw - maxAllowed));
+
+                samples.Add(new Vector2(x, y));
+            }
+
+            // --- 3. Convert samples into GroundBuilder segments ---------------------
+            var b = new GroundBuilder();
+
+            b = b.Segment(OffLeft(0f, Units.Met), OffFloor(samples[0].Y, Units.Met));
+
+            for (int i = 1; i < samples.Count; i++)
+            {
+                var p = samples[i];
+                b = b.Segment(OffLeft(p.X, Units.Met), OffFloor(p.Y, Units.Met));
+            }
+
+            b = b.Segment(OffRight(0f, Units.Pct), OffCeiling(0f, Units.Pct));
+
+            return b.Build();
+        }
+
+
+        public record RestrictionZone(float LeftX, float RightX, float MaxY);
+
+        public static Ground MakeRandomRollingHills(RestrictionZone restrictionZone, int segmentsPerMeter = 8)
+        {
+            while (true) // rejection loop
+            {
+                var ground = GenerateRollingHillsOnce(restrictionZone, segmentsPerMeter);
+
+                // Validate restriction zone
+                bool ok = true;
+                foreach (var p in ground.Points)
+                {
+                    if (p.X >= restrictionZone.LeftX &&
+                        p.X <= restrictionZone.RightX &&
+                        p.Y > restrictionZone.MaxY)
+                    {
+                        ok = false;
+                        break;
+                    }
+                }
+
+                if (ok)
+                    return ground;
+
+                // Otherwise loop and regenerate
+            }
+        }
+
         public static Ground MakeCustom()
         {
             return
@@ -294,7 +413,8 @@ namespace VibeSopwith.Game.Core
 
         public static (Ground, List<StaticBuilding>, List<Runway>) MakeWithBuildings()
         {
-            var result = MakeQuasiRandom1(-5f);
+            //var result = MakeQuasiRandom1(-5f);
+            var result = MakeRandomRollingHills(new RestrictionZone(270, 320, 25), segmentsPerMeter:256);
             result = PlacePlatform(result, OffLeft(11, Units.Met), 5, OffFloor(30, Units.Met), float.Pi / 4f);
             result = PlacePlatform(result, OffLeft(26, Units.Met), 5, OffFloor(20, Units.Met), float.Pi / 4f);
             result = PlacePlatform(result, OffLeft(600-26, Units.Met), 5, OffFloor(20, Units.Met), float.Pi / 4f);
@@ -328,6 +448,8 @@ namespace VibeSopwith.Game.Core
             var runways = new List<Runway>();
             var (runway, withRunwayPlatform) = result.WithRunway(25, 300-20, 300+20, 5);
             runways.Add(runway);
+
+            Console.WriteLine($"Ground segments: {withRunwayPlatform.Points.Count}");
 
             return (withRunwayPlatform, buildings, runways);
         }

@@ -18,6 +18,7 @@ namespace VibeSopwith.Game.Components
         private Paragraph _alt = null!;
         private Paragraph _spd = null!;
         private Paragraph _lng = null!;
+        private Paragraph _ups = null!;
 
         public new void LoadContent()
         {
@@ -38,6 +39,7 @@ namespace VibeSopwith.Game.Components
             _root.AddChild(_alt = new Paragraph(Anchor.AutoLeft, 1, "Altitude"));
             _root.AddChild(_lng = new Paragraph(Anchor.AutoLeft, 1, "Position"));
             _root.AddChild(_spd = new Paragraph(Anchor.AutoLeft, 1, "Speed"));
+            _root.AddChild(_ups = new Paragraph(Anchor.AutoLeft, 1, "FPS"));
         }
 
         public new void UnloadContent()
@@ -51,7 +53,7 @@ namespace VibeSopwith.Game.Components
             _uiSystem.Update(gameTime);
         }
 
-        public void Draw(Airplane plane, Viewport vp, GameTime gameTime)
+        public void Draw(Airplane plane, UpsCounter ups, UpsCounter fps, Viewport vp, GameTime gameTime)
         {
             _root.PositionOffset = new Vector2(vp.X, vp.Y);
             _root.Size = new Vector2(vp.Width, vp.Height);
@@ -61,6 +63,7 @@ namespace VibeSopwith.Game.Components
             _alt.Text = $"Altitude: {(int)plane.Position.Y}";
             _lng.Text = $"Position: {(int)plane.Position.X}";
             _spd.Text = $"Speed: {plane.Speed:0.000}";
+            _ups.Text = $"FPS/UPS: {fps.UPS}/{ups.UPS}";
 
             _uiSystem.Draw(gameTime, TheGame.SpriteBatch);
         }

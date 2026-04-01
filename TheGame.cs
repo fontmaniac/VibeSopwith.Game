@@ -24,6 +24,7 @@ namespace VibeSopwith.Game
 
         private readonly Core.GameWorld _world;
         public readonly static UpsCounter UPS = new UpsCounter();
+        public readonly static UpsCounter FPS = new UpsCounter();
 
         public const float PlaneGizmoWidth = 4f;
         public const float PlaneGizmoHeight = 4f;
@@ -157,6 +158,8 @@ namespace VibeSopwith.Game
         {
             base.Draw(gameTime);
 
+            FPS.Update(gameTime);
+
             var full = GraphicsDevice.Viewport;
             var bnd = full.Height - 120;
 
@@ -182,7 +185,7 @@ namespace VibeSopwith.Game
 
             DrawInViewport(dashViewport, full, () =>
             {
-                _dashboard.Draw(_world.Plane, dashViewport, gameTime);
+                _dashboard.Draw(_world.Plane, UPS, FPS, dashViewport, gameTime);
             });
 
             DrawInViewport(gizmoViewport, full, () =>

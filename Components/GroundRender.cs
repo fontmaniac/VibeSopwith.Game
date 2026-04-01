@@ -1,5 +1,6 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using nkast.Aether.Physics2D.Dynamics;
 using VibeSopwith.Game.Core;
 using VibeSopwith.Game.Graphics;
 
@@ -9,7 +10,7 @@ namespace VibeSopwith.Game.Components
     {
         private Texture2D _groundTexture = null!;
 
-        private VertexPositionColorTexture[] _quadVertsTex = new VertexPositionColorTexture[6];
+        private VertexPositionColorTexture[] _quadVertsTex = new VertexPositionColorTexture[0];
 
         public void LoadContent(GraphicsDevice graphicsDevice)
         {
@@ -35,18 +36,34 @@ namespace VibeSopwith.Game.Components
                 0, 1
             );
 
-            for (int i = 1; i < ground.Points.Count; i++)
+            void singlePass(Action<int, Vector2, Vector2> execute)
             {
-                var start = ground.Points[i - 1];
-                var end = ground.Points[i];
+                for (int i = 1; i < ground.Points.Count; i++)
+                {
+                    var start = ground.Points[i - 1];
+                    var end = ground.Points[i];
 
-                FillUnderLineTexture(gd, start, end, 0, Color.White, _groundTexture, 8);
-                FillUnderLineTexture(gd, start, end, GameWorld.WorldHeight, Color.Black, TheGame.Primitives.Pixel, 64);
-                TheGame.Primitives.DrawLine(start, end, Color.White, thickness/scaleVert);
+                    execute(i-1, start, end);
+                }
             }
+
+            // Allocate/Reallocate _quadVertsTex according to the number of segments, if necessary.
+            var triCount = (ground.Points.Count - 1) * 2;
+            var vertCount = triCount * 3 * 2;
+            if (_quadVertsTex.Length != vertCount)
+            {
+                _quadVertsTex = new VertexPositionColorTexture[vertCount];
+                singlePass((i, start, end) => FillUnderLineTexture(i, start, end, 0, Color.White, 8));
+                singlePass((i, start, end) => FillUnderLineTexture(i + triCount / 2, start, end, GameWorld.WorldHeight, Color.Black, 64));
+            }
+
+            DrawTextures(gd, _groundTexture, 0);
+            DrawTextures(gd, TheGame.Primitives.Pixel, _quadVertsTex.Length/2);
+
+            singlePass((_, start, end) => TheGame.Primitives.DrawLine(start, end, Color.White, thickness / scaleVert));
         }
 
-        private void FillUnderLineTexture(GraphicsDevice gd, Vector2 p1, Vector2 p2, float baseLine, Color color, Texture2D texture, float tileSizeWorld)
+        private void FillUnderLineTexture(int i, Vector2 p1, Vector2 p2, float baseLine, Color color, float tileSizeWorld)
         {
             var tile = tileSizeWorld; // world units per texture tile
 
@@ -62,14 +79,18 @@ namespace VibeSopwith.Game.Components
             Vector2 uv4 = new(p1.X / tile, baseLine / tile);
 
             // Two triangles
-            _quadVertsTex[0] = new VertexPositionColorTexture(v1, color, uv1);
-            _quadVertsTex[1] = new VertexPositionColorTexture(v2, color, uv2);
-            _quadVertsTex[2] = new VertexPositionColorTexture(v3, color, uv3);
+            i = i * 6;
+            _quadVertsTex[i+0] = new VertexPositionColorTexture(v1, color, uv1);
+            _quadVertsTex[i+1] = new VertexPositionColorTexture(v2, color, uv2);
+            _quadVertsTex[i+2] = new VertexPositionColorTexture(v3, color, uv3);
 
-            _quadVertsTex[3] = new VertexPositionColorTexture(v3, color, uv3);
-            _quadVertsTex[4] = new VertexPositionColorTexture(v4, color, uv4);
-            _quadVertsTex[5] = new VertexPositionColorTexture(v1, color, uv1);
+            _quadVertsTex[i+3] = new VertexPositionColorTexture(v3, color, uv3);
+            _quadVertsTex[i+4] = new VertexPositionColorTexture(v4, color, uv4);
+            _quadVertsTex[i+5] = new VertexPositionColorTexture(v1, color, uv1);
+        }
 
+        private void DrawTextures(GraphicsDevice gd, Texture2D texture, int offset)
+        {
             gd.SamplerStates[0] = SamplerState.PointWrap;
             var effect = TheGame.BasicEffect;
             effect.Texture = texture;
@@ -80,8 +101,8 @@ namespace VibeSopwith.Game.Components
                 gd.DrawUserPrimitives(
                     PrimitiveType.TriangleList,
                     _quadVertsTex,
-                    0,
-                    2
+                    offset,
+                    _quadVertsTex.Length / 2 / 3
                 );
             }
         }

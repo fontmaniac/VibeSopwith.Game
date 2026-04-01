@@ -1,8 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System.Runtime.InteropServices;
 using VibeSopwith.Game.Core;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace VibeSopwith.Game.Components
 {

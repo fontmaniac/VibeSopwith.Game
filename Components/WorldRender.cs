@@ -141,7 +141,7 @@ namespace VibeSopwith.Game.Components
                 _explosionRender.Draw(explosion, gameTime);
 
             _bodyRender.Draw(world.Plane.Body, gameTime);
-            _bodyRender.Draw(world.Ground.Body, gameTime);
+            //_bodyRender.Draw(world.Ground.Body, gameTime);
 
 
             TheGame.SpriteBatch.End();
@@ -164,8 +164,8 @@ namespace VibeSopwith.Game.Components
             var source = new Rectangle(0, 0, (int)(height * vp.AspectRatio), (int)height);
             GraphicsDevice.Viewport = new Viewport(source.X, source.Y, source.Width, source.Height);
 
-            float scaleVertFactor = (float)GraphicsDevice.Viewport.Height / GameWorld.WorldHeight;
-            float worldPixelSize = (1f / scaleVertFactor) * 1f;
+            float scaleVertFactor = (float)GraphicsDevice.Viewport.Height / GameWorld.WorldHeight; // Screen pixels per world unit
+            float worldPixelSize = (1f / scaleVertFactor) * 1f; // World units per virtual pixel
 
             DrawStraight(world, gameTime, scaleVertFactor, scaleVertFactor, true, 4f, cameraPositionX, new Vector2(worldPixelSize, worldPixelSize));
 
