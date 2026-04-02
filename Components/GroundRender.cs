@@ -8,14 +8,17 @@ namespace VibeSopwith.Game.Components
     internal class GroundRender(Microsoft.Xna.Framework.Game game) : DrawableGameComponent(game)
     {
         private Texture2D _groundTexture = null!;
+        private Texture2D _skyTexture = null!;
 
         private VertexPositionColorTexture[] _quadVertsTex = new VertexPositionColorTexture[0];
         private Guid _lastGroundHash = Guid.Empty;
 
         public void LoadContent(GraphicsDevice graphicsDevice)
         {
-            var tex = Game.Content.Load<Texture2D>("Textures\\Rock_Tile.png");
-            _groundTexture = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, tex);
+            var tex1 = Game.Content.Load<Texture2D>("Textures\\Rock_Tile.png");
+            _groundTexture = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, tex1);
+            var tex2 = Game.Content.Load<Texture2D>("Textures\\Skybox_1.png");
+            _skyTexture = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, tex2);
         }
 
         public void Draw(Ground ground, float thickness, float scaleVert, Matrix transform)
@@ -54,18 +57,19 @@ namespace VibeSopwith.Game.Components
             {
                 if (_quadVertsTex.Length != vertCount)
                     _quadVertsTex = new VertexPositionColorTexture[vertCount];
-                singlePass((i, start, end) => FillUnderLineTexture(i, start, end, 0, Color.White, 8));
-                singlePass((i, start, end) => FillUnderLineTexture(i + triCount / 2, start, end, GameWorld.WorldHeight, Color.Black, 64));
+                singlePass((i, start, end) => FillUnderLineTexture(i, start, end, 0, Color.White, new Vector2(8, 8)));
+                //singlePass((i, start, end) => FillUnderLineTexture(i + triCount / 2, start, end, GameWorld.WorldHeight, Color.Black, new Vector2(64, 64)));
+                singlePass((i, start, end) => FillUnderLineTexture(i + triCount / 2, start, end, GameWorld.WorldHeight, Color.White, new Vector2(GameWorld.WorldLength, GameWorld.WorldHeight)));
             }
             _lastGroundHash = ground.Hash;
 
             DrawTextures(gd, _groundTexture, 0);
-            DrawTextures(gd, TheGame.Primitives.Pixel, _quadVertsTex.Length/2);
+            DrawTextures(gd, _skyTexture, _quadVertsTex.Length/2);
 
             singlePass((_, start, end) => TheGame.Primitives.DrawLine(start, end, Color.White, thickness / scaleVert));
         }
 
-        private void FillUnderLineTexture(int i, Vector2 p1, Vector2 p2, float baseLine, Color color, float tileSizeWorld)
+        private void FillUnderLineTexture(int i, Vector2 p1, Vector2 p2, float baseLine, Color color, Vector2 tileSizeWorld)
         {
             var tile = tileSizeWorld; // world units per texture tile
 
@@ -74,11 +78,11 @@ namespace VibeSopwith.Game.Components
             Vector3 v3 = new(p2.X, baseLine, 0);
             Vector3 v4 = new(p1.X, baseLine, 0);
 
-            // UVs based on world coordinates
-            Vector2 uv1 = new(p1.X / tile, p1.Y / tile);
-            Vector2 uv2 = new(p2.X / tile, p2.Y / tile);
-            Vector2 uv3 = new(p2.X / tile, baseLine / tile);
-            Vector2 uv4 = new(p1.X / tile, baseLine / tile);
+            // UVs based on world coordinates. "Minus-Y" because our world is Y-flipped.
+            Vector2 uv1 = new(p1.X / tile.X, p1.Y / -tile.Y);
+            Vector2 uv2 = new(p2.X / tile.X, p2.Y / -tile.Y);
+            Vector2 uv3 = new(p2.X / tile.X, baseLine / -tile.Y);
+            Vector2 uv4 = new(p1.X / tile.X, baseLine / -tile.Y);
 
             // Two triangles
             i = i * 6;
