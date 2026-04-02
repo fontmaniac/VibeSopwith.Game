@@ -32,8 +32,8 @@ namespace VibeSopwith.Game
         public TheGame()
         {
             _graphics = new GraphicsDeviceManager(this);
-            _graphics.PreferredBackBufferWidth = 1600; 
-            _graphics.PreferredBackBufferHeight = 1000;
+            _graphics.PreferredBackBufferWidth = 1920; 
+            _graphics.PreferredBackBufferHeight = 1080;
             _graphics.SynchronizeWithVerticalRetrace = true;
 
             Content.RootDirectory = "Content";

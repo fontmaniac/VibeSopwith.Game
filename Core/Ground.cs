@@ -7,8 +7,10 @@ namespace VibeSopwith.Game.Core
 {
     internal class Ground 
     {
+        public Guid Hash { get; private set; } = Guid.NewGuid();
         public readonly List<Vector2> Points;
         public Body Body = null!;
+
 
         private Ground(List<Vector2> points)
         {
@@ -93,7 +95,7 @@ namespace VibeSopwith.Game.Core
         {
             result = default;
 
-            float x = Resolve(offset, null);
+            float offsetX = Resolve(offset, null);
 
             var pts = Points;
             int n = pts.Count;
@@ -110,7 +112,7 @@ namespace VibeSopwith.Game.Core
                 var a = pts[i];
                 var b = pts[i + 1];
 
-                if (Math.Abs(a.X - b.X) < eps && Math.Abs(a.X - x) < eps)
+                if (Math.Abs(a.X - b.X) < eps && Math.Abs(a.X - offsetX) < eps)
                 {
                     // This segment is vertical and sits exactly at X = x
                     // Normalize ordering: a.Y <= b.Y
@@ -131,9 +133,9 @@ namespace VibeSopwith.Game.Core
                     if (b.Y > maxY) maxY = b.Y;
                 }
 
-                var p1 = new Vector2(x, minY);
-                var p2 = new Vector2(x, maxY);
-                var pm = new Vector2(x, (minY + maxY) * 0.5f);
+                var p1 = new Vector2(offsetX, minY);
+                var p2 = new Vector2(offsetX, maxY);
+                var pm = new Vector2(offsetX, (minY + maxY) * 0.5f);
 
                 result = (p1, pm, p2);
                 return true;
@@ -148,8 +150,8 @@ namespace VibeSopwith.Game.Core
 
                 // Check if x lies between a.X and b.X (inclusive)
                 bool inRange =
-                    (a.X <= x + eps && b.X >= x - eps) ||
-                    (b.X <= x + eps && a.X >= x - eps);
+                    (a.X <= offsetX + eps && b.X >= offsetX - eps) ||
+                    (b.X <= offsetX + eps && a.X >= offsetX - eps);
 
                 if (!inRange)
                     continue;
@@ -163,14 +165,14 @@ namespace VibeSopwith.Game.Core
                 {
                     // Not vertical (we handled vertical above), so treat as a point
                     float y = 0.5f * (a.Y + b.Y);
-                    var pm = new Vector2(x, y);
+                    var pm = new Vector2(offsetX, y);
                     result = (a, pm, b);
                     return true;
                 }
 
-                float t = (x - a.X) / dx;
+                float t = (offsetX - a.X) / dx;
                 float yInterp = a.Y + t * (b.Y - a.Y);
-                var pm2 = new Vector2(x, yInterp);
+                var pm2 = new Vector2(offsetX, yInterp);
 
                 result = (a, pm2, b);
                 return true;
@@ -205,7 +207,7 @@ namespace VibeSopwith.Game.Core
                 var platformX = 0f;
                 do
                 {
-                    platformX = (float)GameWorld.WorldSeed.NextDouble() * GameWorld.WorldLength;
+                    platformX = MathF.Round((float)GameWorld.WorldSeed.NextDouble() * GameWorld.WorldLength);
                 } while (!fullAccept(platformX));
 
                 if (!result.GetSegmentAtOffset(new HOffset.OffLeft(platformX, Units.Met), out var seg))
@@ -739,10 +741,8 @@ namespace VibeSopwith.Game.Core
 
         public (float leftX, float rightX) PlaceDent(float x0, float radius, float depth, int segmentsPerMeter)
         {
-            float worldW = GameWorld.WorldLength;
-
-            float leftX = Math.Max(0f, x0 - radius);
-            float rightX = Math.Min(worldW, x0 + radius);
+            var leftX = Math.Max(0f, x0 - radius);
+            var rightX = Math.Min(GameWorld.WorldLength, x0 + radius);
 
             // --- 1. Helper: evaluate f(x) from existing polyline --------------------
             float Eval(float x)
@@ -768,37 +768,27 @@ namespace VibeSopwith.Game.Core
             var newPts = new List<Vector2>(Points.Count + 32);
 
             // 3a. Keep all points strictly left of leftX
-            foreach (var p in Points)
-                if (p.X < leftX)
-                    newPts.Add(p);
+            newPts.AddRange(Points.Where(p => p.X < leftX));
 
             // 3b. Insert a boundary point at leftX
-            {
-                float y = Eval(leftX) + Dent(leftX);
-                newPts.Add(new Vector2(leftX, y));
-            }
+            newPts.Add(new Vector2(leftX, Eval(leftX) + Dent(leftX)));
 
             // 3c. Resample only the dent range
-            float dxSample = 1f / segmentsPerMeter;
-            int sampleCount = (int)((rightX - leftX) * segmentsPerMeter);
+            var dxSample = 1f / segmentsPerMeter;
+            var sampleCount = (int)((rightX - leftX) * segmentsPerMeter);
 
-            for (int i = 1; i < sampleCount; i++)
+            for (var i = 1; i < sampleCount; i++)
             {
-                float x = leftX + i * dxSample;
-                float y = Eval(x) + Dent(x);
+                var x = leftX + i * dxSample;
+                var y = Eval(x) + Dent(x);
                 newPts.Add(new Vector2(x, y));
             }
 
             // 3d. Insert a boundary point at rightX
-            {
-                float y = Eval(rightX) + Dent(rightX);
-                newPts.Add(new Vector2(rightX, y));
-            }
+            newPts.Add(new Vector2(rightX, Eval(rightX) + Dent(rightX)));
 
             // 3e. Keep all points strictly right of rightX
-            foreach (var p in Points)
-                if (p.X > rightX)
-                    newPts.Add(p);
+            newPts.AddRange(Points.Where(p => p.X > rightX));
 
             // 3f. Sort by X (just in case)
             newPts.Sort((a, b) => a.X.CompareTo(b.X));
@@ -806,6 +796,7 @@ namespace VibeSopwith.Game.Core
             // 3g. Replace ground points
             Points.Clear();
             Points.AddRange(newPts);
+            Hash = Guid.NewGuid();
 
             return (leftX, rightX);
         }

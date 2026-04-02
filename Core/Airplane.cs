@@ -191,6 +191,7 @@ namespace VibeSopwith.Game.Core
         private const float BulletSpeed = 21f;              // meters per second
         private const float AccelerationGravityFactor = 0.5f;
         private const float AccelerationReverseFactor = 1.2f;
+        private const float AccelerationReversePastMinFactor = 0.1f;
 
         public enum ThrottleInput { Throttling, None, Reversing }
         public enum PitchInput { Forward, None, Backward }
@@ -224,9 +225,12 @@ namespace VibeSopwith.Game.Core
                 ? (BasisSpin.Up, nowTime)
                 : (BasisSpin.Down, nowTime);
 
+            var accReverseFactor =
+                Speed > MinSpeed ? AccelerationReverseFactor : AccelerationReversePastMinFactor;
+
             var newSpeedRaw =
                 input.Throttle == ThrottleInput.Throttling ? Speed + Acceleration * dt :
-                input.Throttle == ThrottleInput.Reversing ? Speed - Acceleration * dt * AccelerationReverseFactor :
+                input.Throttle == ThrottleInput.Reversing ? Speed - Acceleration * dt * accReverseFactor :
                 Speed;
 
             var lowSpeedLimit =

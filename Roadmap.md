@@ -1,0 +1,55 @@
+# VibeSopwith Roadmap
+
+- [ ] Assets (Friend | Foe | LR | RL )
+    - [ ] Planes
+    - [ ] Plane Skins
+    - [ ] Bombs
+    - [ ] Buildings
+        - [ ] Cistern
+        - [ ] Factory
+        - [ ] Airbase Tower
+        - [ ] HQ
+        - [ ] Tank
+        - [ ] Bunker
+        - [ ] Flak Gun
+        - [ ] Runway Flag
+        - [ ] Tree
+    - [ ] Explosions
+- [ ] Parallax backgrounds
+- [ ] HQ with destructible flag
+- [ ] Flak Gun with rotatable and shooting part; AI
+- [ ] Enemy plane with AI
+- [ ] Level Editor
+- [ ] Score Tab
+- [ ] Dash with good dials (textures)
+- [ ] "Upgrades"
+    - [ ] Multiple guns (Twin | Triple | Tail Gun)
+    - [ ] Multiple bombs (Double | Triple )
+    - [ ] Faster and longer living bullets
+    - [ ] Bomb and bullet aim highlight | "sights"
+    - [ ] Landing funnel highlight
+    - [ ] Target highlight (+minimap)
+    - [ ] Auto-land as upgrade?
+    - [ ] Increased speed 
+    - [ ] Landing tunes: increased max-speed; increased angle;
+- [ ] Upgrade indicators
+- [ ] Clouds
+- [ ] Birds
+- [ ] Visual effects
+- [ ] Pixelization - explore
+- [ ] Auto-landing improvements
+    - [ ] Relief avoidance
+    - [ ] Working armaments
+    - [ ] Cancellation
+- [ ] Difficulty levels
+    - [ ] Armament limits
+    - [ ] Damage limits
+    - [ ] Possibly enemy AI tuning
+- [ ] Damage model
+    - [ ] Tailspin
+    - [ ] Tail trail
+- [ ] Runway highlight
+- [ ] Settings
+- [ ] Sounds
+    
+    

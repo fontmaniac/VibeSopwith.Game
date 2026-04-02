@@ -40,7 +40,7 @@ namespace VibeSopwith.Game.Core
         {
             public sealed record Failure() : ApproachPhase;
             public sealed record Initial(Approach Approach, ApproachZone TargetZone) : ApproachPhase;
-            public sealed record PreFinal(Approach Approach, ApproachZone FinalZone, LoopDirection Loop) : ApproachPhase;
+            public sealed record PreFinal(Approach Approach, ApproachZone TargetZone, LoopDirection Loop) : ApproachPhase;
             public sealed record Final(Approach Approach, ApproachZone PreTouchZone) : ApproachPhase;
             public sealed record PreTouch(Approach Approach) : ApproachPhase;
             public sealed record Touchdown(Approach Approach) : ApproachPhase;
@@ -257,9 +257,9 @@ namespace VibeSopwith.Game.Core
                     plane.Position.X > zone.ExitX ? ZoneMatch.InZone :
                     ZoneMatch.AfterZone);
 
-            (ApproachPhase Phase, Airplane.Inputs Inputs) steerToFinal(ApproachPhase.PreFinal x) 
+            (ApproachPhase Phase, Airplane.Inputs Inputs) steerToTarget(ApproachPhase.PreFinal x) 
             {
-                var (loop, inputs) = plane.SteerTowards(x.Approach, x.Approach.Final, x.Loop, ups);
+                var (loop, inputs) = plane.SteerTowards(x.Approach, x.TargetZone, x.Loop, ups);
                 return (x with { Loop = loop }, inputs);
             }
 
@@ -280,20 +280,20 @@ namespace VibeSopwith.Game.Core
                     {
                         ZoneMatch.BeforeZone => (x, plane.SteerTowards(x.Approach, x.Approach.PreFinal, LoopDirection.NoLoop, ups).Inputs),
                         ZoneMatch.InZone or 
-                        ZoneMatch.AfterZone => steerToFinal(new ApproachPhase.PreFinal(x.Approach, x.Approach.Final, LoopDirection.NoLoop)),       
+                        ZoneMatch.AfterZone => steerToTarget(new ApproachPhase.PreFinal(x.Approach, x.Approach.Final, LoopDirection.NoLoop)),       
                         _ => approachFail(),
                     },
                 ApproachPhase.Initial x when x.TargetZone == x.Approach.Final =>
                     inZone(x.TargetZone) switch
                     {
-                        ZoneMatch.BeforeZone => steerToFinal(new ApproachPhase.PreFinal(x.Approach, x.Approach.Final, LoopDirection.NoLoop)),
+                        ZoneMatch.BeforeZone => steerToTarget(new ApproachPhase.PreFinal(x.Approach, x.Approach.Final, LoopDirection.NoLoop)),
                         ZoneMatch.InZone => steerToPreTouch(new ApproachPhase.Final(x.Approach, x.Approach.PreTouch)),
                         _ => approachFail(),
                     },
                 ApproachPhase.PreFinal x =>
-                    inZone(x.FinalZone) switch
+                    inZone(x.TargetZone) switch
                     {
-                        ZoneMatch.BeforeZone => steerToFinal(x),
+                        ZoneMatch.BeforeZone => steerToTarget(x),
                         ZoneMatch.InZone => steerToPreTouch(new ApproachPhase.Final(x.Approach, x.Approach.PreTouch)),
                         _ => approachFail(),
                     },

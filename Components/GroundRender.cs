@@ -1,6 +1,5 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using nkast.Aether.Physics2D.Dynamics;
 using VibeSopwith.Game.Core;
 using VibeSopwith.Game.Graphics;
 
@@ -11,6 +10,7 @@ namespace VibeSopwith.Game.Components
         private Texture2D _groundTexture = null!;
 
         private VertexPositionColorTexture[] _quadVertsTex = new VertexPositionColorTexture[0];
+        private Guid _lastGroundHash = Guid.Empty;
 
         public void LoadContent(GraphicsDevice graphicsDevice)
         {
@@ -50,12 +50,14 @@ namespace VibeSopwith.Game.Components
             // Allocate/Reallocate _quadVertsTex according to the number of segments, if necessary.
             var triCount = (ground.Points.Count - 1) * 2;
             var vertCount = triCount * 3 * 2;
-            if (_quadVertsTex.Length != vertCount)
+            if (_lastGroundHash != ground.Hash)
             {
-                _quadVertsTex = new VertexPositionColorTexture[vertCount];
+                if (_quadVertsTex.Length != vertCount)
+                    _quadVertsTex = new VertexPositionColorTexture[vertCount];
                 singlePass((i, start, end) => FillUnderLineTexture(i, start, end, 0, Color.White, 8));
                 singlePass((i, start, end) => FillUnderLineTexture(i + triCount / 2, start, end, GameWorld.WorldHeight, Color.Black, 64));
             }
+            _lastGroundHash = ground.Hash;
 
             DrawTextures(gd, _groundTexture, 0);
             DrawTextures(gd, TheGame.Primitives.Pixel, _quadVertsTex.Length/2);

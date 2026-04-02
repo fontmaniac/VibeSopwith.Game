@@ -13,7 +13,7 @@ namespace VibeSopwith.Game.Components
         {
             base.LoadContent();
 
-            var tex1 = Game.Content.Load<Texture2D>("Textures\\Plane_1.png");
+            var tex1 = Game.Content.Load<Texture2D>("Textures\\Plane_1_Q.png");
             _airplaneTexture = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, tex1);
         }
 

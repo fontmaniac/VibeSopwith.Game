@@ -124,7 +124,7 @@ namespace VibeSopwith.Game.Components
 
             foreach (var building in world.Buildings)
             {
-                _buildingRender.Draw(building, gameTime);
+                _buildingRender.DrawSnapped(building, gameTime, worldPixelSize);
                 //_bodyRender.Draw(building.Body, gameTime);
             }
 
@@ -140,7 +140,7 @@ namespace VibeSopwith.Game.Components
             foreach (var explosion in world.GetExplosions())
                 _explosionRender.Draw(explosion, gameTime);
 
-            _bodyRender.Draw(world.Plane.Body, gameTime);
+            //_bodyRender.Draw(world.Plane.Body, gameTime);
             //_bodyRender.Draw(world.Ground.Body, gameTime);
 
 
@@ -160,7 +160,7 @@ namespace VibeSopwith.Game.Components
             GraphicsDevice.Clear(Color.Black);
 
             var destination = new Rectangle(0, 0, vp.Width, vp.Height);
-            var height = vp.Height/1;
+            var height = vp.Height;
             var source = new Rectangle(0, 0, (int)(height * vp.AspectRatio), (int)height);
             GraphicsDevice.Viewport = new Viewport(source.X, source.Y, source.Width, source.Height);
 
