@@ -1,6 +1,7 @@
-MANIFEST-2026-04-02T04:25:17Z-master-97e08b6a9d72470f97bbb85f020711c5
+MANIFEST-2026-04-02T12:56:39Z-master-572ef1f42fd74409991202e527f53563
 Content
 https://github.com/fontmaniac/VibeSopwith.Content.git
 
-+ Textures/Rock_Tile_Huge2.png
-+ Textures/Skybox_1.png
++ Textures/Flak_1.png
++ Textures/Flak_1_LR.png
++ Textures/Flak_1_RL.png

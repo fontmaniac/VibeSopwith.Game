@@ -413,7 +413,7 @@ namespace VibeSopwith.Game.Core
                 .Segment(OffRight(0f, Units.Pct), OffCeiling(0f, Units.Met))
                 .Build();
 
-        public static (Ground, List<StaticBuilding>, List<Runway>) MakeWithBuildings()
+        public static (Ground, List<StaticBuilding>, List<FlakGun>, List<Runway>) MakeWithBuildings()
         {
             var result = MakeQuasiRandom1(-5f);
             //var result = MakeRandomRollingHills(new RestrictionZone(270, 320, 25), segmentsPerMeter:8);
@@ -425,6 +425,9 @@ namespace VibeSopwith.Game.Core
             result = PlacePlatform(result, OffLeft(270, Units.Met), 20, OffFloor(25, Units.Met), float.Pi / 8f);
 
             result = PlaceRandomPlatforms(result, 20, 5, (x) => x > 50 && x < GameWorld.WorldLength-50 && (x < 250f || x > 350f), out var platforms);
+
+            result = PlacePlatform(result, OffLeft(340, Units.Met), 5, OffFloor(17, Units.Met), float.Pi / 4f);
+            result = PlacePlatform(result, OffLeft(360, Units.Met), 5, OffFloor(15, Units.Met), float.Pi / 4f);
 
             var buildings = new List<StaticBuilding>();
             buildings.Add(new StaticBuilding(StaticBuilding.BuildingType.Factory, new Vector2(11, 30f), BasisSpin.Up));
@@ -451,9 +454,13 @@ namespace VibeSopwith.Game.Core
             var (runway, withRunwayPlatform) = result.WithRunway(25, 300-20, 300+20, 5);
             runways.Add(runway);
 
+            var flakGuns = new List<FlakGun>();
+            flakGuns.Add(new FlakGun(new Vector2(340, 17), BasisSpin.Down));
+            flakGuns.Add(new FlakGun(new Vector2(360, 15), BasisSpin.Up));
+
             Console.WriteLine($"Ground segments: {withRunwayPlatform.Points.Count}");
 
-            return (withRunwayPlatform, buildings, runways);
+            return (withRunwayPlatform, buildings, flakGuns, runways);
         }
 
         public static string ReverseBuild(Ground ground, Units horzUnits, Units vertUnits, bool useOffPrev = false, float flatThreshold = 0.03f)
@@ -739,7 +746,9 @@ namespace VibeSopwith.Game.Core
             return new Ground(cleaned);
         }
 
-        public (float leftX, float rightX) PlaceDent(float x0, float radius, float depth, int segmentsPerMeter)
+        public record XRange(float LeftX, float RightX);
+
+        public XRange PlaceDent(float x0, float radius, float depth, int segmentsPerMeter)
         {
             var leftX = Math.Max(0f, x0 - radius);
             var rightX = Math.Min(GameWorld.WorldLength, x0 + radius);
@@ -798,16 +807,16 @@ namespace VibeSopwith.Game.Core
             Points.AddRange(newPts);
             Hash = Guid.NewGuid();
 
-            return (leftX, rightX);
+            return new(leftX, rightX);
         }
 
-        public void ReRigRange(float leftX, float rightX)
+        public void ReRigRange(XRange range)
         {
             // Remove fixtures falling within range.
             bool fixtureToDelete(Fixture f)
             {
                 var tag = ((Vector2 p1, Vector2 p2))f.Tag;
-                return tag.p1.X >= leftX && tag.p2.X <= rightX;
+                return tag.p1.X >= range.LeftX && tag.p2.X <= range.RightX;
             }
             var fixturesToDelete = Body.FixtureList.Where(fixtureToDelete).ToList();
             foreach (var f in fixturesToDelete) Body.Remove(f);
@@ -818,7 +827,7 @@ namespace VibeSopwith.Game.Core
                 var p1 = Points[i];
                 var p2 = Points[i + 1];
 
-                if (!(p1.X <= rightX && p2.X >= leftX))
+                if (!(p1.X <= range.RightX && p2.X >= range.LeftX))
                     continue;
 
                 var bottomLeft = new Vector2(p1.X, 0);
@@ -839,7 +848,7 @@ namespace VibeSopwith.Game.Core
 
         }
 
-        public void SetupRigging(World collisionWorld)
+        public void SetupRigging(World collisionWorld, Func<object>? makeTag = null)
         {
             var groundBody = collisionWorld.CreateBody(Aether.Vector2.Zero, 0f, BodyType.Static);
 
@@ -849,7 +858,10 @@ namespace VibeSopwith.Game.Core
 
             Body = groundBody;
 
-            ReRigRange(0, GameWorld.WorldLength);
+            ReRigRange(new(0, GameWorld.WorldLength));
+
+            makeTag = makeTag ?? (() => this);
+            Body.Tag = makeTag();
         }
     }
 }

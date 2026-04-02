@@ -1,10 +1,11 @@
 ﻿using Microsoft.Xna.Framework;
+using System.Diagnostics.Metrics;
 
 namespace VibeSopwith.Game;
 
 public enum BasisSpin { Down, Up }
 
-public interface ICentered
+public interface ILocation
 {
     Vector2 Position { get; }   // In world
     Vector2 Direction { get; }
@@ -13,14 +14,9 @@ public interface ICentered
     float Height { get; }       // Measurement along Y-axis 
 }
 
-public record Centered(
-    Vector2 Position,
-    Vector2 Direction,
-    BasisSpin Spin,
-    float Length,
-    float Height) : ICentered
+public record Location(Vector2 Position, Vector2 Direction, BasisSpin Spin, float Length, float Height) : ILocation
 {
-    public static Centered OffInterface(ICentered src) => new Centered(
+    public static Location OffInterface(ILocation src) => new Location(
         src.Position,
         src.Direction,
         src.Spin,
@@ -38,4 +34,14 @@ public interface ISimulated<TState>
     public void PostSimulationUpdate(TState projected);
 }
 
+public interface IDescribeMyself { string WhoAmI { get; } }
 
+public interface ICanDieByBomb<T>
+{
+    Func<bool> IsExploded { get; }
+    Action SetExploded { get; }
+    Action<T> RemoveRigging { get; }
+    Func<GameTime, Vector2, T> MakeExplosion { get; }
+}
+
+public record CanDieByBomb<T>(string WhoAmI, Func<bool> IsExploded, Action SetExploded, Action<T> RemoveRigging, Func<GameTime, Vector2, T> MakeExplosion) : ICanDieByBomb<T>, IDescribeMyself;

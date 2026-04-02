@@ -23,7 +23,7 @@ namespace VibeSopwith.Game.Components
         public void Draw(Bullet bullet, float pxPerUnit, GameTime gameTime)
         {
             DrawHelper.DrawCentered(
-                Centered.OffInterface(bullet) with 
+                Location.OffInterface(bullet) with 
                 { 
                     Length = BulletLengthPx / pxPerUnit,  
                     Height = BulletHeightPx / pxPerUnit,

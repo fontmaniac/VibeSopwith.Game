@@ -16,6 +16,7 @@ namespace VibeSopwith.Game.Components
         private BombRender _bombRender = null!;
         private BulletRender _bulletRender = null!;
         private StaticBuildingRender _buildingRender = null!;
+        private FlakGunRender _flakGunRender = null!;
 
         private RenderTarget2D _upscaleTarget = null!;
         private RenderTarget2D _postTarget = null!;
@@ -48,6 +49,9 @@ namespace VibeSopwith.Game.Components
 
             _buildingRender = new StaticBuildingRender(Game);
             _buildingRender.LoadContent();
+
+            _flakGunRender = new FlakGunRender(Game);
+            _flakGunRender.LoadContent();
 
             _bodyRender = new AetherBodyRender(Game);
             _approachRender = new ApproachRender(Game);
@@ -126,6 +130,12 @@ namespace VibeSopwith.Game.Components
             {
                 _buildingRender.DrawSnapped(building, gameTime, worldPixelSize);
                 //_bodyRender.Draw(building.Body, gameTime);
+            }
+
+            foreach (var flakGun in world.FlakGuns)
+            {
+                _flakGunRender.DrawSnapped(flakGun, gameTime, worldPixelSize);
+                _bodyRender.Draw(flakGun.Body, gameTime);
             }
 
             _airplaneRender.Draw(world.Plane, gameTime);

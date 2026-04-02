@@ -5,7 +5,7 @@ using Aether = nkast.Aether.Physics2D.Common;
 
 namespace VibeSopwith.Game.Core
 {
-    internal class Airplane : ICentered, ISimulated<Airplane.State>
+    internal class Airplane : ILocation, ISimulated<Airplane.State>
     {
         public Body Body = null!;
 
@@ -45,7 +45,7 @@ namespace VibeSopwith.Game.Core
         private Fixture[] bodyFixtures = null!;
         private Vector2 midPointOffset = Vector2.Zero;
 
-        public void SetupRigging(World collisionWorld)
+        public void SetupRigging(World collisionWorld, Func<object>? makeTag = null)
         {
             var body = collisionWorld.CreateBody(Aether.Vector2.Zero, 0f, BodyType.Dynamic);
             body.Tag = this;
@@ -56,6 +56,9 @@ namespace VibeSopwith.Game.Core
             this.Body = body;
 
             (bodyFixtures, midPointOffset) = RebuildFixtures(body, []);
+
+            makeTag = makeTag ?? (() => this);
+            Body.Tag = makeTag();
         }
 
         private (Fixture[], Vector2) RebuildFixtures(Body body, Fixture[] fixtures)

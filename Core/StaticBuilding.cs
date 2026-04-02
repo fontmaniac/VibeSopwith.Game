@@ -1,11 +1,10 @@
 ﻿using Microsoft.Xna.Framework;
 using nkast.Aether.Physics2D.Dynamics;
-using System.Diagnostics.Metrics;
 using VibeSopwith.Game.Utils;
 
 namespace VibeSopwith.Game.Core
 {
-    internal class StaticBuilding : ICentered
+    internal class StaticBuilding : ILocation
     {
         public Body Body = null!;
 
@@ -50,6 +49,7 @@ namespace VibeSopwith.Game.Core
             body.AngularDamping = 0.0f;
 
             var ff = FlipFactor;
+
             // Add fixture 0
             var vertices0 = new[]
             {
@@ -130,13 +130,17 @@ namespace VibeSopwith.Game.Core
 
             return body;
         }
-        public void SetupRigging(World collisionWorld)
+
+        public void SetupRigging(World collisionWorld, Func<object>? makeTag = null)
         {
             Body =
                 TheType == BuildingType.Factory  ? SetupRigging_Factory(collisionWorld) :
                 TheType == BuildingType.Cistern  ? SetupRigging_Cistern(collisionWorld) :
                 TheType == BuildingType.ArmyBase ? SetupRigging_ArmyBase(collisionWorld) :
                 throw new ApplicationException("Unsupported building type");
+
+            makeTag = makeTag ?? (() => this);
+            Body.Tag = makeTag();
         }
 
     }

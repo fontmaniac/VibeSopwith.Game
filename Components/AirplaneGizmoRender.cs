@@ -42,7 +42,7 @@ namespace VibeSopwith.Game.Components
                 transform);
 
             DrawHelper.DrawCentered(
-                Centered.OffInterface(airplane) with { Position = new Vector2(TheGame.PlaneGizmoWidth / 2f, TheGame.PlaneGizmoHeight / 2f) },
+                Location.OffInterface(airplane) with { Position = new Vector2(TheGame.PlaneGizmoWidth / 2f, TheGame.PlaneGizmoHeight / 2f) },
                 _airplaneTexture,
                 TheGame.SpriteBatch);
 

@@ -88,7 +88,18 @@ namespace VibeSopwith.Game.Utils
         {
             if (!ct.IsTouching) return false;
 
-            (bool, T?) castAndCheck<T>(Fixture fix, Func<T, bool> check) => fix.Body.Tag is T fix1 && check(fix1) ? (true, fix1) : (false, default(T));
+            bool exists<T>(object[] arr, Func<T, bool> check, out T? found)
+            {
+                found = default(T);
+                var result = arr.FirstOrDefault(x => x is T fix && check(fix));
+                if (result != null) { found = (T)result; return true; }
+                return false;
+            }
+
+            (bool, T?) castAndCheck<T>(Fixture fix, Func<T, bool> check) => 
+                fix.Body.Tag is T fixSingle && check(fixSingle) ? (true, fixSingle) : 
+                fix.Body.Tag is object[] arr && exists(arr, check, out var fixElement) ? (true, fixElement) : 
+                (false, default(T));
 
             (TFix1 fix1, TFix2 fix2)? tryPair(Fixture fa, Fixture fb)
             {
@@ -104,6 +115,22 @@ namespace VibeSopwith.Game.Utils
                 tryPair(ct.FixtureB, ct.FixtureA);
 
             if (fixtures == null) return false;
+
+            string formatCollision()
+            {
+                var d1 = fixtures.Value.fix1 as IDescribeMyself;
+                var d2 = fixtures.Value.fix2 as IDescribeMyself;
+
+                return (d1, d2) switch
+                {
+                    (not null, not null) => string.Format(collisionType, d1.WhoAmI, d2.WhoAmI),
+                    (not null, null)     => string.Format(collisionType, d1.WhoAmI),
+                    (null, not null)     => string.Format(collisionType, d2.WhoAmI),
+                    _ => collisionType
+                };
+            }
+
+            collisionType = formatCollision();
 
             var cp = PrintContactLog(ct, collisionType);
             execute(cp, fixtures.Value.fix1, fixtures.Value.fix2);

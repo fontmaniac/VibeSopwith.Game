@@ -6,7 +6,7 @@ using Aether = nkast.Aether.Physics2D.Common;
 
 namespace VibeSopwith.Game.Core
 {
-    internal class GameWorld 
+    internal class GameWorld
     {
         public const int WorldLength = 600;
         public const int WorldHeight = 50;
@@ -18,9 +18,9 @@ namespace VibeSopwith.Game.Core
         public readonly Ceiling Ceiling;
         public Airplane Plane;
         private readonly List<Explosion> explosions = new List<Explosion>();
-        private Explosion? planeExplosion = null; 
+        private Explosion? planeExplosion = null;
         public IEnumerable<Explosion> GetExplosions()
-        { 
+        {
             if (planeExplosion != null) yield return planeExplosion;
             foreach (var exp in explosions) yield return exp;
         }
@@ -28,6 +28,7 @@ namespace VibeSopwith.Game.Core
         public readonly List<Bomb> Bombs = new List<Bomb>();
         public readonly List<Bullet> Bullets = new List<Bullet>();
 
+        public readonly List<FlakGun> FlakGuns;
         public readonly List<StaticBuilding> Buildings;
         public readonly List<Ground.Runway> Runways;
         public readonly List<Autopilot.Approach> Approaches = new List<Autopilot.Approach>();
@@ -46,19 +47,24 @@ namespace VibeSopwith.Game.Core
             //Ground = Ground.MakeCustom();
 
             Ceiling = new Ceiling();
-            (Ground, Buildings, Runways) = Ground.MakeWithBuildings();
+            (Ground, Buildings, FlakGuns, Runways) = Ground.MakeWithBuildings();
 
-            Ground.SetupRigging(collisionWorld);
+            Ground.SetupRigging(collisionWorld, () => new object[] { Ground, MayDieByBomb(Ground) });
             Ceiling.SetupRigging(collisionWorld);
+
             foreach (var building in Buildings)
-                building.SetupRigging(collisionWorld);
+                building.SetupRigging(collisionWorld, () => MayDieByBomb(building));
+
+            foreach (var flakGun in FlakGuns)
+                flakGun.SetupRigging(collisionWorld, () => MayDieByBomb(flakGun));
+
             Plane = MakeNewPlane();
 
             Autopilot.Approach makeApproach(Ground.Runway rw, float farX, float rwEnd, float rwLevel, float df)
             {
-                var preTouchZone = new Autopilot.ApproachZone(rwEnd+5f*df, rwEnd-15f*df, rwLevel+2.5f, rwLevel+7.5f, (-Vector2.UnitX*df).Rotate(MathHelper.ToRadians(+29f*df)), (-Vector2.UnitX*df).Rotate(MathHelper.ToRadians(+15f*df)));
-                var finalZone = new Autopilot.ApproachZone(rwEnd+35f*df, rwEnd+25f*df, rwLevel+10f, rwLevel+20f, (-Vector2.UnitX*df).Rotate(MathHelper.ToRadians(+30f*df)), (-Vector2.UnitX*df).Rotate(MathHelper.ToRadians(-30f*df)));
-                var preFinalZone = new Autopilot.ApproachZone(rwEnd+95f*df, farX, rwLevel+10f, rwLevel+20f, (Vector2.UnitX*df).Rotate(MathHelper.ToRadians(-45f*df)), (Vector2.UnitX*df).Rotate(MathHelper.ToRadians(+45f*df)));
+                var preTouchZone = new Autopilot.ApproachZone(rwEnd + 5f * df, rwEnd - 15f * df, rwLevel + 2.5f, rwLevel + 7.5f, (-Vector2.UnitX * df).Rotate(MathHelper.ToRadians(+29f * df)), (-Vector2.UnitX * df).Rotate(MathHelper.ToRadians(+15f * df)));
+                var finalZone = new Autopilot.ApproachZone(rwEnd + 35f * df, rwEnd + 25f * df, rwLevel + 10f, rwLevel + 20f, (-Vector2.UnitX * df).Rotate(MathHelper.ToRadians(+30f * df)), (-Vector2.UnitX * df).Rotate(MathHelper.ToRadians(-30f * df)));
+                var preFinalZone = new Autopilot.ApproachZone(rwEnd + 95f * df, farX, rwLevel + 10f, rwLevel + 20f, (Vector2.UnitX * df).Rotate(MathHelper.ToRadians(-45f * df)), (Vector2.UnitX * df).Rotate(MathHelper.ToRadians(+45f * df)));
                 var approach = new Autopilot.Approach(rw, preFinalZone, finalZone, preTouchZone, 34f, 20f);
 
                 return approach;
@@ -83,11 +89,61 @@ namespace VibeSopwith.Game.Core
             var plane = new Airplane(new Vector2(parkingPos, runway.Level), spin);
             plane.CheckAndSetLandingMode(runway);
 
-            plane.SetupRigging(collisionWorld);
+            plane.SetupRigging(collisionWorld, () => new object[] { plane, MayDieByBomb(plane) });
             plane.Body.Position = plane.Position.ToAether();
             plane.Body.Rotation = plane.Direction.ToAngle();
             return plane;
         }
+
+        private ICanDieByBomb<Unit> MayDieByBomb(StaticBuilding building) =>
+            new CanDieByBomb<Unit>(
+                "Building",
+                () => building.Exploded,
+                () => building.Exploded = true,
+                (_) => building.RemoveRigging(collisionWorld),
+                (gameTime, _) => { explosions.Add(MakeBasedExplosion(gameTime, building.Position.ToAether())); return Unit.Value; });
+
+        private ICanDieByBomb<Unit> MayDieByBomb(FlakGun flakGun) =>
+            new CanDieByBomb<Unit>(
+                "FlakGun",
+                () => flakGun.Exploded,
+                () => flakGun.Exploded = true,
+                (_) => flakGun.RemoveRigging(collisionWorld),
+                (gameTime, _) => { explosions.Add(MakeBasedExplosion(gameTime, flakGun.Position.ToAether())); return Unit.Value; });
+
+        private ICanDieByBomb<Unit> MayDieByBomb(Bomb bomb) =>
+            new CanDieByBomb<Unit>(
+                "Bomb",
+                () => !Bombs.Exists(b => bomb == b),
+                () => Bombs.Remove(bomb),
+                (_) => collisionWorld.Remove(bomb.Body),
+                (gameTime, cp) => { explosions.Add(MakeBigExplosion(gameTime, cp.ToAether())); return Unit.Value; });
+
+        private ICanDieByBomb<Unit> MayDieByBomb(Airplane plane) =>
+            new CanDieByBomb<Unit>(
+                "Plane",
+                () => plane.Exploded,
+                () => plane.Exploded = true,
+                (_) => plane.RemoveRigging(collisionWorld),
+                (gameTime, cp) =>
+                {
+                    planeExplosion = MakeBigExplosion(gameTime, cp.ToAether());
+                    explosions.Add(MakeBigExplosion(gameTime, cp.ToAether()));
+                    return Unit.Value;
+                });
+
+        private ICanDieByBomb<Ground.XRange> MayDieByBomb(Ground ground) =>
+            new CanDieByBomb<Ground.XRange>(
+                "Ground",
+                () => false,
+                () => { },
+                (xr) => ground.ReRigRange(xr),
+                (gameTime, cp) => 
+                {
+                    explosions.Add(MakeBigExplosion(gameTime, cp.ToAether()));
+                    return ground.PlaceDent(cp.X, 1.0f, 0.5f, segmentsPerMeter: 8);
+                });
+
 
         private static Explosion MakeBasedExplosion(GameTime gameTime, Aether.Vector2 pt) =>
             new Explosion(Explosion.ExplosionVariant.Based1, 16f, 16f, gameTime.TotalGameTime, TimeSpan.FromSeconds(2)) { RootPosition = pt.ToXna() };
@@ -106,16 +162,7 @@ namespace VibeSopwith.Game.Core
             plane.Exploded = true;
             planeExplosion = MakeBigExplosion(ctx.gameTime, ctx.cp);
             var affectedRange = ground.PlaceDent(ctx.cp.X, 1.5f, 0.8f, segmentsPerMeter: 8);
-            ctx.postCheckActions.Push(() => { ground.ReRigRange(affectedRange.leftX, affectedRange.rightX); });
-        }
-
-        private void ExecuteExplosion(CollisionContext ctx, Bomb bomb, Ground ground)
-        {
-            ctx.postCheckActions.Push(() => { collisionWorld.Remove(bomb.Body); });
-            Bombs.Remove(bomb);
-            explosions.Add(MakeBigExplosion(ctx.gameTime, ctx.cp));
-            var affectedRange = ground.PlaceDent(ctx.cp.X, 1.0f, 0.5f, segmentsPerMeter: 8);
-            ctx.postCheckActions.Push(() => { ground.ReRigRange(affectedRange.leftX, affectedRange.rightX); });
+            ctx.postCheckActions.Push(() => { ground.ReRigRange(affectedRange); });
         }
 
         private void ExecuteExplosion(CollisionContext ctx, Bullet bullet, Ground ground)
@@ -125,32 +172,13 @@ namespace VibeSopwith.Game.Core
             explosions.Add(MakeSmallExplosion(ctx.gameTime, ctx.cp));
         }
 
-        private void ExecuteExplosion(CollisionContext ctx, Bomb bomb, Airplane plane)
+        private void ExecuteExplosion<T>(CollisionContext ctx, Bomb bomb, ICanDieByBomb<T> dead)
         {
             ctx.postCheckActions.Push(() => { collisionWorld.Remove(bomb.Body); });
             Bombs.Remove(bomb);
-            ctx.postCheckActions.Push(() => { Plane.RemoveRigging(collisionWorld); });
-            Plane.Exploded = true;
-            planeExplosion = MakeBigExplosion(ctx.gameTime, ctx.cp);
-            explosions.Add(MakeBigExplosion(ctx.gameTime, ctx.cp));
-        }
-
-        private void ExecuteExplosion(CollisionContext ctx, Bomb bomb1, Bomb bomb2)
-        {
-            ctx.postCheckActions.Push(() => { collisionWorld.Remove(bomb1.Body); });
-            ctx.postCheckActions.Push(() => { collisionWorld.Remove(bomb2.Body); });
-            Bombs.Remove(bomb1);
-            Bombs.Remove(bomb2);
-            explosions.Add(MakeBigExplosion(ctx.gameTime, ctx.cp));
-        }
-
-        private void ExecuteExplosion(CollisionContext ctx, Bomb bomb, StaticBuilding building)
-        {
-            ctx.postCheckActions.Push(() => { collisionWorld.Remove(bomb.Body); });
-            ctx.postCheckActions.Push(() => { building.RemoveRigging(collisionWorld); });
-            building.Exploded = true;
-            Bombs.Remove(bomb);
-            explosions.Add(MakeBasedExplosion(ctx.gameTime, building.Position.ToAether()));
+            dead.SetExploded();
+            var payload = dead.MakeExplosion(ctx.gameTime, ctx.cp.ToXna());
+            ctx.postCheckActions.Push(() => { dead.RemoveRigging(payload); });
         }
 
         private void ExecuteCollision(CollisionContext ctx, Airplane plane, StaticBuilding building)
@@ -225,7 +253,7 @@ namespace VibeSopwith.Game.Core
                     var planeProjected = Plane.ApplyInputs(Plane.Input, () => Autopilot.InitiateAutoLanding(Plane, Approaches), gameTime);
 
                     if (planeProjected.Bomb != null)
-                        Bombs.Add(planeProjected.Bomb.SetupRigging(collisionWorld));
+                        Bombs.Add(planeProjected.Bomb.SetupRigging(collisionWorld, () => new object[] { planeProjected.Bomb, MayDieByBomb(planeProjected.Bomb) }));
 
                     if (planeProjected.Bullet != null)
                         Bullets.Add(planeProjected.Bullet.SetupRigging(collisionWorld));
@@ -279,24 +307,23 @@ namespace VibeSopwith.Game.Core
 
             for (Contact ct = collisionWorld.ContactList.Next; ct != collisionWorld.ContactList; ct = ct.Next)
             {
-                var bombAlive     = (Bomb bomb)      => Bombs.Exists(b => bomb == b);
-                var bulletAlive   = (Bullet bullet)  => Bullets.Exists(b => bullet == b);
-                var groundAlive   = (Ground ground)  => true;
-                var planeAlive    = (Airplane plane) => !plane.Exploded;
+                var bombAlive     = (Bomb bomb)       => Bombs.Exists(b => bomb == b);
+                var bulletAlive   = (Bullet bullet)   => Bullets.Exists(b => bullet == b);
+                var groundAlive   = (Ground ground)   => true;
+                var planeAlive    = (Airplane plane)  => !plane.Exploded;
                 var buildingAlive = (StaticBuilding building) => !building.Exploded;
                 var ceilingAlive  = (Ceiling ceiling) => true;
-
+                var byBombAlive1  = (ICanDieByBomb<Unit> byBomb) => !byBomb.IsExploded();
+                var byBombAlive2  = (ICanDieByBomb<Ground.XRange> byBomb) => !byBomb.IsExploded();
 
                 var _ = 
-                    Physics.OnCollision(ct, "Plane-Ground",    planeAlive,  groundAlive,   (cp, p, g)   => ExecuteCollision(makeCtx(cp), p,  g))  ||
-                    Physics.OnCollision(ct, "Bomb-Ground",     bombAlive,   groundAlive,   (cp, b, g)   => ExecuteExplosion(makeCtx(cp), b,  g))  ||
-                    Physics.OnCollision(ct, "Bomb-Bomb",       bombAlive,   bombAlive,     (cp, b1, b2) => ExecuteExplosion(makeCtx(cp), b1, b2)) ||
-                    Physics.OnCollision(ct, "Bomb-Plane",      bombAlive,   planeAlive,    (cp, b, p)   => ExecuteExplosion(makeCtx(cp), b,  p))  ||
-                    Physics.OnCollision(ct, "Bullet-Ground",   bulletAlive, groundAlive,   (cp, b, g)   => ExecuteExplosion(makeCtx(cp), b,  g))  ||
-                    Physics.OnCollision(ct, "Bomb-Building",   bombAlive,   buildingAlive, (cp, b, bb)  => ExecuteExplosion(makeCtx(cp), b,  bb)) ||
-                    Physics.OnCollision(ct, "Plane-Building",  planeAlive,  buildingAlive, (cp, p, b)   => ExecuteCollision(makeCtx(cp), p,  b)) ||
-                    Physics.OnCollision(ct, "Bullet-Building", bulletAlive, buildingAlive, (cp, b, bb)  => ExecuteExplosion(makeCtx(cp), b,  bb)) ||
-                    Physics.OnCollision(ct, "Plane-Ceiling",   planeAlive,  ceilingAlive,  (cp, p, c)   => ExecuteBounce   (makeCtx(cp), p,  c)) ||
+                    Physics.OnCollision(ct, "Plane-Ground",    planeAlive,  groundAlive,    (cp, p, g)   => ExecuteCollision(makeCtx(cp), p,  g))  ||
+                    Physics.OnCollision(ct, "Bullet-Ground",   bulletAlive, groundAlive,    (cp, b, g)   => ExecuteExplosion(makeCtx(cp), b,  g))  ||
+                    Physics.OnCollision(ct, "Plane-Building",  planeAlive,  buildingAlive,  (cp, p, b)   => ExecuteCollision(makeCtx(cp), p,  b))  ||
+                    Physics.OnCollision(ct, "Bullet-Building", bulletAlive, buildingAlive,  (cp, b, bb)  => ExecuteExplosion(makeCtx(cp), b,  bb)) ||
+                    Physics.OnCollision(ct, "Plane-Ceiling",   planeAlive,  ceilingAlive,   (cp, p, c)   => ExecuteBounce   (makeCtx(cp), p,  c))  ||
+                    Physics.OnCollision(ct, "Bomb-{0}",        bombAlive,   byBombAlive1,   (cp, b, bb)  => ExecuteExplosion(makeCtx(cp), b,  bb)) ||
+                    Physics.OnCollision(ct, "Bomb-{0}",        bombAlive,   byBombAlive2,   (cp, b, bb)  => ExecuteExplosion(makeCtx(cp), b,  bb)) ||
                     false;
             }
 

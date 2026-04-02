@@ -4,7 +4,7 @@ using VibeSopwith.Game.Utils;
 
 namespace VibeSopwith.Game.Core
 {
-    internal class Bomb : ICentered, ISimulated<Unit>
+    internal class Bomb : ILocation, ISimulated<Unit>
     {
         public Body Body = null!;
         public record State(Vector2 Position, Vector2 Direction, Vector2 Velocity);
@@ -25,7 +25,7 @@ namespace VibeSopwith.Game.Core
             CurrentState = initialState;
         }
 
-        public Bomb SetupRigging(World collisionWorld)
+        public Bomb SetupRigging(World collisionWorld, Func<object>? makeTag = null)
         {
             var body = collisionWorld.CreateBody(Position.ToAether(), Direction.ToAngle(), BodyType.Dynamic);
             body.LinearVelocity = CurrentState.Velocity.ToAether();
@@ -69,6 +69,9 @@ namespace VibeSopwith.Game.Core
             fixture1.CollidesWith = GameWorld.WorldCollider.GetAll(); // & ~GameWorld.WorldCollider.GetCategories("Bomb");
 
             this.Body = body;
+
+            makeTag = makeTag ?? (() => this);
+            Body.Tag = makeTag();
 
             return this;
         }
