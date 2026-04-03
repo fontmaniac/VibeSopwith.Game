@@ -36,12 +36,26 @@ public interface ISimulated<TState>
 
 public interface IDescribeMyself { string WhoAmI { get; } }
 
+public record Poppet<T>(Func<T, bool> IsAlive, Action<T> Kill)
+{
+    public Poppet Embrace(T target) => new Poppet(() => IsAlive(target), () => Kill(target));
+}
+
+public record Poppet(Func<bool> IsAlive, Action Kill)
+{
+    public static Poppet<T> Make<T>(Func<T, bool> isAlive, Action<T> kill) => new Poppet<T>(isAlive, kill);
+    public static void Make<T>(out Poppet<T> popout, Func<T, bool> isAlive, Action<T> kill) => popout = new Poppet<T>(isAlive, kill);
+    public static void Make<T>(out Poppet<T> popout) => popout = new Poppet<T>(_ => true, _ => { });
+}
+
 public interface ICanDieByBomb<T>
 {
-    Func<bool> IsExploded { get; }
-    Action SetExploded { get; }
-    Action<T> RemoveRigging { get; }
+    Poppet Poppet {  get; }
+    Action<T> RefreshRigging { get; }
     Func<GameTime, Vector2, T> MakeExplosion { get; }
 }
 
-public record CanDieByBomb<T>(string WhoAmI, Func<bool> IsExploded, Action SetExploded, Action<T> RemoveRigging, Func<GameTime, Vector2, T> MakeExplosion) : ICanDieByBomb<T>, IDescribeMyself;
+public record CanDieByBomb<T>(string WhoAmI, Poppet Poppet, Action<T> RefreshRigging, Func<GameTime, Vector2, T> MakeExplosion) : ICanDieByBomb<T>, IDescribeMyself;
+
+
+
