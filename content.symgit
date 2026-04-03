@@ -1,7 +1,6 @@
-MANIFEST-2026-04-02T12:56:39Z-master-572ef1f42fd74409991202e527f53563
+MANIFEST-2026-04-03T10:19:47Z-master-5822b61c915a4be5900e0237e83bf82e
 Content
 https://github.com/fontmaniac/VibeSopwith.Content.git
 
-+ Textures/Flak_1.png
-+ Textures/Flak_1_LR.png
-+ Textures/Flak_1_RL.png
++ Textures/Flak_1_Exploded_LR.png
++ Textures/Flak_1_Exploded_RL.png

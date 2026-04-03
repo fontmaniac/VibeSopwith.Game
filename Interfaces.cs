@@ -54,12 +54,12 @@ public record Poppet(Func<bool> IsAlive, Action Kill)
     public static void Make<T>(out Poppet<T> popout) => popout = new Poppet<T>(_ => true, _ => { });
 }
 
-public interface ICanDie<T>
+public interface IHasPoppet { Poppet Poppet { get; } }
+
+public interface ICanDie<T> : IHasPoppet
 {
-    Poppet Poppet { get; }
     Action<T> RefreshRigging { get; }
     Func<GameTime, Vector2, T> ExecuteEffect { get; }
-
 }
 
 public interface ICanDieByBomb<T> : ICanDie<T>;
@@ -111,6 +111,8 @@ public static class Caps
 
     public static ICanDie<Unit> JustDie<T>(Poppet<T> poppet, T target, World collisionWorld, Func<GameTime, Vector2, Unit> effect) where T : ICanRemoveRigging =>
         new CanDie<Unit>(poppet.Embrace(target), Caps.RemoveRigging(target, collisionWorld), effect);
+
+    public static Func<TCap, bool> CheckAlive<TCap>() where TCap : IHasPoppet => (TCap target) => target.Poppet.IsAlive();
 
 }
 

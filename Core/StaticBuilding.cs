@@ -31,7 +31,8 @@ namespace VibeSopwith.Game.Core
 
         public void RemoveRigging(World collisionWorld)
         {
-            collisionWorld.Remove(Body);
+            collisionWorld.Remove(Body); 
+            Body = null!;
         }
 
         private Body SetupRigging_Cistern(World collisionWorld)

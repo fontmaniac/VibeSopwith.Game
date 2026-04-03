@@ -28,6 +28,7 @@ namespace VibeSopwith.Game.Core
         public void RemoveRigging(World collisionWorld)
         {
             collisionWorld.Remove(Body);
+            Body = null!;
         }
 
         public void SetupRigging(World collisionWorld, Func<object>? makeTag = null)

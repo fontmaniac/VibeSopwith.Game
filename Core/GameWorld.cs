@@ -98,7 +98,6 @@ namespace VibeSopwith.Game.Core
             return plane;
         }
 
-        // Object Capabilities
         #region Object Capabilities
 
         private Poppet<Ground> pGround = null!;
@@ -109,7 +108,7 @@ namespace VibeSopwith.Game.Core
         private Poppet<FlakGun> pFlakGun = null!;
         private Poppet<Ceiling> pCeiling = null!;
 
-        private ICanDie<Unit> howPlaneDies(Airplane plane) => Caps.JustDie(pPlane,  plane,  collisionWorld, Caps.ExecuteEffect((gt, cp) => planeExplosion = MakeBigExplosion(gt, cp.ToAether())));
+        private ICanDie<Unit> howPlaneDies(Airplane plane) => Caps.JustDie(pPlane,  plane,  collisionWorld, Caps.ExecuteEffect((gt, cp) => planeExplosion = MakeBigExplosion(gt, plane.MidPoint.ToAether())));
         private ICanDie<Unit> howBombDies(Bomb bomb)       => Caps.JustDie(pBomb,   bomb,   collisionWorld, Caps.NoEffect());
         private ICanDie<Unit> howBulletDies(Bullet bullet) => Caps.JustDie(pBullet, bullet, collisionWorld, Caps.ExecuteEffect((gt, cp) => explosions.Add(MakeSmallExplosion(gt, cp.ToAether()))));
 
@@ -316,19 +315,13 @@ namespace VibeSopwith.Game.Core
 
             for (Contact ct = collisionWorld.ContactList.Next; ct != collisionWorld.ContactList; ct = ct.Next)
             {
-                var byBombAlive1  = (ICanDieByBomb<Unit> byBomb) => byBomb.Poppet.IsAlive();
-                var byBombAlive2  = (ICanDieByBomb<Ground.XRange> byBomb) => byBomb.Poppet.IsAlive();
-                var byBulletAlive = (ICanDieByBullet<Unit> byBullet) => byBullet.Poppet.IsAlive();
-                var byPlaneAlive1 = (ICanDieByPlane<Unit> byPlane) => byPlane.Poppet.IsAlive();
-                var byPlaneAlive2 = (ICanDieByPlane<Ground.XRange> byPlane) => byPlane.Poppet.IsAlive();
-
                 var _ = 
-                    Physics.OnCollision(ct, "Plane-Ceiling",   pPlane.IsAlive,  pCeiling.IsAlive,   (cp, p, c)   => ExecuteBounce   (makeCtx(cp), p,  c))  ||
-                    Physics.OnCollision(ct, "Plane-{0}",       pPlane.IsAlive,  byPlaneAlive1,      (cp, p, g)   => ExecuteCollision(makeCtx(cp), p,  g))  ||
-                    Physics.OnCollision(ct, "Plane-{0}",       pPlane.IsAlive,  byPlaneAlive2,      (cp, p, b)   => ExecuteCollision(makeCtx(cp), p,  b))  ||
-                    Physics.OnCollision(ct, "Bullet-{0}",      pBullet.IsAlive, byBulletAlive,      (cp, b, bb)  => ExecuteExplosion(makeCtx(cp), b,  bb)) ||
-                    Physics.OnCollision(ct, "Bomb-{0}",        pBomb.IsAlive,   byBombAlive1,       (cp, b, bb)  => ExecuteExplosion(makeCtx(cp), b,  bb)) ||
-                    Physics.OnCollision(ct, "Bomb-{0}",        pBomb.IsAlive,   byBombAlive2,       (cp, b, bb)  => ExecuteExplosion(makeCtx(cp), b,  bb)) ||
+                    Physics.OnCollision(ct, "Plane-Ceiling", pPlane.IsAlive,  pCeiling.IsAlive,                                 (cp, p, c) => ExecuteBounce   (makeCtx(cp), p,  c)) ||
+                    Physics.OnCollision(ct, "Plane-{0}",     pPlane.IsAlive,  Caps.CheckAlive<ICanDieByPlane<Unit>>(),          (cp, p, t) => ExecuteCollision(makeCtx(cp), p,  t)) ||
+                    Physics.OnCollision(ct, "Plane-{0}",     pPlane.IsAlive,  Caps.CheckAlive<ICanDieByPlane<Ground.XRange>>(), (cp, p, t) => ExecuteCollision(makeCtx(cp), p,  t)) ||
+                    Physics.OnCollision(ct, "Bullet-{0}",    pBullet.IsAlive, Caps.CheckAlive<ICanDieByBullet<Unit>>(),         (cp, b, t) => ExecuteExplosion(makeCtx(cp), b,  t)) ||
+                    Physics.OnCollision(ct, "Bomb-{0}",      pBomb.IsAlive,   Caps.CheckAlive<ICanDieByBomb<Unit>>(),           (cp, b, t) => ExecuteExplosion(makeCtx(cp), b,  t)) ||
+                    Physics.OnCollision(ct, "Bomb-{0}",      pBomb.IsAlive,   Caps.CheckAlive<ICanDieByBomb<Ground.XRange>>(),  (cp, b, t) => ExecuteExplosion(makeCtx(cp), b,  t)) ||
                     false;
             }
 
