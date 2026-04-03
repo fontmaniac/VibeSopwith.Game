@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
-using System.Diagnostics.Metrics;
+using nkast.Aether.Physics2D.Dynamics;
+using VibeSopwith.Game.Utils;
 
 namespace VibeSopwith.Game;
 
@@ -34,6 +35,11 @@ public interface ISimulated<TState>
     public void PostSimulationUpdate(TState projected);
 }
 
+public interface ICanRemoveRigging
+{
+    void RemoveRigging(World collisionWorld);
+}
+
 public interface IDescribeMyself { string WhoAmI { get; } }
 
 public record Poppet<T>(Func<T, bool> IsAlive, Action<T> Kill)
@@ -48,14 +54,63 @@ public record Poppet(Func<bool> IsAlive, Action Kill)
     public static void Make<T>(out Poppet<T> popout) => popout = new Poppet<T>(_ => true, _ => { });
 }
 
-public interface ICanDieByBomb<T>
+public interface ICanDie<T>
 {
-    Poppet Poppet {  get; }
+    Poppet Poppet { get; }
     Action<T> RefreshRigging { get; }
-    Func<GameTime, Vector2, T> MakeExplosion { get; }
+    Func<GameTime, Vector2, T> ExecuteEffect { get; }
+
 }
 
-public record CanDieByBomb<T>(string WhoAmI, Poppet Poppet, Action<T> RefreshRigging, Func<GameTime, Vector2, T> MakeExplosion) : ICanDieByBomb<T>, IDescribeMyself;
+public interface ICanDieByBomb<T> : ICanDie<T>;
 
+public interface ICanDieByBullet<T> : ICanDie<T>
+{
+    Func<bool> HitOnce { get; } // Returns true when target supposed to die.
+}
 
+public interface ICanDieByPlane<T> : ICanDie<T>;
+
+public record CanDie<T>(Poppet Poppet, Action<T> RefreshRigging, Func<GameTime, Vector2, T> ExecuteEffect)
+    : ICanDie<T>;
+
+public record CanDieByBomb<T>(string WhoAmI, Poppet Poppet, Action<T> RefreshRigging, Func<GameTime, Vector2, T> ExecuteEffect) 
+    : ICanDieByBomb<T>
+    , IDescribeMyself;
+
+public record CanDieByBullet<T>(string WhoAmI, Poppet Poppet, Func<bool> HitOnce, Action<T> RefreshRigging, Func<GameTime, Vector2, T> ExecuteEffect) 
+    : ICanDieByBullet<T>
+    , IDescribeMyself;
+
+public record CanDieByPlane<T>(string WhoAmI, Poppet Poppet, Action<T> RefreshRigging, Func<GameTime, Vector2, T> ExecuteEffect)
+    : ICanDieByPlane<T>
+    , IDescribeMyself;
+
+public record CanDieByProjectile<T>(string WhoAmI, Poppet Poppet, Func<bool> HitOnce, Action<T> RefreshRigging, Func<GameTime, Vector2, T> ExecuteEffect) 
+    : ICanDieByBullet<T>
+    , ICanDieByBomb<T>
+    , ICanDieByPlane<T>
+    , IDescribeMyself;
+
+public static class Caps
+{
+    public static Func<bool> AbsorbHits(int maxHits)
+    {
+        var hits = 0;
+        return () => (++hits > maxHits);
+    }
+
+    public static Func<bool> ImperviousToHits() => () => false;
+
+    public static Action<Unit> RemoveRigging(ICanRemoveRigging canRemove, World collisionWorld) => (_) => canRemove.RemoveRigging(collisionWorld);
+
+    public static Func<GameTime, Vector2, Unit> ExecuteEffect(Action<GameTime, Vector2> doExecute) => (gt, ct) => { doExecute(gt, ct); return Unit.Value; };
+    public static Func<GameTime, Vector2, Unit> NoEffect() => (_, _) => default;
+
+    public static Action<Unit> DoNothing() => _ => { };
+
+    public static ICanDie<Unit> JustDie<T>(Poppet<T> poppet, T target, World collisionWorld, Func<GameTime, Vector2, Unit> effect) where T : ICanRemoveRigging =>
+        new CanDie<Unit>(poppet.Embrace(target), Caps.RemoveRigging(target, collisionWorld), effect);
+
+}
 

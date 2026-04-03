@@ -4,7 +4,7 @@ using VibeSopwith.Game.Utils;
 
 namespace VibeSopwith.Game.Core
 {
-    internal class StaticBuilding : ILocation
+    internal class StaticBuilding : ILocation, ICanRemoveRigging
     {
         public Body Body = null!;
 
@@ -18,7 +18,6 @@ namespace VibeSopwith.Game.Core
         public BuildingType TheType { get; }
 
         public bool Exploded = false;
-        public int Hits = 0;
 
         private float FlipFactor { get => Spin == BasisSpin.Down ? +1f : -1f; }
 
@@ -33,9 +32,7 @@ namespace VibeSopwith.Game.Core
         public void RemoveRigging(World collisionWorld)
         {
             collisionWorld.Remove(Body);
-            Body = null!;
         }
-
 
         private Body SetupRigging_Cistern(World collisionWorld)
         {

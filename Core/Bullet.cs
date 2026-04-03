@@ -4,7 +4,7 @@ using VibeSopwith.Game.Utils;
 
 namespace VibeSopwith.Game.Core
 {
-    internal class Bullet : ILocation, ISimulated<Unit>
+    internal class Bullet : ILocation, ISimulated<Unit>, ICanRemoveRigging
     {
         public Body Body = null!;
         public record State(Vector2 Position, Vector2 Direction, Vector2 Velocity);
@@ -28,6 +28,11 @@ namespace VibeSopwith.Game.Core
         {
             CurrentState = initialState;
             StartTime = startTime;
+        }
+
+        public void RemoveRigging(World collisionWorld)
+        {
+            collisionWorld.Remove(Body);
         }
 
         public Bullet SetupRigging(World collisionWorld)

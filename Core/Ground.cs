@@ -415,8 +415,8 @@ namespace VibeSopwith.Game.Core
 
         public static (Ground, List<StaticBuilding>, List<FlakGun>, List<Runway>) MakeWithBuildings()
         {
-            //var result = MakeQuasiRandom1(-5f);
-            var result = MakeRandomRollingHills(new RestrictionZone(270, 320, 25), segmentsPerMeter:8);
+            var result = MakeQuasiRandom1(-5f);
+            //var result = MakeRandomRollingHills(new RestrictionZone(270, 320, 25), segmentsPerMeter:8);
             result = PlacePlatform(result, OffLeft(11, Units.Met), 5, OffFloor(30, Units.Met), float.Pi / 4f);
             result = PlacePlatform(result, OffLeft(26, Units.Met), 5, OffFloor(20, Units.Met), float.Pi / 4f);
             result = PlacePlatform(result, OffLeft(600-26, Units.Met), 5, OffFloor(20, Units.Met), float.Pi / 4f);

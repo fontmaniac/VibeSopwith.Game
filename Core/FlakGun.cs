@@ -1,12 +1,10 @@
 ﻿using Microsoft.Xna.Framework;
 using nkast.Aether.Physics2D.Dynamics;
-using System.Security.AccessControl;
 using VibeSopwith.Game.Utils;
-using static VibeSopwith.Game.Core.StaticBuilding;
 
 namespace VibeSopwith.Game.Core
 {
-    internal class FlakGun : ILocation
+    internal class FlakGun : ILocation, ICanRemoveRigging
     {
         public Body Body = null!;
 
@@ -30,7 +28,6 @@ namespace VibeSopwith.Game.Core
         public void RemoveRigging(World collisionWorld)
         {
             collisionWorld.Remove(Body);
-            Body = null!;
         }
 
         public void SetupRigging(World collisionWorld, Func<object>? makeTag = null)

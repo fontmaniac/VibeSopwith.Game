@@ -5,7 +5,7 @@ using Aether = nkast.Aether.Physics2D.Common;
 
 namespace VibeSopwith.Game.Core
 {
-    internal class Airplane : ILocation, ISimulated<Airplane.State>
+    internal class Airplane : ILocation, ISimulated<Airplane.State>, ICanRemoveRigging
     {
         public Body Body = null!;
 
