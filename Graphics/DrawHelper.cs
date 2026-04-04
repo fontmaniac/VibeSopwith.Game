@@ -25,53 +25,10 @@ namespace VibeSopwith.Game.Graphics
         public static void DrawOriginated(this IHasLocation loc, Texture2D texture, Vector2 origin, SpriteBatch spriteBatch, Vector2? worldPixelSize) =>
             DrawOriginatedHanded(loc, HandedTexture.LR.Wrap(texture), origin, spriteBatch, worldPixelSize);
 
-
-
-        static (Vector2 X, Vector2 Y) BasisAxes(IBasis b)
+        public static void DrawOriginatedHanded(this IHasLocation location, HandedTexture tex, Vector2 origin, SpriteBatch spriteBatch, Vector2? worldPixelSize)
         {
-            var x = Vector2.Normalize(b.Direction);
-            var y = b.Spin == BasisSpin.Down
-                ? new Vector2(x.Y, x.X)     // Collinear
-                : new Vector2(-x.Y, -x.X);  // Counterlinear
-            return (x, y);
-        }
-
-        static IBasis ResolveWorldBasis(IBasis b)
-        {
-            if (b is not IRelativeBasis rel)
-                return b; // already world
-
-            var parent = ResolveWorldBasis(rel.Parent);
-
-            var (px, py) = BasisAxes(parent);
-            var (lx, ly) = BasisAxes(rel);
-
-            // Compose orientation
-            var worldX = px * lx.X + py * lx.Y;
-            var worldY = px * ly.X + py * ly.Y;
-
-            // Compose position
-            var worldPos =
-                parent.Position +
-                px * rel.Position.X +
-                py * rel.Position.Y;
-
-            // Compose spin
-            // Is it correct? 
-            var worldSpin =
-                parent.Spin == rel.Spin ? BasisSpin.Down : BasisSpin.Up;
-
-            return new Basis(worldPos, worldX, worldSpin);
-        }
-
-
-        public static void DrawOriginatedHanded(this IHasLocation loc, HandedTexture tex, Vector2 origin, SpriteBatch spriteBatch, Vector2? worldPixelSize)
-        {
-            // 1. Resolve world basis
-            //var wb = ResolveWorldBasis(loc);
-
-            // 1. New interpretation - assume loc IS the world basis.            
-            var wb = loc;
+            // Assume location IS the world basis.            
+            var wb = location;
 
             Vector2 pos = wb.Position;
 
@@ -82,8 +39,8 @@ namespace VibeSopwith.Game.Graphics
             var texture = tex.Texture;
 
             // Scale from object dimensions to texture size (in meters)
-            float scaleX = loc.Length / texture.Width;
-            float scaleY = loc.Height / texture.Height;
+            float scaleX = location.Length / texture.Width;
+            float scaleY = location.Height / texture.Height;
 
             var adjOrigin = new Vector2(origin.X, texture.Height - origin.Y);
 
@@ -104,7 +61,7 @@ namespace VibeSopwith.Game.Graphics
                 rotation,
                 adjOrigin,
                 new Vector2(scaleX, scaleY), // in world units
-                wb.Spin == BasisSpin.Down ? flip : noFlip,      // Previously it was using loc.Spin, which was local one before resolution. I fixed it.
+                wb.Spin == BasisSpin.Down ? flip : noFlip,      
                 0f
             );
         }

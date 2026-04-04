@@ -14,7 +14,6 @@ namespace VibeSopwith.Game.Core
         public State CurrentState;
         public float Speed { get => CurrentState.Speed; }
 
-        public IBasis Parent { get; } = Basis.DefaultWorld;
         public Vector2 Position { get => CurrentState.Position; }       // World position of the plane in meters. 
         public Vector2 Direction { get => CurrentState.Direction; }     // Direction where plane is facing.
         public BasisSpin Spin { get => CurrentState.Spin; }             // Orientation of basis spin. Up is Y-up.

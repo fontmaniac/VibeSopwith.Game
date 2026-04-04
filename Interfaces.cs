@@ -18,26 +18,15 @@ public interface IBasis
     BasisSpin Spin { get; }
 }
 
-public interface IRelativeBasis : IBasis
-{
-    IBasis Parent { get; }
-}
-
-public record Basis(Vector2 Position, Vector2 Direction, BasisSpin Spin) : IBasis
-{
-    public static IBasis DefaultWorld = new Basis(Vector2.Zero, Vector2.UnitX, BasisSpin.Down);
-}
-
-public interface IHasLocation : IRelativeBasis
+public interface IHasLocation : IBasis
 {
     float Length { get; }       // Measurement along X-axis 
     float Height { get; }       // Measurement along Y-axis 
 }
 
-public record Location(IBasis Parent, Vector2 Position, Vector2 Direction, BasisSpin Spin, float Length, float Height) : IHasLocation
+public record Location(Vector2 Position, Vector2 Direction, BasisSpin Spin, float Length, float Height) : IHasLocation
 {
     public static Location OffInterface(IHasLocation src) => new Location(
-        src.Parent,
         src.Position,
         src.Direction,
         src.Spin,

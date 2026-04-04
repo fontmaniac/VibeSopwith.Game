@@ -8,7 +8,6 @@ namespace VibeSopwith.Game.Core
     {
         public Body Body = null!;
 
-        public IBasis Parent { get; } = Basis.DefaultWorld;
         public Vector2 Position { get; }
         public Vector2 Direction { get; }
         public BasisSpin Spin { get; }
