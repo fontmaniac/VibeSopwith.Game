@@ -19,6 +19,8 @@ namespace VibeSopwith.Game.Core
         //----------------------------------------------------------------------------------------------------
 
         public enum Cardinal { Left, Right }
+        public static float ToFactor(this Cardinal c) => c == Cardinal.Left ? -1f : +1f;
+        public static Cardinal Toggle(this Cardinal c) => c == Cardinal.Left ? Cardinal.Right : Cardinal.Left;
 
         public record struct Funnel(Vector2 Def, float AngleDeg1, float AngleDeg2)
         {
@@ -26,7 +28,10 @@ namespace VibeSopwith.Game.Core
             public Vector2 Ray2 = Def.Rotate(MathHelper.ToRadians(AngleDeg2));
         }
 
-        public record struct ApproachZone(float EntryX, float ExitX, float BottomEntryY, float TopEntryY, Funnel Funnel);
+        public record struct ApproachZone(float EntryX, Cardinal Direction, float Width, float BottomEntryY, float TopEntryY, Funnel Funnel)
+        {
+            public float ExitX => EntryX + Width * Direction.ToFactor();
+        }
 
         public enum LoopDirection { NoLoop, PitchUp, PitchDown }
 
@@ -61,7 +66,7 @@ namespace VibeSopwith.Game.Core
         public abstract record ApproachPhase()
         {
             public sealed record Failure() : ApproachPhase;
-            public sealed record Initial(Approach Approach, Approach.Node TargetNode, Cardinal FlightDirection) : ApproachPhase;
+            public sealed record Initial(Approach Approach, Approach.Node TargetNode) : ApproachPhase;
             public sealed record CounterDirect(Approach Approach, Approach.Node CoDirectNode, LoopDirection Loop) : ApproachPhase;
             public sealed record CoDirect(Approach Approach, Approach.Node NextNode) : ApproachPhase;
             public sealed record Final(Approach Approach, ApproachZone PreTouchZone) : ApproachPhase;
@@ -83,7 +88,7 @@ namespace VibeSopwith.Game.Core
             return null;
         }
 
-        private static (Approach.Node? node, Cardinal direction) ChooseInitialZone(Airplane plane, Approach approach)
+        private static Approach.Node? ChooseInitialZone(Airplane plane, Approach approach)
         {
             var planeDirectionAngle = plane.Direction.ToAngle();
             var flightDirection =
@@ -105,7 +110,7 @@ namespace VibeSopwith.Game.Core
                 while (node != null && GetProjectedEntry(plane.Position, node.Zone) == null)
                     node = node.Next;
             
-            return (node, flightDirection);
+            return node;
         }
 
         /// <summary>
@@ -114,9 +119,9 @@ namespace VibeSopwith.Game.Core
         /// <param name="approaches">Prioritised sequence of approaches to choose from</param>
         public static ApproachPhase InitiateAutoLanding(Airplane plane, IEnumerable<Approach> approaches) =>
             approaches
-                .Select(approach => new { approach, zone = ChooseInitialZone(plane, approach) })
-                .Where(a => a.zone.node != null)
-                .Select(a => new ApproachPhase.Initial(a.approach, a.zone.node!, a.zone.direction) as ApproachPhase)
+                .Select(approach => new { approach, node = ChooseInitialZone(plane, approach) })
+                .Where(a => a.node != null)
+                .Select(a => new ApproachPhase.Initial(a.approach, a.node!) as ApproachPhase)
                 .Append(ApproachPhase.Fail)
                 .First();
 
@@ -270,12 +275,12 @@ namespace VibeSopwith.Game.Core
         public static (ApproachPhase Phase, Airplane.Inputs Inputs) Transition(this Airplane plane, ApproachPhase phase, float ups)
         {
             var inZone = (ApproachZone zone) =>
-                zone.EntryX < zone.ExitX
+                zone.Direction == Cardinal.Right
                 ? (plane.Position.X < zone.EntryX ? ZoneMatch.BeforeZone :
-                    plane.Position.X < zone.ExitX ? ZoneMatch.InZone :
+                    plane.Position.X < zone.EntryX + zone.Width ? ZoneMatch.InZone :
                     ZoneMatch.AfterZone)
                 : (plane.Position.X > zone.EntryX ? ZoneMatch.BeforeZone :
-                    plane.Position.X > zone.ExitX ? ZoneMatch.InZone :
+                    plane.Position.X > zone.EntryX - zone.Width ? ZoneMatch.InZone :
                     ZoneMatch.AfterZone);
 
             (ApproachPhase Phase, Airplane.Inputs Inputs) steerToCounterTarget(ApproachPhase.CounterDirect x)
@@ -304,7 +309,7 @@ namespace VibeSopwith.Game.Core
 
             return phase switch
             {
-                ApproachPhase.Initial x when x.FlightDirection != x.Approach.Direction =>
+                ApproachPhase.Initial x when x.TargetNode.Zone.Direction != x.Approach.Direction =>
                     inZone(x.TargetNode.Zone) switch
                     {
                         ZoneMatch.BeforeZone => (x, plane.SteerTowards(x.Approach, x.TargetNode.Zone, LoopDirection.NoLoop, ups).Inputs),
@@ -312,7 +317,7 @@ namespace VibeSopwith.Game.Core
                         ZoneMatch.AfterZone => steerToCounterTarget(new ApproachPhase.CounterDirect(x.Approach, pickAheadNode(x.Approach), LoopDirection.NoLoop)),
                         _ => approachFail(),
                     },
-                ApproachPhase.Initial x when x.FlightDirection == x.Approach.Direction =>
+                ApproachPhase.Initial x when x.TargetNode.Zone.Direction == x.Approach.Direction =>
                     inZone(x.TargetNode.Zone) switch
                     {
                         ZoneMatch.BeforeZone => steerToCounterTarget(new ApproachPhase.CounterDirect(x.Approach, x.TargetNode, LoopDirection.NoLoop)),

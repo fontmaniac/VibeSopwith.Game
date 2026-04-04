@@ -66,9 +66,9 @@ namespace VibeSopwith.Game.Core
 
             Autopilot.Approach makeApproach(Autopilot.Cardinal direction, Ground.Runway rw, float farX, float rwEnd, float rwLevel, float df)
             {
-                var preTouchZone = new Autopilot.ApproachZone(rwEnd + 5f * df, rwEnd - 15f * df, rwLevel + 2.5f, rwLevel + 7.5f, new Autopilot.Funnel((-Vector2.UnitX * df).RotateDeg(+22f * df), +7f * df, -7f * df));
-                var finalZone0 = new Autopilot.ApproachZone(rwEnd + 35f * df, rwEnd + 25f * df, rwLevel + 10f, rwLevel + 20f, new Autopilot.Funnel((-Vector2.UnitX * df), -30f, +30f));
-                var preFinalZone0 = new Autopilot.ApproachZone(rwEnd + 95f * df, farX, rwLevel + 10f, rwLevel + 20f, new Autopilot.Funnel((Vector2.UnitX * df), -45f, +45f));
+                var preTouchZone = new Autopilot.ApproachZone(rwEnd + 5f * df, direction, 20f, rwLevel + 2.5f, rwLevel + 7.5f, new Autopilot.Funnel((-Vector2.UnitX * df).RotateDeg(+22f * df), +7f * df, -7f * df));
+                var finalZone0 = new Autopilot.ApproachZone(rwEnd + 35f * df, direction, 10f, rwLevel + 10f, rwLevel + 20f, new Autopilot.Funnel((-Vector2.UnitX * df), -30f, +30f));
+                var preFinalZone0 = new Autopilot.ApproachZone(rwEnd + 95f * df, direction.Toggle(), MathF.Abs(rwEnd + 95f * df - farX), rwLevel + 10f, rwLevel + 20f, new Autopilot.Funnel((Vector2.UnitX * df), -45f, +45f));
                 var approach = new Autopilot.Approach(direction, rw, Autopilot.Approach.Node.Of(preFinalZone0), Autopilot.Approach.Node.Of(finalZone0), preTouchZone, 34f, 20f);
 
                 return approach;
@@ -76,16 +76,16 @@ namespace VibeSopwith.Game.Core
 
             Autopilot.Approach makeLeftApproach(Autopilot.Cardinal direction, Ground.Runway rw, float farX, float rwEnd, float rwLevel)
             {
-                var preTouchZone = new Autopilot.ApproachZone(rwEnd + 5f, rwEnd - 15f, rwLevel + 2.5f, rwLevel + 7.5f, new Autopilot.Funnel((-Vector2.UnitX).RotateDeg(+22f), +7f, -7f));
+                var preTouchZone = new Autopilot.ApproachZone(rwEnd + 5f, direction, 20f, rwLevel + 2.5f, rwLevel + 7.5f, new Autopilot.Funnel((-Vector2.UnitX).RotateDeg(+22f), +7f, -7f));
 
-                var finalZone0 = new Autopilot.ApproachZone(rwEnd + 35f, rwEnd + 25f, rwLevel + 10f, rwLevel + 20f, new Autopilot.Funnel((-Vector2.UnitX), -30f, +30f));
-                var finalZone1 = new Autopilot.ApproachZone(rwEnd + 95f, rwEnd + 85f, rwLevel + 08f, rwLevel + 22f, new Autopilot.Funnel((-Vector2.UnitX), -45f, +45f));
-                var finalZone2 = new Autopilot.ApproachZone(rwEnd + 155f, rwEnd + 145f, rwLevel + 08f, rwLevel + 22f, new Autopilot.Funnel((-Vector2.UnitX), -45f, +45f));
-                var finalZone3 = new Autopilot.ApproachZone(rwEnd + 215f, rwEnd + 205f, rwLevel + 12f, rwLevel + 18f, new Autopilot.Funnel((-Vector2.UnitX), -45f, +45f));
+                var finalZone0 = new Autopilot.ApproachZone(rwEnd + 35f, direction, 10f, rwLevel + 10f, rwLevel + 20f, new Autopilot.Funnel((-Vector2.UnitX), -30f, +30f));
+                var finalZone1 = new Autopilot.ApproachZone(rwEnd + 95f, direction, 10f, rwLevel + 08f, rwLevel + 22f, new Autopilot.Funnel((-Vector2.UnitX), -45f, +45f));
+                var finalZone2 = new Autopilot.ApproachZone(rwEnd + 155f, direction, 10f, rwLevel + 08f, rwLevel + 22f, new Autopilot.Funnel((-Vector2.UnitX), -45f, +45f));
+                var finalZone3 = new Autopilot.ApproachZone(rwEnd + 215f, direction, 10f, rwLevel + 12f, rwLevel + 18f, new Autopilot.Funnel((-Vector2.UnitX), -45f, +45f));
 
-                var preFinalZone0 = new Autopilot.ApproachZone(rwEnd + 95f, rwEnd + 105f, rwLevel + 10f, rwLevel + 20f, new Autopilot.Funnel((Vector2.UnitX), -45f, +45f));
-                var preFinalZone1 = new Autopilot.ApproachZone(rwEnd + 155f, rwEnd + 165f, rwLevel + 10f, rwLevel + 20f, new Autopilot.Funnel((Vector2.UnitX), -75f, +75f));
-                var preFinalZone2 = new Autopilot.ApproachZone(rwEnd + 245f, rwEnd + 255f, rwLevel + 10f, rwLevel + 20f, new Autopilot.Funnel((Vector2.UnitX), -75f, +75f));
+                var preFinalZone0 = new Autopilot.ApproachZone(rwEnd + 95f, direction.Toggle(), 10f, rwLevel + 10f, rwLevel + 20f, new Autopilot.Funnel((Vector2.UnitX), -45f, +45f));
+                var preFinalZone1 = new Autopilot.ApproachZone(rwEnd + 155f, direction.Toggle(), 10f, rwLevel + 10f, rwLevel + 20f, new Autopilot.Funnel((Vector2.UnitX), -75f, +75f));
+                var preFinalZone2 = new Autopilot.ApproachZone(rwEnd + 245f, direction.Toggle(), 10f, rwLevel + 10f, rwLevel + 20f, new Autopilot.Funnel((Vector2.UnitX), -75f, +75f));
 
                 var approach = new Autopilot.Approach(
                     direction, rw,
