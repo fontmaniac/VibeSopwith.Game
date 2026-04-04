@@ -18,7 +18,15 @@ namespace VibeSopwith.Game.Core
         // Runway:          -----------------------------------------
         //----------------------------------------------------------------------------------------------------
 
-        public record struct ApproachZone(float EntryX, float ExitX, float BottomEntryY, float TopEntryY, Vector2 FunnelBottom, Vector2 FunnelTop);
+        public enum Cardinal { Left, Right }
+
+        public record struct Funnel(Vector2 Def, float AngleDeg1, float AngleDeg2)
+        {
+            public Vector2 Ray1 = Def.Rotate(MathHelper.ToRadians(AngleDeg1));
+            public Vector2 Ray2 = Def.Rotate(MathHelper.ToRadians(AngleDeg2));
+        }
+
+        public record struct ApproachZone(float EntryX, float ExitX, float BottomEntryY, float TopEntryY, Funnel Funnel);
 
         public enum LoopDirection { NoLoop, PitchUp, PitchDown }
 
@@ -34,8 +42,6 @@ namespace VibeSopwith.Game.Core
         // Once in Final plane initiates maneuver to orient its Direction with PreTouch.Direction, and to move within boundaries of PreTouch.
         // Once in PreTouch plane ceases maneuvering until touchdown. Upon touchdown decelerate to zero.
 
-        public enum Cardinal { Left, Right }
-
         public record struct Approach(
             Cardinal Direction,
             Ground.Runway Runway, 
@@ -48,7 +54,6 @@ namespace VibeSopwith.Game.Core
             public sealed record Node(ApproachZone Zone, Node? Next)
             {
                 public static Node Of(ApproachZone zone) => new(zone, null);
-
                 public Node WithNext(ApproachZone nextZone) => this with { Next = Next == null ? Of(nextZone) : Next.WithNext(nextZone) };
             }
         }
@@ -128,15 +133,15 @@ namespace VibeSopwith.Game.Core
 
             // Compute intersections of funnel rays with the entry line.
             // Invariants guarantee: FunnelBottom.X != 0 and FunnelTop.X != 0.
-            float tB = dx / zone.FunnelBottom.X;
-            float tT = dx / zone.FunnelTop.X;
+            float tB = dx / zone.Funnel.Ray1.X;
+            float tT = dx / zone.Funnel.Ray2.X;
 
             // Only forward intersections are valid.
             if (tB <= 0f || tT <= 0f)
                 return null;
 
-            float Yb = currentPos.Y + tB * zone.FunnelBottom.Y;
-            float Yt = currentPos.Y + tT * zone.FunnelTop.Y;
+            float Yb = currentPos.Y + tB * zone.Funnel.Ray1.Y;
+            float Yt = currentPos.Y + tT * zone.Funnel.Ray2.Y;
 
             float minFunnelY = MathF.Min(Yb, Yt);
             float maxFunnelY = MathF.Max(Yb, Yt);

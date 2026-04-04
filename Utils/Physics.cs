@@ -64,6 +64,7 @@ namespace VibeSopwith.Game.Utils
         }
 
         public static Vector2 Rotate(this Vector2 orig, float radAngle) => Vector2.Transform(orig, Matrix.CreateRotationZ(radAngle));
+        public static Vector2 RotateDeg(this Vector2 orig, float degAngle) => orig.Rotate(MathHelper.ToRadians(degAngle));
 
         public static Fixture ToPolygon(this (float x, float y)[] srcVertices, Body body, float density = 1.0f)
         {

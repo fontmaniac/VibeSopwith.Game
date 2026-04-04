@@ -45,8 +45,8 @@ namespace VibeSopwith.Game.Components
 
             // Funnel
             var funnelCenter = new Vector2(zone.EntryX, (zone.BottomEntryY + zone.TopEntryY) / 2f);
-            var funnelArrow1 = funnelCenter + zone.FunnelBottom * 2f;
-            var funnelArrow2 = funnelCenter + zone.FunnelTop * 2f;
+            var funnelArrow1 = funnelCenter + zone.Funnel.Ray1 * 2f;
+            var funnelArrow2 = funnelCenter + zone.Funnel.Ray2 * 2f;
             TheGame.Primitives.DrawLine(funnelCenter, funnelArrow1, Color.Blue, 0.1f);
             TheGame.Primitives.DrawLine(funnelCenter, funnelArrow2, Color.Blue, 0.1f);
         }
