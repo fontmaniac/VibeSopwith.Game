@@ -1,4 +1,5 @@
 using Microsoft.Xna.Framework;
+using MLEM.Maths;
 using nkast.Aether.Physics2D.Dynamics;
 using nkast.Aether.Physics2D.Dynamics.Contacts;
 using VibeSopwith.Game.Utils;
@@ -63,12 +64,15 @@ namespace VibeSopwith.Game.Core
 
             Plane = MakeNewPlane();
 
-            Autopilot.Approach makeApproach(Ground.Runway rw, float farX, float rwEnd, float rwLevel, float df)
+            Autopilot.Approach makeApproach(Autopilot.Cardinal direction, Ground.Runway rw, float farX, float rwEnd, float rwLevel, float df)
             {
                 var preTouchZone = new Autopilot.ApproachZone(rwEnd + 5f * df, rwEnd - 15f * df, rwLevel + 2.5f, rwLevel + 7.5f, (-Vector2.UnitX * df).Rotate(MathHelper.ToRadians(+29f * df)), (-Vector2.UnitX * df).Rotate(MathHelper.ToRadians(+15f * df)));
-                var finalZone = new Autopilot.ApproachZone(rwEnd + 35f * df, rwEnd + 25f * df, rwLevel + 10f, rwLevel + 20f, (-Vector2.UnitX * df).Rotate(MathHelper.ToRadians(+30f * df)), (-Vector2.UnitX * df).Rotate(MathHelper.ToRadians(-30f * df)));
-                var preFinalZone = new Autopilot.ApproachZone(rwEnd + 95f * df, farX, rwLevel + 10f, rwLevel + 20f, (Vector2.UnitX * df).Rotate(MathHelper.ToRadians(-45f * df)), (Vector2.UnitX * df).Rotate(MathHelper.ToRadians(+45f * df)));
-                var approach = new Autopilot.Approach(rw, preFinalZone, finalZone, preTouchZone, 34f, 20f);
+                
+                var finalZone0 = new Autopilot.ApproachZone(rwEnd + 35f * df, rwEnd + 25f * df, rwLevel + 10f, rwLevel + 20f, (-Vector2.UnitX * df).Rotate(MathHelper.ToRadians(+30f * df)), (-Vector2.UnitX * df).Rotate(MathHelper.ToRadians(-30f * df)));
+                
+                var preFinalZone0 = new Autopilot.ApproachZone(rwEnd + 95f * df, farX, rwLevel + 10f, rwLevel + 20f, (Vector2.UnitX * df).Rotate(MathHelper.ToRadians(-45f * df)), (Vector2.UnitX * df).Rotate(MathHelper.ToRadians(+45f * df)));
+                
+                var approach = new Autopilot.Approach(direction, rw, preFinalZone0, Autopilot.Approach.NoMoreZones, Autopilot.Approach.NoMoreZones, finalZone0, preTouchZone, 34f, 20f);
 
                 return approach;
             }
@@ -76,8 +80,8 @@ namespace VibeSopwith.Game.Core
             // For each runaway construct an approach
             foreach (var rw in Runways)
             {
-                var eastApproach = makeApproach(rw, 550, rw.End, rw.Level, +1f);
-                var westApproach = makeApproach(rw, 50, rw.Start, rw.Level, -1f);
+                var eastApproach = makeApproach(Autopilot.Cardinal.Left, rw, 550, rw.End, rw.Level, +1f);
+                var westApproach = makeApproach(Autopilot.Cardinal.Right, rw, 50, rw.Start, rw.Level, -1f);
 
                 Approaches.Add(eastApproach);
                 Approaches.Add(westApproach);

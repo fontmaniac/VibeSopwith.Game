@@ -34,26 +34,103 @@ namespace VibeSopwith.Game.Core
         // Once in Final plane initiates maneuver to orient its Direction with PreTouch.Direction, and to move within boundaries of PreTouch.
         // Once in PreTouch plane ceases maneuvering until touchdown. Upon touchdown decelerate to zero.
 
-        public record struct Approach(Ground.Runway Runway, ApproachZone PreFinal, ApproachZone Final, ApproachZone PreTouch, float LoopHeightThreshold, float LandingSpeedDistance);
+        public enum Cardinal { Left, Right }
+
+        public record struct Approach(
+            Cardinal Direction,
+            Ground.Runway Runway, 
+            ApproachZone CounterDirect, ApproachZone[] CounterDirects,
+            ApproachZone[] CoDirects, ApproachZone CoDirect, 
+            ApproachZone PreTouch, 
+            float LoopHeightThreshold, 
+            float LandingSpeedDistance)
+        {
+            public static ApproachZone[] NoMoreZones => new ApproachZone[0];
+
+            public sealed record Node(ApproachZone Zone, Node? Next)
+            {
+                public static Node? FromSpan(Span<ApproachZone> span) => span.Length == 0
+                    ? null
+                    : new Node(span[0], Node.FromSpan(span.Slice(1)));
+            }
+
+            private static IEnumerable<ApproachZone> SynthForward(ApproachZone head, ApproachZone[] tail)
+            {
+                yield return head;
+                foreach (var z in tail) yield return z;
+            }
+
+            private static IEnumerable<ApproachZone> SynthBackward(ApproachZone[] tail, ApproachZone head)
+            {
+                foreach (var z in tail.Reverse()) yield return z;
+                yield return head;
+            }
+
+            public Node CounterDirectNode = Node.FromSpan(SynthForward(CounterDirect, CounterDirects).ToArray())!;
+            public Node CoDirectNode = Node.FromSpan(SynthBackward(CoDirects, CoDirect).ToArray())!;
+        }
 
         public abstract record ApproachPhase()
         {
             public sealed record Failure() : ApproachPhase;
             public sealed record Initial(Approach Approach, ApproachZone TargetZone) : ApproachPhase;
-            public sealed record PreFinal(Approach Approach, ApproachZone TargetZone, LoopDirection Loop) : ApproachPhase;
-            public sealed record Final(Approach Approach, ApproachZone PreTouchZone) : ApproachPhase;
+            public sealed record CounterDirect(Approach Approach, ApproachZone TargetZone, LoopDirection Loop) : ApproachPhase;
+            public sealed record CoDirect(Approach Approach, ApproachZone PreTouchZone) : ApproachPhase;
             public sealed record PreTouch(Approach Approach) : ApproachPhase;
             public sealed record Touchdown(Approach Approach) : ApproachPhase;
 
             public static Failure Fail = new Failure();
         }
 
-        private enum Cardinal { Left, Right }
-        private static float ToFactor(this Cardinal c) => c == Cardinal.Left ? -1f : +1f;
+        public abstract record ApproachPhase2()
+        {
+            public sealed record Failure() : ApproachPhase2;
+            public sealed record Initial(Approach Approach, Approach.Node TargetNode, Cardinal FlightDirection) : ApproachPhase2;
+            public sealed record CounterDirect(Approach Approach, Approach.Node CoDirectNode, LoopDirection Loop) : ApproachPhase2;
+            public sealed record CoDirect(Approach Approach, Approach.Node NextNode) : ApproachPhase2;
+            public sealed record Final(Approach Approach, ApproachZone PreTouchZone) : ApproachPhase2;
+            public sealed record PreTouch(Approach Approach) : ApproachPhase2;
+            public sealed record Touchdown(Approach Approach) : ApproachPhase2;
+
+            public static Failure Fail = new Failure();
+        }
+
+        private static bool AheadLeft(float zoneX, float planeX) => zoneX <= planeX;
+        private static bool AheadRight(float zoneX, float planeX) => zoneX >= planeX;
+
+        private static Approach.Node? PickAheadNode(Approach.Node start, float planePosX, Func<float, float, bool> isAhead)
+        {
+            for (var node = start; node != null; node = node.Next)
+                if (isAhead(node.Zone.EntryX, planePosX))
+                    return node;
+
+            return null;
+        }
+
+        private static (Approach.Node? node, Cardinal direction) ChooseInitialZone2(Airplane plane, Approach approach)
+        {
+            var planeDirectionAngle = plane.Direction.ToAngle();
+            var flightDirection =
+                plane.Direction.X == 0f ? approach.Direction :       // If flying strictly vertically consider it in direction of approach.
+                -float.Pi / 2f < planeDirectionAngle && planeDirectionAngle < +float.Pi / 2f ? Cardinal.Right :
+                Cardinal.Left;
+
+            var node = (approach.Direction, flightDirection) switch
+            {
+                (Cardinal.Left,  Cardinal.Left)  => PickAheadNode(approach.CoDirectNode, plane.Position.X, AheadLeft),
+                (Cardinal.Left,  Cardinal.Right) => PickAheadNode(approach.CounterDirectNode, plane.Position.X, AheadRight),
+                (Cardinal.Right, Cardinal.Right) => PickAheadNode(approach.CoDirectNode, plane.Position.X, AheadRight),
+                (Cardinal.Right, Cardinal.Left)  => PickAheadNode(approach.CounterDirectNode, plane.Position.X, AheadLeft),
+                _ => throw new ApplicationException("Logic error")
+            };
+
+            return (node, flightDirection);
+        }
+
 
         private static (Approach approach, ApproachZone zone)? ChooseInitialZone(Airplane plane, Approach approach)
         {
-            var approachDirection = approach.Final.EntryX < approach.PreTouch.EntryX ? Cardinal.Right : Cardinal.Left;
+            var approachDirection = approach.CoDirect.EntryX < approach.PreTouch.EntryX ? Cardinal.Right : Cardinal.Left;
             var planeDirectionAngle = plane.Direction.ToAngle();
             var flightDirection = 
                 plane.Direction.X == 0f ? approachDirection :       // If flying strictly vertically consider it in direction of approach.
@@ -65,25 +142,25 @@ namespace VibeSopwith.Game.Core
                 case Cardinal.Left:
                     return
                         flightDirection == Cardinal.Left ? 
-                            (plane.Position.X >= approach.Final.EntryX 
-                            ? (approach, approach.Final) 
+                            (plane.Position.X >= approach.CoDirect.EntryX 
+                            ? (approach, approach.CoDirect) 
                             : null) :
                         flightDirection == Cardinal.Right ? 
-                            (plane.Position.X >= approach.PreFinal.EntryX 
-                            ? (approach, approach.Final) 
-                            : (approach, approach.PreFinal)) :
+                            (plane.Position.X >= approach.CounterDirect.EntryX 
+                            ? (approach, approach.CoDirect) 
+                            : (approach, approach.CounterDirect)) :
                         null;
 
                 case Cardinal.Right:
                     return
                         flightDirection == Cardinal.Right ?
-                            (plane.Position.X <= approach.Final.EntryX
-                            ? (approach, approach.Final)
+                            (plane.Position.X <= approach.CoDirect.EntryX
+                            ? (approach, approach.CoDirect)
                             : null) :
                         flightDirection == Cardinal.Left ?
-                            (plane.Position.X <= approach.PreFinal.EntryX
-                            ? (approach, approach.Final)
-                            : (approach, approach.PreFinal)) :
+                            (plane.Position.X <= approach.CounterDirect.EntryX
+                            ? (approach, approach.CoDirect)
+                            : (approach, approach.CounterDirect)) :
                         null;
                 default: 
                     return null;
@@ -101,6 +178,19 @@ namespace VibeSopwith.Game.Core
                 .Select(a => new ApproachPhase.Initial(a!.Value.approach, a!.Value.zone) as ApproachPhase)
                 .Append(ApproachPhase.Fail)
                 .First();
+
+        /// <summary>
+        /// Initiates auto landing.
+        /// </summary>
+        /// <param name="approaches">Prioritised sequence of approaches to choose from</param>
+        public static ApproachPhase2 InitiateAutoLanding2(Airplane plane, IEnumerable<Approach> approaches) =>
+            approaches
+                .Select(approach => new { approach, zone = ChooseInitialZone2(plane, approach) })
+                .Where(a => a.zone.node != null)
+                .Select(a => new ApproachPhase2.Initial(a.approach, a.zone.node!, a.zone.direction) as ApproachPhase2)
+                .Append(ApproachPhase2.Fail)
+                .First();
+
 
         // Find and return a point `Pe` and vector `Ve` such that
         // - Pe.X = zone.EntryX - i.e. Pe lies on a vertical "axis" X==zone.EntryX
@@ -250,20 +340,20 @@ namespace VibeSopwith.Game.Core
         {
             var inZone = (ApproachZone zone) => 
                 zone.EntryX < zone.ExitX
-                ? (plane.Position.X < zone.EntryX ? ZoneMatch.BeforeZone :
+                ?  (plane.Position.X < zone.EntryX ? ZoneMatch.BeforeZone :
                     plane.Position.X < zone.ExitX ? ZoneMatch.InZone :
                     ZoneMatch.AfterZone)
-                : (plane.Position.X > zone.EntryX ? ZoneMatch.BeforeZone :
+                :  (plane.Position.X > zone.EntryX ? ZoneMatch.BeforeZone :
                     plane.Position.X > zone.ExitX ? ZoneMatch.InZone :
                     ZoneMatch.AfterZone);
 
-            (ApproachPhase Phase, Airplane.Inputs Inputs) steerToTarget(ApproachPhase.PreFinal x) 
+            (ApproachPhase Phase, Airplane.Inputs Inputs) steerToTarget(ApproachPhase.CounterDirect x) 
             {
                 var (loop, inputs) = plane.SteerTowards(x.Approach, x.TargetZone, x.Loop, ups);
                 return (x with { Loop = loop }, inputs);
             }
 
-            (ApproachPhase Phase, Airplane.Inputs Inputs) steerToPreTouch(ApproachPhase.Final x)
+            (ApproachPhase Phase, Airplane.Inputs Inputs) steerToPreTouch(ApproachPhase.CoDirect x)
             {
                 var (loop, inputs) = plane.SteerTowards(x.Approach, x.Approach.PreTouch, LoopDirection.NoLoop, ups);
                 if (Math.Abs(plane.Position.X - x.Approach.PreTouch.EntryX) < x.Approach.LandingSpeedDistance)
@@ -275,29 +365,29 @@ namespace VibeSopwith.Game.Core
 
             return phase switch
             {
-                ApproachPhase.Initial x when x.TargetZone == x.Approach.PreFinal =>
+                ApproachPhase.Initial x when x.TargetZone == x.Approach.CounterDirect =>
                     inZone(x.TargetZone) switch
                     {
-                        ZoneMatch.BeforeZone => (x, plane.SteerTowards(x.Approach, x.Approach.PreFinal, LoopDirection.NoLoop, ups).Inputs),
+                        ZoneMatch.BeforeZone => (x, plane.SteerTowards(x.Approach, x.Approach.CounterDirect, LoopDirection.NoLoop, ups).Inputs),
                         ZoneMatch.InZone or 
-                        ZoneMatch.AfterZone => steerToTarget(new ApproachPhase.PreFinal(x.Approach, x.Approach.Final, LoopDirection.NoLoop)),       
+                        ZoneMatch.AfterZone => steerToTarget(new ApproachPhase.CounterDirect(x.Approach, x.Approach.CoDirect, LoopDirection.NoLoop)),       
                         _ => approachFail(),
                     },
-                ApproachPhase.Initial x when x.TargetZone == x.Approach.Final =>
+                ApproachPhase.Initial x when x.TargetZone == x.Approach.CoDirect =>
                     inZone(x.TargetZone) switch
                     {
-                        ZoneMatch.BeforeZone => steerToTarget(new ApproachPhase.PreFinal(x.Approach, x.Approach.Final, LoopDirection.NoLoop)),
-                        ZoneMatch.InZone => steerToPreTouch(new ApproachPhase.Final(x.Approach, x.Approach.PreTouch)),
+                        ZoneMatch.BeforeZone => steerToTarget(new ApproachPhase.CounterDirect(x.Approach, x.Approach.CoDirect, LoopDirection.NoLoop)),
+                        ZoneMatch.InZone => steerToPreTouch(new ApproachPhase.CoDirect(x.Approach, x.Approach.PreTouch)),
                         _ => approachFail(),
                     },
-                ApproachPhase.PreFinal x =>
+                ApproachPhase.CounterDirect x =>
                     inZone(x.TargetZone) switch
                     {
                         ZoneMatch.BeforeZone => steerToTarget(x),
-                        ZoneMatch.InZone => steerToPreTouch(new ApproachPhase.Final(x.Approach, x.Approach.PreTouch)),
+                        ZoneMatch.InZone => steerToPreTouch(new ApproachPhase.CoDirect(x.Approach, x.Approach.PreTouch)),
                         _ => approachFail(),
                     },
-                ApproachPhase.Final x =>
+                ApproachPhase.CoDirect x =>
                     inZone(x.PreTouchZone) switch
                     {
                         ZoneMatch.BeforeZone => steerToPreTouch(x),
@@ -315,5 +405,102 @@ namespace VibeSopwith.Game.Core
                 _ => approachFail(),
             };
         }
+
+        // ----------------------------------
+
+        public static (ApproachPhase2 Phase, Airplane.Inputs Inputs) Transition2(this Airplane plane, ApproachPhase2 phase, float ups)
+        {
+            var inZone = (ApproachZone zone) =>
+                zone.EntryX < zone.ExitX
+                ? (plane.Position.X < zone.EntryX ? ZoneMatch.BeforeZone :
+                    plane.Position.X < zone.ExitX ? ZoneMatch.InZone :
+                    ZoneMatch.AfterZone)
+                : (plane.Position.X > zone.EntryX ? ZoneMatch.BeforeZone :
+                    plane.Position.X > zone.ExitX ? ZoneMatch.InZone :
+                    ZoneMatch.AfterZone);
+
+            (ApproachPhase2 Phase, Airplane.Inputs Inputs) steerToCounterTarget(ApproachPhase2.CounterDirect x)
+            {
+                var (loop, inputs) = plane.SteerTowards(x.Approach, x.CoDirectNode.Zone, x.Loop, ups);
+                return (x with { Loop = loop }, inputs);
+            }
+
+            (ApproachPhase2 Phase, Airplane.Inputs Inputs) steerToCoTarget(ApproachPhase2.CoDirect x)
+            {
+                var (loop, inputs) = plane.SteerTowards(x.Approach, x.NextNode.Zone, LoopDirection.NoLoop, ups);
+                return (x, inputs);
+            }
+
+            (ApproachPhase2 Phase, Airplane.Inputs Inputs) steerToPreTouch(ApproachPhase2.Final x)
+            {
+                var (loop, inputs) = plane.SteerTowards(x.Approach, x.Approach.PreTouch, LoopDirection.NoLoop, ups);
+                if (Math.Abs(plane.Position.X - x.Approach.PreTouch.EntryX) < x.Approach.LandingSpeedDistance)
+                    inputs = brakeForLanding(plane, inputs);
+                return (x, inputs);
+            }
+
+            var approachFail = () => (ApproachPhase2.Fail, Airplane.Inputs.Clean());
+            var pickAheadNode = (Approach a) => PickAheadNode(a.CoDirectNode, plane.Position.X, a.Direction == Cardinal.Left ? AheadLeft : AheadRight)!;
+
+
+            return phase switch
+            {
+                ApproachPhase2.Initial x when x.FlightDirection != x.Approach.Direction =>
+                    inZone(x.TargetNode.Zone) switch
+                    {
+                        ZoneMatch.BeforeZone => (x, plane.SteerTowards(x.Approach, x.Approach.CounterDirect, LoopDirection.NoLoop, ups).Inputs),
+                        ZoneMatch.InZone or
+                        ZoneMatch.AfterZone => steerToCounterTarget(new ApproachPhase2.CounterDirect(x.Approach,  pickAheadNode(x.Approach), LoopDirection.NoLoop)),
+                        _ => approachFail(),
+                    },
+                ApproachPhase2.Initial x when x.FlightDirection == x.Approach.Direction =>
+                    inZone(x.TargetNode.Zone) switch
+                    {
+                        ZoneMatch.BeforeZone => steerToCounterTarget(new ApproachPhase2.CounterDirect(x.Approach, x.TargetNode, LoopDirection.NoLoop)),
+                        ZoneMatch.InZone => 
+                            x.TargetNode.Next == null
+                            ? steerToPreTouch(new ApproachPhase2.Final(x.Approach, x.Approach.PreTouch))
+                            : steerToCoTarget(new ApproachPhase2.CoDirect(x.Approach, x.TargetNode.Next)),
+                        _ => approachFail(),
+                    },
+                ApproachPhase2.CounterDirect x =>
+                    inZone(x.CoDirectNode.Zone) switch
+                    {
+                        ZoneMatch.BeforeZone => steerToCounterTarget(x),
+                        ZoneMatch.InZone =>
+                            x.CoDirectNode.Next == null
+                            ? steerToPreTouch(new ApproachPhase2.Final(x.Approach, x.Approach.PreTouch))
+                            : steerToCoTarget(new ApproachPhase2.CoDirect(x.Approach, x.CoDirectNode.Next)),
+                        _ => approachFail(),
+                    },
+                ApproachPhase2.CoDirect x =>
+                    inZone(x.NextNode.Zone) switch
+                    {
+                        ZoneMatch.BeforeZone => steerToCoTarget(x),
+                        ZoneMatch.InZone =>
+                            x.NextNode.Next == null
+                            ? steerToPreTouch(new ApproachPhase2.Final(x.Approach, x.Approach.PreTouch))
+                            : steerToCoTarget(new ApproachPhase2.CoDirect(x.Approach, x.NextNode.Next)),
+                        _ => approachFail(),
+                    },
+                ApproachPhase2.Final x =>
+                    inZone(x.PreTouchZone) switch
+                    {
+                        ZoneMatch.BeforeZone => steerToPreTouch(x),
+                        ZoneMatch.InZone => (new ApproachPhase2.PreTouch(x.Approach), Airplane.Inputs.Clean()),
+                        _ => approachFail(),
+                    },
+                ApproachPhase2.PreTouch x =>
+                    inZone(x.Approach.PreTouch) switch
+                    {
+                        ZoneMatch.InZone when !plane.Landing => (x, brakeForLanding(plane, Airplane.Inputs.Clean())),
+                        ZoneMatch.InZone when plane.Landing => (new ApproachPhase2.Touchdown(x.Approach), Airplane.Inputs.Clean()),
+                        _ => approachFail(),
+                    },
+                ApproachPhase2.Touchdown x when plane.Speed > 0 => (x, Airplane.Inputs.Clean() with { Throttle = Airplane.ThrottleInput.Reversing }),
+                _ => approachFail(),
+            };
+        }
+
     }
 }

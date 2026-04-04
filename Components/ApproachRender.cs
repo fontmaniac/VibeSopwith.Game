@@ -9,8 +9,8 @@ namespace VibeSopwith.Game.Components
     {
         public void Draw(Autopilot.Approach approach, GameTime gameTime, Vector2? worldPixelSize)
         {
-            DrawZone(approach.PreFinal, Color.CornflowerBlue * 0.5f, worldPixelSize);
-            DrawZone(approach.Final, Color.CornflowerBlue * 0.7f, worldPixelSize);
+            DrawZone(approach.CounterDirect, Color.CornflowerBlue * 0.5f, worldPixelSize);
+            DrawZone(approach.CoDirect, Color.CornflowerBlue * 0.7f, worldPixelSize);
             DrawZone(approach.PreTouch, Color.CornflowerBlue * 0.9f, worldPixelSize);
         }
 
