@@ -67,12 +67,32 @@ namespace VibeSopwith.Game.Core
             Autopilot.Approach makeApproach(Autopilot.Cardinal direction, Ground.Runway rw, float farX, float rwEnd, float rwLevel, float df)
             {
                 var preTouchZone = new Autopilot.ApproachZone(rwEnd + 5f * df, rwEnd - 15f * df, rwLevel + 2.5f, rwLevel + 7.5f, (-Vector2.UnitX * df).Rotate(MathHelper.ToRadians(+29f * df)), (-Vector2.UnitX * df).Rotate(MathHelper.ToRadians(+15f * df)));
-                
                 var finalZone0 = new Autopilot.ApproachZone(rwEnd + 35f * df, rwEnd + 25f * df, rwLevel + 10f, rwLevel + 20f, (-Vector2.UnitX * df).Rotate(MathHelper.ToRadians(+30f * df)), (-Vector2.UnitX * df).Rotate(MathHelper.ToRadians(-30f * df)));
-                
                 var preFinalZone0 = new Autopilot.ApproachZone(rwEnd + 95f * df, farX, rwLevel + 10f, rwLevel + 20f, (Vector2.UnitX * df).Rotate(MathHelper.ToRadians(-45f * df)), (Vector2.UnitX * df).Rotate(MathHelper.ToRadians(+45f * df)));
-                
-                var approach = new Autopilot.Approach(direction, rw, preFinalZone0, Autopilot.Approach.NoMoreZones, Autopilot.Approach.NoMoreZones, finalZone0, preTouchZone, 34f, 20f);
+                var approach = new Autopilot.Approach(direction, rw, Autopilot.Approach.Node.Of(preFinalZone0), Autopilot.Approach.Node.Of(finalZone0), preTouchZone, 34f, 20f);
+
+                return approach;
+            }
+
+            Autopilot.Approach makeLeftApproach(Autopilot.Cardinal direction, Ground.Runway rw, float farX, float rwEnd, float rwLevel)
+            {
+                var preTouchZone = new Autopilot.ApproachZone(rwEnd + 5f, rwEnd - 15f, rwLevel + 2.5f, rwLevel + 7.5f, (-Vector2.UnitX).Rotate(MathHelper.ToRadians(+29f)), (-Vector2.UnitX).Rotate(MathHelper.ToRadians(+15f)));
+
+                var finalZone0 = new Autopilot.ApproachZone(rwEnd + 35f, rwEnd + 25f, rwLevel + 10f, rwLevel + 20f, (-Vector2.UnitX).Rotate(MathHelper.ToRadians(+30f)), (-Vector2.UnitX).Rotate(MathHelper.ToRadians(-30f)));
+                var finalZone1 = new Autopilot.ApproachZone(rwEnd + 95f, rwEnd + 85f, rwLevel + 08f, rwLevel + 22f, (-Vector2.UnitX).Rotate(MathHelper.ToRadians(+45f)), (-Vector2.UnitX).Rotate(MathHelper.ToRadians(-45f)));
+                var finalZone2 = new Autopilot.ApproachZone(rwEnd + 155f, rwEnd + 145f, rwLevel + 08f, rwLevel + 22f, (-Vector2.UnitX).Rotate(MathHelper.ToRadians(+45f)), (-Vector2.UnitX).Rotate(MathHelper.ToRadians(-45f)));
+                var finalZone3 = new Autopilot.ApproachZone(rwEnd + 215f, rwEnd + 205f, rwLevel + 12f, rwLevel + 18f, (-Vector2.UnitX).Rotate(MathHelper.ToRadians(+75f)), (-Vector2.UnitX).Rotate(MathHelper.ToRadians(-75f)));
+
+
+                var preFinalZone0 = new Autopilot.ApproachZone(rwEnd + 95f, rwEnd + 105f, rwLevel + 10f, rwLevel + 20f, (Vector2.UnitX).Rotate(MathHelper.ToRadians(-45f)), (Vector2.UnitX).Rotate(MathHelper.ToRadians(+45f)));
+                var preFinalZone1 = new Autopilot.ApproachZone(rwEnd + 155f, rwEnd + 165f, rwLevel + 10f, rwLevel + 20f, (Vector2.UnitX).Rotate(MathHelper.ToRadians(-75f)), (Vector2.UnitX).Rotate(MathHelper.ToRadians(+75f)));
+                var preFinalZone2 = new Autopilot.ApproachZone(rwEnd + 245f, rwEnd + 255f, rwLevel + 10f, rwLevel + 20f, (Vector2.UnitX).Rotate(MathHelper.ToRadians(-75f)), (Vector2.UnitX).Rotate(MathHelper.ToRadians(+75f)));
+
+                var approach = new Autopilot.Approach(
+                    direction, rw,
+                    Autopilot.Approach.Node.Of(preFinalZone0).WithNext(preFinalZone1).WithNext(preFinalZone2),
+                    Autopilot.Approach.Node.Of(finalZone3).WithNext(finalZone2).WithNext(finalZone1).WithNext(finalZone0),
+                    preTouchZone, 34f, 20f);
 
                 return approach;
             }
@@ -80,7 +100,7 @@ namespace VibeSopwith.Game.Core
             // For each runaway construct an approach
             foreach (var rw in Runways)
             {
-                var eastApproach = makeApproach(Autopilot.Cardinal.Left, rw, 550, rw.End, rw.Level, +1f);
+                var eastApproach = makeLeftApproach(Autopilot.Cardinal.Left,  rw, 550, rw.End, rw.Level);
                 var westApproach = makeApproach(Autopilot.Cardinal.Right, rw, 50, rw.Start, rw.Level, -1f);
 
                 Approaches.Add(eastApproach);

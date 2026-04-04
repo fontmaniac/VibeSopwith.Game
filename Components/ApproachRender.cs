@@ -9,8 +9,10 @@ namespace VibeSopwith.Game.Components
     {
         public void Draw(Autopilot.Approach approach, GameTime gameTime, Vector2? worldPixelSize)
         {
-            DrawZone(approach.CounterDirect, Color.CornflowerBlue * 0.5f, worldPixelSize);
-            DrawZone(approach.CoDirect, Color.CornflowerBlue * 0.7f, worldPixelSize);
+            for (var n = approach.CounterDirectNode; n != null; n = n.Next)
+                DrawZone(n.Zone, Color.CornflowerBlue * 0.5f, worldPixelSize);
+            for (var n = approach.CoDirectNode; n != null; n = n.Next)
+                DrawZone(n.Zone, Color.CornflowerBlue * 0.7f, worldPixelSize);
             DrawZone(approach.PreTouch, Color.CornflowerBlue * 0.9f, worldPixelSize);
         }
 
@@ -40,6 +42,13 @@ namespace VibeSopwith.Game.Components
             TheGame.Primitives.DrawLine(topRight, bottomRight, Color.Blue, 0.1f);
             TheGame.Primitives.DrawLine(bottomRight, bottomLeft, Color.Blue, 0.1f);
             TheGame.Primitives.DrawLine(bottomLeft, topLeft, Color.Blue, 0.1f);
+
+            // Funnel
+            var funnelCenter = new Vector2(zone.EntryX, (zone.BottomEntryY + zone.TopEntryY) / 2f);
+            var funnelArrow1 = funnelCenter + zone.FunnelBottom * 2f;
+            var funnelArrow2 = funnelCenter + zone.FunnelTop * 2f;
+            TheGame.Primitives.DrawLine(funnelCenter, funnelArrow1, Color.Blue, 0.1f);
+            TheGame.Primitives.DrawLine(funnelCenter, funnelArrow2, Color.Blue, 0.1f);
         }
     }
 }
