@@ -146,7 +146,7 @@ namespace VibeSopwith.Game.Core
             Poppet.Make(out pFlakGun,   (flakGun)  => !flakGun.Exploded,                flakGun  => flakGun.Exploded = true);
         }
 
-        private CanDieByProjectile<Unit> MayDieByProjectile<T>(T target, string name, Poppet<T> poppet, int hits) where T : ILocation, ICanRemoveRigging =>
+        private CanDieByProjectile<Unit> MayDieByProjectile<T>(T target, string name, Poppet<T> poppet, int hits) where T : IHasLocation, ICanRemoveRigging =>
             new CanDieByProjectile<Unit>(
                 name,
                 poppet.Embrace(target),

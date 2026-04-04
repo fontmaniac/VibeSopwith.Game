@@ -6,18 +6,38 @@ namespace VibeSopwith.Game;
 
 public enum BasisSpin { Down, Up }
 
-public interface ILocation
+public static class Spin
+{
+    public static BasisSpin Toggle(this BasisSpin s) => s == BasisSpin.Down ? BasisSpin.Up : BasisSpin.Down;
+}
+
+public interface IBasis
 {
     Vector2 Position { get; }   // In world
     Vector2 Direction { get; }
     BasisSpin Spin { get; }
+}
+
+public interface IRelativeBasis : IBasis
+{
+    IBasis Parent { get; }
+}
+
+public record Basis(Vector2 Position, Vector2 Direction, BasisSpin Spin) : IBasis
+{
+    public static IBasis DefaultWorld = new Basis(Vector2.Zero, Vector2.UnitX, BasisSpin.Down);
+}
+
+public interface IHasLocation : IRelativeBasis
+{
     float Length { get; }       // Measurement along X-axis 
     float Height { get; }       // Measurement along Y-axis 
 }
 
-public record Location(Vector2 Position, Vector2 Direction, BasisSpin Spin, float Length, float Height) : ILocation
+public record Location(IBasis Parent, Vector2 Position, Vector2 Direction, BasisSpin Spin, float Length, float Height) : IHasLocation
 {
-    public static Location OffInterface(ILocation src) => new Location(
+    public static Location OffInterface(IHasLocation src) => new Location(
+        src.Parent,
         src.Position,
         src.Direction,
         src.Spin,

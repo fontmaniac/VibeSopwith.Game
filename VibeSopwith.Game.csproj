@@ -93,6 +93,12 @@
     <None Update="Content\Textures\Factory_1_Exploded.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="Content\Textures\FlakBarrel_1_LR.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Content\Textures\FlakBarrel_1_RL.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Content\Textures\Flak_1_Exploded_LR.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

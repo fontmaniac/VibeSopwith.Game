@@ -4,12 +4,13 @@ using VibeSopwith.Game.Utils;
 
 namespace VibeSopwith.Game.Core
 {
-    internal class Bullet : ILocation, ISimulated<Unit>, ICanRemoveRigging
+    internal class Bullet : IHasLocation, ISimulated<Unit>, ICanRemoveRigging
     {
         public Body Body = null!;
         public record State(Vector2 Position, Vector2 Direction, Vector2 Velocity);
         public State CurrentState;
 
+        public IBasis Parent { get; } = Basis.DefaultWorld;
         public Vector2 Position { get => CurrentState.Position; }
         public Vector2 Direction { get => CurrentState.Direction; }
         public BasisSpin Spin => BasisSpin.Down;

@@ -4,15 +4,18 @@ using VibeSopwith.Game.Utils;
 
 namespace VibeSopwith.Game.Core
 {
-    internal class FlakGun : ILocation, ICanRemoveRigging
+    internal class FlakGun : IHasLocation, ICanRemoveRigging
     {
         public Body Body = null!;
 
+        public IBasis Parent { get; } = Basis.DefaultWorld;
         public Vector2 Position { get; }
         public Vector2 Direction { get; }
         public BasisSpin Spin { get; }
         public float Length => 4f;
         public float Height => 4f;
+
+        public FlakGunBarrel Barrel;
 
         public bool Exploded = false;
 
@@ -23,6 +26,8 @@ namespace VibeSopwith.Game.Core
             Position = position;
             Spin = spin;
             Direction = Vector2.UnitX * (spin == BasisSpin.Down ? +1f : -1f);
+
+            Barrel = new FlakGunBarrel(this, new Vector2(0f, 2f));
         }
 
         public void RemoveRigging(World collisionWorld)
