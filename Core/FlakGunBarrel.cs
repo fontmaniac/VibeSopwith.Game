@@ -10,19 +10,22 @@ namespace VibeSopwith.Game.Core
         public Body Body = null!;
 
         public IBasis Parent { get; }
-        public Vector2 Position { get; }
-        public Vector2 Direction { get; }
-        public BasisSpin Spin { get; } = BasisSpin.Down;    // Since it is relative to parent, it is always default (Down). 
+        // Returned Basis is now "World" basis.
+        public Vector2 Position { get => Parent.Position + _localPosition; }
+        public Vector2 Direction { get => Parent.Direction.Rotate(_localDirection.ToAngle()); }
+        // Spin is inherited from Parent at all times.
+        public BasisSpin Spin { get => Parent.Spin; }
         public float Length => 8f;
         public float Height => 4f;
 
-        public FlakGunBarrel(IBasis parent, Vector2 position)
+        private Vector2 _localPosition;
+        private Vector2 _localDirection;
+
+        public FlakGunBarrel(IBasis parent, Vector2 localPosition, Vector2 localDirection)
         {
             Parent = parent;
-            Position = position;
-            // This renders correctly but doesn't fit my reasoning model. So, if the base is spin-UP then direction of barrel is locally-opposite to world-direction of base?
-            // My intuition doesn't fit.
-            Direction = parent.Direction * (parent.Spin == BasisSpin.Down ? +1f : -1f);
+            _localPosition = localPosition;
+            _localDirection = localDirection;
         }
 
         public void RemoveRigging(World collisionWorld)

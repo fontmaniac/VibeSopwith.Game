@@ -15,6 +15,9 @@
         - [ ] Runway Flag
         - [ ] Tree
     - [ ] Explosions
+    - [ ] Zeppelin - short
+    - [ ] Zeppelin - long
+    - [ ] Baloon 
 - [ ] Parallax backgrounds
 - [ ] HQ with destructible flag
 - [ ] Flak Gun with rotatable and shooting part; AI
@@ -32,13 +35,16 @@
     - [ ] Auto-land as upgrade?
     - [ ] Increased speed 
     - [ ] Landing tunes: increased max-speed; increased angle;
+    - [ ] Laser guns
+    - [ ] Plasma guns
+    - [ ] Cassette bombs
 - [ ] Upgrade indicators
 - [ ] Clouds
 - [ ] Birds
 - [ ] Visual effects
 - [ ] Pixelization - explore
 - [ ] Auto-landing improvements
-    - [ ] Relief avoidance
+    - [x] Relief avoidance
     - [ ] Working armaments
     - [ ] Cancellation
 - [ ] Difficulty levels

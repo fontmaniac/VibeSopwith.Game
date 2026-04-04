@@ -27,7 +27,7 @@ namespace VibeSopwith.Game.Core
             Spin = spin;
             Direction = Vector2.UnitX * (spin == BasisSpin.Down ? +1f : -1f);
 
-            Barrel = new FlakGunBarrel(this, new Vector2(0f, 2f));
+            Barrel = new FlakGunBarrel(this, new Vector2(0f, 2f), Vector2.UnitX);
         }
 
         public void RemoveRigging(World collisionWorld)

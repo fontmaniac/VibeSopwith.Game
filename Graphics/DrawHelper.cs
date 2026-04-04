@@ -68,7 +68,10 @@ namespace VibeSopwith.Game.Graphics
         public static void DrawOriginatedHanded(this IHasLocation loc, HandedTexture tex, Vector2 origin, SpriteBatch spriteBatch, Vector2? worldPixelSize)
         {
             // 1. Resolve world basis
-            var wb = ResolveWorldBasis(loc);
+            //var wb = ResolveWorldBasis(loc);
+
+            // 1. New interpretation - assume loc IS the world basis.            
+            var wb = loc;
 
             Vector2 pos = wb.Position;
 
