@@ -9,7 +9,7 @@ namespace VibeSopwith.Game.Core
     internal class GameWorld
     {
         public const int WorldLength = 600;
-        public const int WorldHeight = 50;
+        public const int WorldHeight = 60;
 
         public static readonly Random WorldSeed = new Random(12345);
         public static readonly Collider<string> WorldCollider = new Collider<string>();
@@ -28,6 +28,7 @@ namespace VibeSopwith.Game.Core
         public readonly List<Bomb> Bombs = new List<Bomb>();
         public readonly List<Bullet> Bullets = new List<Bullet>();
 
+        public readonly List<Baloon> Baloons;
         public readonly List<FlakGun> FlakGuns;
         public readonly List<StaticBuilding> Buildings;
         public readonly List<Ground.Runway> Runways;
@@ -52,8 +53,16 @@ namespace VibeSopwith.Game.Core
             Ceiling = new Ceiling();
             (Ground, Buildings, FlakGuns, Runways) = Ground.MakeWithBuildings();
 
+            Baloons = new List<Baloon>();
+            Baloons.Add(new Baloon(new Vector2(380, 35), BasisSpin.Down, new Vector2(385, 35)));
+            Baloons.Add(new Baloon(new Vector2(555, 25), BasisSpin.Up, new Vector2(558, 25)));
+
+
             Ground.SetupRigging(collisionWorld, () => new object[] { Ground, MayDieByBomb(Ground), MayDieByBullet(Ground), MayDieByPlane(Ground) });
             Ceiling.SetupRigging(collisionWorld);
+
+            foreach (var baloon in Baloons)
+                baloon.SetupRigging(collisionWorld, () => new object[] { baloon, MayDieByProjectile(baloon, "Baloon", pBaloon, 10) with { ExecuteEffect = Caps.ExecuteEffect((gameTime, _) => explosions.Add(MakeBigExplosion(gameTime, baloon.Position.ToAether())))}});
 
             foreach (var building in Buildings)
                 building.SetupRigging(collisionWorld, () => new object[] { building, MayDieByProjectile(building, "Building", pBuilding, 5) });
@@ -128,6 +137,7 @@ namespace VibeSopwith.Game.Core
         private Poppet<Airplane> pPlane = null!;
         private Poppet<StaticBuilding> pBuilding = null!;
         private Poppet<FlakGun> pFlakGun = null!;
+        private Poppet<Baloon> pBaloon = null!;
         private Poppet<Ceiling> pCeiling = null!;
 
         private ICanDie<Unit> howPlaneDies(Airplane plane) => 
@@ -146,6 +156,7 @@ namespace VibeSopwith.Game.Core
             Poppet.Make(out pPlane,     (plane)    => !plane.Exploded,                  plane    => plane.Exploded = true);
             Poppet.Make(out pBuilding,  (building) => !building.Exploded,               building => building.Exploded = true);
             Poppet.Make(out pFlakGun,   (flakGun)  => !flakGun.Exploded,                flakGun  => flakGun.Exploded = true);
+            Poppet.Make(out pBaloon,    (baloon)   => !baloon.Exploded,                 baloon   => baloon.Exploded = true);
         }
 
         private CanDieByProjectile<Unit> MayDieByProjectile<T>(T target, string name, Poppet<T> poppet, int hits) where T : IHasLocation, ICanRemoveRigging =>
@@ -153,7 +164,7 @@ namespace VibeSopwith.Game.Core
                 name,
                 poppet.Embrace(target),
                 Caps.AbsorbHits(hits),
-                Caps.BindToWorld(),
+                target,
                 Caps.RemoveRigging(target, collisionWorld),
                 Caps.ExecuteEffect((gameTime, _) => explosions.Add(MakeBasedExplosion(gameTime, target.Position.ToAether()))));
 
@@ -351,6 +362,13 @@ namespace VibeSopwith.Game.Core
                 flakGun.PreSimulationPrepare(projected);
             }
 
+            foreach (var baloon in Baloons)
+            {
+                var projected = baloon.ApplyInputs(gameTime);
+                baloon.PreSimulationPrepare(projected);
+            }
+
+
             //------------------------------------------------------------------//
             // Simulate Physics.                                                //
             collisionWorld.Step((float)gameTime.ElapsedGameTime.TotalSeconds);  //
@@ -385,6 +403,10 @@ namespace VibeSopwith.Game.Core
             var expiredExplosions = explosions.Where(e => e.IsExpired(gameTime.TotalGameTime)).ToArray();
             foreach (var ee in expiredExplosions)
                 explosions.Remove(ee);
+
+            var explodedBaloons = Baloons.Where(e => e.Exploded).ToArray();
+            foreach (var eb in explodedBaloons)
+                Baloons.Remove(eb);
 
             // Collision check round - not a "behavior", a structural step.
             var postCheckActions = new Stack<Action>(); // Push here actions which manipulate collisionWorld, to avoid corruption mid-iteration.

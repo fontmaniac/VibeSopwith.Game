@@ -8,7 +8,7 @@ namespace VibeSopwith.Game.Core
     {
         public Body Body = null!;
 
-        public record State(float BarrelAngle, Bullet? Bullet, BarrelMovement Movement, DateTime BulletTime);
+        public record State(float BarrelAngle, Bullet? Bullet, BarrelMovement Movement, float RecoilShift, DateTime BulletTime, DateTime RecoilTime);
         public State CurrentState;
 
         public Vector2 Position { get; }
@@ -25,7 +25,10 @@ namespace VibeSopwith.Game.Core
 
         private const float MinGunAngle = 20f;          // Degrees.
         private const float MaxGunAngle = 85f;          // Degrees.
-        private const float GunAngleChangeRate = 60f;   // Degree per second.
+        private const float GunAngleChangeRate = 30f;   // Degree per second.
+        public  const float BulletGracePeriod = 0.125f;      // Time in seconds before subsequent bullet can be spawned.
+        public  const float RecoilShift = 0.25f;             // meters
+        public  const float RecoilHalfTime = 0.05f * 0.9f / 2f;  // Time to slide back and forth in recoil, seconds.
 
         public FlakGun(Vector2 position, BasisSpin spin)
         {
@@ -34,8 +37,12 @@ namespace VibeSopwith.Game.Core
             Direction = Vector2.UnitX * (spin == BasisSpin.Down ? +1f : -1f);
 
             var barrelAngle = (float)GameWorld.WorldSeed.NextDouble() * (MaxGunAngle - MinGunAngle) + MinGunAngle;
-            CurrentState = new State(barrelAngle, null, BarrelMovement.Up, DateTime.MinValue);
-            Barrel = new FlakGunBarrel(this, new LiveBasis(() => new Vector2(0f, 2f), () => Vector2.UnitX.RotateDeg(CurrentState.BarrelAngle * spin.ToFactor()), () => BasisSpin.Down));
+            CurrentState = new State(barrelAngle, null, BarrelMovement.Up, 0f, DateTime.MinValue, DateTime.MinValue);
+
+            var barrelDirection = () => Vector2.UnitX.RotateDeg(CurrentState.BarrelAngle * spin.ToFactor());
+            var barrelPosition = () => new Vector2(0f, 2f) - Vector2.Normalize(barrelDirection()) * CurrentState.RecoilShift * spin.ToFactor();
+
+            Barrel = new FlakGunBarrel(this, new LiveBasis(barrelPosition, barrelDirection, () => BasisSpin.Down));
         }
 
         public void RemoveRigging(World collisionWorld)
@@ -107,11 +114,21 @@ namespace VibeSopwith.Game.Core
                 newAngle <= MinGunAngle ? BarrelMovement.Up :
                 CurrentState.Movement;
 
-            var (newBullet, newBulletTime) = Exploded || ((nowTime - CurrentState.BulletTime).TotalSeconds < FlakGunBarrel.BulletGracePeriod)
+            var (newBullet, newBulletTime) = Exploded || ((nowTime - CurrentState.BulletTime).TotalSeconds < BulletGracePeriod)
                 ? (null, CurrentState.BulletTime)
                 : (Barrel.SpawnBullet(gameTime.TotalGameTime), nowTime);
 
-            return new(newAngle, newBullet, newMovement, newBulletTime);
+            // Barrels goes fully back in RecoilHalfTime and then fully forward in another RecoilHalfTime. 
+            var recoilPhase = MathF.Min((float)(nowTime - CurrentState.RecoilTime).TotalSeconds, RecoilHalfTime * 2f);
+            var recoilPhasePct = recoilPhase / RecoilHalfTime;
+            var newRecoilShift =
+                recoilPhasePct <= 1f
+                ? RecoilShift * recoilPhasePct
+                : RecoilShift - RecoilShift * (recoilPhasePct - 1f);
+
+            newRecoilShift = MathHelper.Clamp(newRecoilShift, 0f, RecoilShift);
+
+            return new(newAngle, newBullet, newMovement, newRecoilShift, newBulletTime, newBulletTime);
         }
 
         public void PreSimulationPrepare(State projected)
@@ -120,6 +137,7 @@ namespace VibeSopwith.Game.Core
 
             // State must be "accepted" in the PostSimulationUpdate, but for now it is too inconvenient - I have to rethink it.
             CurrentState = projected;
+            Barrel.Body.Position = Barrel.Position.ToAether();
             Barrel.Body.Rotation = Barrel.Direction.ToAngle();
         }
 

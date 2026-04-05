@@ -19,8 +19,7 @@ namespace VibeSopwith.Game.Core
         public float Length => 8f;
         public float Height => 4f;
 
-        public const float BulletSpeed = 21f;           // meters per second
-        public const float BulletGracePeriod = 0.125f;    // Time in seconds before subsequent bullet can be spawned.
+        public const float BulletSpeed = 21f;               // meters per second
 
         public FlakGunBarrel(IBasis parent, IBasis localBasis)
         {
@@ -102,7 +101,7 @@ namespace VibeSopwith.Game.Core
             var gun0 = Body.GetWorldPoint(GetRefPoint("gun0").ToAether());
             var gun1 = Body.GetWorldPoint(GetRefPoint("gun1").ToAether());
             var launchDirection = gun1 - gun0;
-            var spawnPos = gun1 + launchDirection * 0.1f;
+            var spawnPos = gun1 + launchDirection * 0.05f;
             var velocityVector = Vector2.Normalize(launchDirection.ToXna()) * BulletSpeed;
 
             return new Bullet(new Bullet.State(spawnPos.ToXna(), Vector2.Normalize(velocityVector), velocityVector), startTime);

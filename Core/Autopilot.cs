@@ -95,9 +95,9 @@ namespace VibeSopwith.Game.Core
             var node = (approach.Direction, flightDirection) switch
             {
                 (Cardinal.Left,  Cardinal.Left)  => PickAheadNode(approach.CoDirectNode, plane.Position.X, AheadLeft),
-                (Cardinal.Left,  Cardinal.Right) => PickAheadNode(approach.CounterDirectNode, plane.Position.X, AheadRight),
+                (Cardinal.Left,  Cardinal.Right) => PickAheadNode(approach.CounterDirectNode, plane.Position.X, AheadRight) ?? PickAheadNode(approach.CoDirectNode, plane.Position.X, AheadLeft),
                 (Cardinal.Right, Cardinal.Right) => PickAheadNode(approach.CoDirectNode, plane.Position.X, AheadRight),
-                (Cardinal.Right, Cardinal.Left)  => PickAheadNode(approach.CounterDirectNode, plane.Position.X, AheadLeft),
+                (Cardinal.Right, Cardinal.Left)  => PickAheadNode(approach.CounterDirectNode, plane.Position.X, AheadLeft) ?? PickAheadNode(approach.CoDirectNode, plane.Position.X, AheadRight),
                 _ => throw new ApplicationException("Logic error")
             };
 
