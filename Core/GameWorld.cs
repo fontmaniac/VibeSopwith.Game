@@ -308,6 +308,12 @@ namespace VibeSopwith.Game.Core
             foreach (var bullet in Bullets)
                 bullet.PreSimulationPrepare(Unit.Value);
 
+            foreach (var flakGun in FlakGuns)
+            {
+                flakGun.ApplyInputs(gameTime);
+                flakGun.PreSimulationPrepare(flakGun.BarrelAngle);
+            }
+
             // Simulate
             collisionWorld.Step((float)gameTime.ElapsedGameTime.TotalSeconds);
 
@@ -321,6 +327,10 @@ namespace VibeSopwith.Game.Core
             // Update bullet states
             foreach (var bullet in Bullets)
                 bullet.PostSimulationUpdate(Unit.Value);
+
+            // Update guns
+            foreach (var flakGun in FlakGuns)
+                flakGun.PostSimulationUpdate(flakGun.BarrelAngle);
 
             // Get rid of expired bullets
             var expiredBullets = Bullets.Where(e => e.IsExpired(gameTime.TotalGameTime)).ToArray();

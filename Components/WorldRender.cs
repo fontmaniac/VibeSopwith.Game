@@ -135,6 +135,7 @@ namespace VibeSopwith.Game.Components
             foreach (var flakGun in world.FlakGuns)
             {
                 _flakGunRender.DrawSnapped(flakGun, gameTime, worldPixelSize);
+                _bodyRender.Draw(flakGun.Barrel.Body, gameTime);
                 _bodyRender.Draw(flakGun.Body, gameTime);
             }
 
@@ -151,7 +152,7 @@ namespace VibeSopwith.Game.Components
                 _explosionRender.Draw(explosion, gameTime);
 
             //_bodyRender.Draw(world.Plane.Body, gameTime);
-            //_bodyRender.Draw(world.Ground.Body, gameTime);
+            _bodyRender.Draw(world.Ground.Body, gameTime);
 
 
             TheGame.SpriteBatch.End();

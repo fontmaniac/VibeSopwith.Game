@@ -39,14 +39,14 @@ namespace VibeSopwith.Game.Components
         public void Draw(FlakGun gun, GameTime gameTime)
         {
             if (!gun.Exploded)
-                DrawHelper.DrawOriginatedHanded(gun.Barrel, PickBarrelTexture(gun), new Vector2(128, 128), TheGame.SpriteBatch, null);
+                DrawHelper.DrawOriginatedHanded(gun.Barrel, PickBarrelTexture(gun), new Vector2(128, 120), TheGame.SpriteBatch, null);
             DrawHelper.DrawOriginatedHanded(gun, PickBaseTexture(gun), new Vector2(64, 128), TheGame.SpriteBatch, null);
         }
 
         public void DrawSnapped(FlakGun gun, GameTime gameTime, Vector2 worldPixelSize)
         {
             if (!gun.Exploded)
-                DrawHelper.DrawOriginatedHanded(gun.Barrel, PickBarrelTexture(gun), new Vector2(128, 128), TheGame.SpriteBatch, worldPixelSize);
+                DrawHelper.DrawOriginatedHanded(gun.Barrel, PickBarrelTexture(gun), new Vector2(128, 120), TheGame.SpriteBatch, worldPixelSize);
             DrawHelper.DrawOriginatedHanded(gun, PickBaseTexture(gun), new Vector2(64, 128), TheGame.SpriteBatch, worldPixelSize);
         }
 

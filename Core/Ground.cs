@@ -816,7 +816,7 @@ namespace VibeSopwith.Game.Core
             bool fixtureToDelete(Fixture f)
             {
                 var tag = ((Vector2 p1, Vector2 p2))f.Tag;
-                return tag.p1.X >= range.LeftX && tag.p2.X <= range.RightX;
+                return tag.p1.X <= range.RightX && tag.p2.X >= range.LeftX;
             }
             var fixturesToDelete = Body.FixtureList.Where(fixtureToDelete).ToList();
             foreach (var f in fixturesToDelete) Body.Remove(f);

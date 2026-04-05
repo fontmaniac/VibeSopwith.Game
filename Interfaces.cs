@@ -9,6 +9,8 @@ public enum BasisSpin { Down, Up }
 public static class Spin
 {
     public static BasisSpin Toggle(this BasisSpin s) => s == BasisSpin.Down ? BasisSpin.Up : BasisSpin.Down;
+    public static float ToFactor(this BasisSpin c) => c == BasisSpin.Down ? +1f : -1f;
+
 }
 
 public interface IBasis
@@ -16,6 +18,20 @@ public interface IBasis
     Vector2 Position { get; }   // In world
     Vector2 Direction { get; }
     BasisSpin Spin { get; }
+}
+
+public record Basis(Vector2 Position, Vector2 Direction, BasisSpin Spin) : IBasis
+{
+    public static IBasis Canonical = new Basis(Vector2.Zero, Vector2.UnitX, BasisSpin.Down);
+    public static IBasis Default = Canonical;
+}
+
+public record LiveBasis(Func<Vector2> getPosition, Func<Vector2> getDirection, Func<BasisSpin> getSpin) : IBasis
+{
+    public Vector2 Position { get => getPosition(); }   
+    public Vector2 Direction { get => getDirection(); }
+    public BasisSpin Spin { get => getSpin(); }
+
 }
 
 public interface IHasLocation : IBasis

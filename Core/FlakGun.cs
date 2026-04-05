@@ -4,7 +4,7 @@ using VibeSopwith.Game.Utils;
 
 namespace VibeSopwith.Game.Core
 {
-    internal class FlakGun : IHasLocation, ICanRemoveRigging
+    internal class FlakGun : IHasLocation, ICanRemoveRigging, ISimulated<float>
     {
         public Body Body = null!;
 
@@ -18,7 +18,13 @@ namespace VibeSopwith.Game.Core
 
         public bool Exploded = false;
 
-        private float FlipFactor { get => Spin == BasisSpin.Down ? +1f : -1f; }
+        private enum BarrelMovement { Up, Down };
+
+        private BarrelMovement currentMovement = BarrelMovement.Up;
+        public float BarrelAngle { get; private set; } // Degrees
+
+        private const float MaxGunAngle = 85f;          // Degrees.
+        private const float GunAngleChangeRate = 60f;   // Degree per second.
 
         public FlakGun(Vector2 position, BasisSpin spin)
         {
@@ -26,11 +32,13 @@ namespace VibeSopwith.Game.Core
             Spin = spin;
             Direction = Vector2.UnitX * (spin == BasisSpin.Down ? +1f : -1f);
 
-            Barrel = new FlakGunBarrel(this, new Vector2(0f, 2f), Vector2.UnitX);
+            BarrelAngle = (float)GameWorld.WorldSeed.NextDouble() * MaxGunAngle;
+            Barrel = new FlakGunBarrel(this, new LiveBasis(() => new Vector2(0f, 2f), () => Vector2.UnitX.RotateDeg(BarrelAngle * spin.ToFactor()), () => BasisSpin.Down));
         }
 
         public void RemoveRigging(World collisionWorld)
         {
+            Barrel.RemoveRigging(collisionWorld);
             collisionWorld.Remove(Body);
             Body = null!;
         }
@@ -46,7 +54,7 @@ namespace VibeSopwith.Game.Core
             body.LinearDamping = 0.0f;
             body.AngularDamping = 0.0f;
 
-            var ff = FlipFactor;
+            var ff = Spin.ToFactor();
 
             // Add fixture 0
             var vertices0 = new[]
@@ -82,7 +90,30 @@ namespace VibeSopwith.Game.Core
 
             makeTag = makeTag ?? (() => this);
             Body.Tag = makeTag();
+
+            Barrel.SetupRigging(collisionWorld, makeTag);
         }
 
+        public void ApplyInputs(GameTime gameTime)
+        {
+            var dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+            BarrelAngle = BarrelAngle + (currentMovement == BarrelMovement.Up ? +1f : -1f) * GunAngleChangeRate * dt;
+            currentMovement =
+                BarrelAngle >= MaxGunAngle ? BarrelMovement.Down :
+                BarrelAngle <= 0f ? BarrelMovement.Up :
+                currentMovement;
+        }
+
+        public void PreSimulationPrepare(float projected)
+        {
+            if (Barrel.Body == null) return;
+            Barrel.Body.Rotation = Barrel.Direction.ToAngle();
+        }
+
+        public void PostSimulationUpdate(float projected)
+        {
+            
+        }
     }
 }
