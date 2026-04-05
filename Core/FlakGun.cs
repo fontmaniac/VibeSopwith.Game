@@ -23,7 +23,7 @@ namespace VibeSopwith.Game.Core
 
         public enum BarrelMovement { Up, Down };
 
-        private const float MinGunAngle = 30f;          // Degrees.
+        private const float MinGunAngle = 20f;          // Degrees.
         private const float MaxGunAngle = 85f;          // Degrees.
         private const float GunAngleChangeRate = 60f;   // Degree per second.
 
@@ -33,7 +33,8 @@ namespace VibeSopwith.Game.Core
             Spin = spin;
             Direction = Vector2.UnitX * (spin == BasisSpin.Down ? +1f : -1f);
 
-            CurrentState = new State((float)GameWorld.WorldSeed.NextDouble() * (MaxGunAngle-MinGunAngle)+MinGunAngle, null, BarrelMovement.Up, DateTime.MinValue);
+            var barrelAngle = (float)GameWorld.WorldSeed.NextDouble() * (MaxGunAngle - MinGunAngle) + MinGunAngle;
+            CurrentState = new State(barrelAngle, null, BarrelMovement.Up, DateTime.MinValue);
             Barrel = new FlakGunBarrel(this, new LiveBasis(() => new Vector2(0f, 2f), () => Vector2.UnitX.RotateDeg(CurrentState.BarrelAngle * spin.ToFactor()), () => BasisSpin.Down));
         }
 

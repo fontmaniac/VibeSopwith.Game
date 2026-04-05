@@ -29,7 +29,7 @@ namespace VibeSopwith.Game.Components
                 Vector2 scaleTexture(int texWidth, int texHeight) => new Vector2(explosion.Length / texWidth, explosion.Height / texHeight);
                 sb.Draw(
                     spriteSheet, 
-                    explosion.RootPosition, 
+                    explosion.Position, 
                     sheetRect, 
                     Color.White, 
                     0f, 

@@ -2,7 +2,6 @@
 using nkast.Aether.Physics2D.Dynamics;
 using VibeSopwith.Game.Utils;
 
-
 namespace VibeSopwith.Game.Core
 {
     internal class FlakGunBarrel : IHasLocation, ICanRemoveRigging
@@ -31,8 +30,8 @@ namespace VibeSopwith.Game.Core
 
         private Dictionary<string, (float X, float Y)> refPoints = new Dictionary<string, (float X, float Y)>
         {
-            { "gun0", (0.0f, 0.0f) },
-            { "gun1", (3.8271f, 0.0f) },
+            { "gun0", (0.0f, 1.0f) },
+            { "gun1", (3.8271f, 1.0f) },
         };
 
         private (float X, float Y) GetRefPoint(string name)
@@ -56,7 +55,6 @@ namespace VibeSopwith.Game.Core
             body.Inertia = 0f;
             body.LinearDamping = 0.0f;
             body.AngularDamping = 0.0f;
-
 
             var ff = Spin.ToFactor();
 
@@ -84,8 +82,8 @@ namespace VibeSopwith.Game.Core
                 (-0.5137f, ff * 1.7739f),
                 (0.7305f, ff * 1.7729f),
                 (1.5771f, ff * 1.6167f),
-                (3.8291f, ff * 1.2417f),
-                (3.8252f, ff * 0.6812f),
+                (3.8291f, ff * 1.2417f),    // Top of the barrel
+                (3.8252f, ff * 0.6812f),    // Bottom of the barrel
                 (0.8623f, ff * 0.6831f)
             };
 

@@ -72,7 +72,7 @@ namespace VibeSopwith.Game.Utils
             return body.CreatePolygon(vertices, density);
         }
 
-        private static Aether.Vector2 PrintContactLog(Contact ct, string contactType)
+        private static Aether.Vector2 ResolveContactPoint(Contact ct, string contactType)
         {
             ct.GetWorldManifold(out var normal, out var points);
             var contactPoint = points[0];
@@ -133,7 +133,7 @@ namespace VibeSopwith.Game.Utils
 
             collisionType = formatCollision();
 
-            var cp = PrintContactLog(ct, collisionType);
+            var cp = ResolveContactPoint(ct, collisionType);
             execute(cp, fixtures.Value.fix1, fixtures.Value.fix2);
 
             return true;

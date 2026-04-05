@@ -63,7 +63,7 @@ namespace VibeSopwith.Game.Core
 
             Plane = MakeNewPlane();
 
-            Autopilot.Approach makeApproach(Autopilot.Cardinal direction, Ground.Runway rw, float farX, float rwEnd, float rwLevel, float df)
+            Autopilot.Approach makeApproach(Cardinal direction, Ground.Runway rw, float farX, float rwEnd, float rwLevel, float df)
             {
                 var preTouchZone = new Autopilot.ApproachZone(rwEnd + 5f * df, direction, 20f, rwLevel + 2.5f, rwLevel + 7.5f, new Autopilot.Funnel((-Vector2.UnitX * df).RotateDeg(+22f * df), +7f * df, -7f * df));
                 var finalZone0 = new Autopilot.ApproachZone(rwEnd + 35f * df, direction, 10f, rwLevel + 10f, rwLevel + 20f, new Autopilot.Funnel((-Vector2.UnitX * df), -30f, +30f));
@@ -73,7 +73,7 @@ namespace VibeSopwith.Game.Core
                 return approach;
             }
 
-            Autopilot.Approach makeLeftApproach(Autopilot.Cardinal direction, Ground.Runway rw, float farX, float rwEnd, float rwLevel)
+            Autopilot.Approach makeLeftApproach(Cardinal direction, Ground.Runway rw, float farX, float rwEnd, float rwLevel)
             {
                 var preTouchZone = new Autopilot.ApproachZone(rwEnd + 5f, direction, 20f, rwLevel + 2.5f, rwLevel + 7.5f, new Autopilot.Funnel((-Vector2.UnitX).RotateDeg(+22f), +7f, -7f));
 
@@ -98,8 +98,8 @@ namespace VibeSopwith.Game.Core
             // For each runaway construct an approach
             foreach (var rw in Runways)
             {
-                var eastApproach = makeLeftApproach(Autopilot.Cardinal.Left,  rw, 550, rw.End, rw.Level);
-                var westApproach = makeApproach(Autopilot.Cardinal.Right, rw, 50, rw.Start, rw.Level, -1f);
+                var eastApproach = makeLeftApproach(Cardinal.Left,  rw, 550, rw.End, rw.Level);
+                var westApproach = makeApproach(Cardinal.Right, rw, 50, rw.Start, rw.Level, -1f);
 
                 Approaches.Add(eastApproach);
                 Approaches.Add(westApproach);
@@ -130,9 +130,12 @@ namespace VibeSopwith.Game.Core
         private Poppet<FlakGun> pFlakGun = null!;
         private Poppet<Ceiling> pCeiling = null!;
 
-        private ICanDie<Unit> howPlaneDies(Airplane plane) => Caps.JustDie(pPlane,  plane,  collisionWorld, Caps.ExecuteEffect((gt, cp) => planeExplosion = MakeBigExplosion(gt, plane.MidPoint.ToAether())));
-        private ICanDie<Unit> howBombDies(Bomb bomb)       => Caps.JustDie(pBomb,   bomb,   collisionWorld, Caps.NoEffect());
-        private ICanDie<Unit> howBulletDies(Bullet bullet) => Caps.JustDie(pBullet, bullet, collisionWorld, Caps.ExecuteEffect((gt, cp) => explosions.Add(MakeSmallExplosion(gt, cp.ToAether()))));
+        private ICanDie<Unit> howPlaneDies(Airplane plane) => 
+            Caps.JustDie(pPlane,  plane,  collisionWorld, Caps.ExecuteEffect((gt, cp) => planeExplosion = MakeBigExplosion(gt, plane.MidPoint.ToAether())));
+        private ICanDie<Unit> howBombDies(Bomb bomb) => 
+            Caps.JustDie(pBomb,   bomb,   collisionWorld, Caps.NoEffect());
+        private ICanDie<Unit> howBulletDies(Bullet bullet, IBasis bindTarget) => 
+            Caps.JustDie(pBullet, bullet, collisionWorld, Caps.ExecuteEffect((gt, cp) => explosions.Add(MakeSmallExplosion(gt, LiveBasis.Bind(Basis.FixedPos(cp), bindTarget)))));
 
         private void RaisePoppets()
         {
@@ -150,6 +153,7 @@ namespace VibeSopwith.Game.Core
                 name,
                 poppet.Embrace(target),
                 Caps.AbsorbHits(hits),
+                Caps.BindToWorld(),
                 Caps.RemoveRigging(target, collisionWorld),
                 Caps.ExecuteEffect((gameTime, _) => explosions.Add(MakeBasedExplosion(gameTime, target.Position.ToAether()))));
 
@@ -176,6 +180,7 @@ namespace VibeSopwith.Game.Core
                 "Plane",
                 pPlane.Embrace(plane),
                 Caps.AbsorbHits(5),
+                plane,
                 Caps.RemoveRigging(plane, collisionWorld),
                 Caps.ExecuteEffect((gameTime, cp) => { planeExplosion = MakeBigExplosion(gameTime, plane.MidPoint.ToAether()); }));
 
@@ -202,19 +207,20 @@ namespace VibeSopwith.Game.Core
                 "Ground",
                 pGround.Embrace(ground),
                 Caps.ImperviousToHits(),
+                Caps.BindToWorld(),
                 Caps.DoNothing(),
                 Caps.NoEffect());
 
         #endregion
 
         private static Explosion MakeBasedExplosion(GameTime gameTime, Aether.Vector2 pt) =>
-            new Explosion(Explosion.ExplosionVariant.Based1, 16f, 16f, gameTime.TotalGameTime, TimeSpan.FromSeconds(2)) { RootPosition = pt.ToXna() };
+            new Explosion(Explosion.ExplosionVariant.Based1, 16f, 16f, gameTime.TotalGameTime, TimeSpan.FromSeconds(2), Basis.FixedPos(pt.ToXna()));
 
         private static Explosion MakeBigExplosion(GameTime gameTime, Aether.Vector2 pt) =>
-            new Explosion(Explosion.ExplosionVariant.Centered1, 10f, 10f, gameTime.TotalGameTime, TimeSpan.FromSeconds(1.5)) { RootPosition = pt.ToXna() };
+            new Explosion(Explosion.ExplosionVariant.Centered1, 10f, 10f, gameTime.TotalGameTime, TimeSpan.FromSeconds(1.5), Basis.FixedPos(pt.ToXna()));
 
-        private static Explosion MakeSmallExplosion(GameTime gameTime, Aether.Vector2 pt) =>
-            new Explosion(Explosion.ExplosionVariant.Centered1, 1f, 1f, gameTime.TotalGameTime, TimeSpan.FromSeconds(1)) { RootPosition = pt.ToXna() };
+        private static Explosion MakeSmallExplosion(GameTime gameTime, IBasis boundBasis) =>
+            new Explosion(Explosion.ExplosionVariant.Centered1, 1f, 1f, gameTime.TotalGameTime, TimeSpan.FromSeconds(1), boundBasis);
 
         private record struct CollisionContext(Aether.Vector2 cp, GameTime gameTime, Stack<Action> postCheckActions);
 
@@ -251,7 +257,8 @@ namespace VibeSopwith.Game.Core
 
         private void ExecuteExplosion<T>(CollisionContext ctx, Bullet bullet, ICanDieByBullet<T> target)
         {
-            Kill(ctx, howBulletDies(bullet));
+
+            Kill(ctx, howBulletDies(bullet, target.ExplosionBindTarget));
             if (!target.HitOnce()) return;
             Kill(ctx, target);
         }

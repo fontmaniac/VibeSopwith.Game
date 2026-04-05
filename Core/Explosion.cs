@@ -2,26 +2,31 @@
 
 namespace VibeSopwith.Game.Core
 {
-    internal class Explosion
+    internal class Explosion : IHasLocation
     {
-        public Vector2 RootPosition { get; set; } = Vector2.Zero;   // World position of explosion "root" - point in the middle of the bottom edge of the texture.
         public TimeSpan Duration { get; set; }
 
         public enum ExplosionVariant { Based1, Centered1, BluePlasma }
         public ExplosionVariant Variant { get; }
 
-        public float Length;
-        public float Height;
+        public IBasis World { get; }
+        public Vector2 Position { get => World.Position; }
+        public Vector2 Direction { get => World.Direction; }
+        public BasisSpin Spin { get => World.Spin; }
+
+        public float Length { get; }
+        public float Height { get; }
 
         public TimeSpan StartTime;
 
-        public Explosion(ExplosionVariant variant, float length, float height, TimeSpan startTime, TimeSpan duration)
+        public Explosion(ExplosionVariant variant, float length, float height, TimeSpan startTime, TimeSpan duration, IBasis WorldPosition)
         {
             Length = length;
             Height = height;
             StartTime = startTime;
             Variant = variant;
             Duration = duration;
+            World = WorldPosition;
         }
 
         public bool IsExpired(TimeSpan gameTime) => StartTime + Duration < gameTime; 

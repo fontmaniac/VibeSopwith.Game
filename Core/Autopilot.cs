@@ -18,10 +18,6 @@ namespace VibeSopwith.Game.Core
         // Runway:          -----------------------------------------
         //----------------------------------------------------------------------------------------------------
 
-        public enum Cardinal { Left, Right }
-        public static float ToFactor(this Cardinal c) => c == Cardinal.Left ? -1f : +1f;
-        public static Cardinal Toggle(this Cardinal c) => c == Cardinal.Left ? Cardinal.Right : Cardinal.Left;
-
         public record struct Funnel(Vector2 Def, float AngleDeg1, float AngleDeg2)
         {
             public Vector2 Ray1 = Def.Rotate(MathHelper.ToRadians(AngleDeg1));
