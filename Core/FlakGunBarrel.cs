@@ -10,6 +10,7 @@ namespace VibeSopwith.Game.Core
         public Body Body = null!;
 
         public IBasis Parent { get; }
+        public IBasis Local { get; }
 
         // Returned Basis is now "World" basis.
         public Vector2 Position { get => Parent.Position + Local.Position; }
@@ -19,12 +20,25 @@ namespace VibeSopwith.Game.Core
         public float Length => 8f;
         public float Height => 4f;
 
-        public IBasis Local;
+        public const float BulletSpeed = 21f;           // meters per second
+        public const float BulletGracePeriod = 0.125f;    // Time in seconds before subsequent bullet can be spawned.
 
         public FlakGunBarrel(IBasis parent, IBasis localBasis)
         {
             Parent = parent;
             Local = localBasis;
+        }
+
+        private Dictionary<string, (float X, float Y)> refPoints = new Dictionary<string, (float X, float Y)>
+        {
+            { "gun0", (0.0f, 0.0f) },
+            { "gun1", (3.8271f, 0.0f) },
+        };
+
+        private (float X, float Y) GetRefPoint(string name)
+        {
+            var refPoint = refPoints[name];
+            return (refPoint.X, Spin.ToFactor() * refPoint.Y);
         }
 
         public void RemoveRigging(World collisionWorld)
@@ -35,7 +49,7 @@ namespace VibeSopwith.Game.Core
 
         public void SetupRigging(World collisionWorld, Func<object>? makeTag = null)
         {
-            var body = collisionWorld.CreateBody(Position.ToAether(), 0f, BodyType.Static);
+            var body = collisionWorld.CreateBody(Position.ToAether(), 0f, BodyType.Kinematic);
             body.Tag = this;
             body.FixedRotation = false;
             body.Mass = 1000f;
@@ -85,5 +99,15 @@ namespace VibeSopwith.Game.Core
             Body.Tag = makeTag();
         }
 
+        public Bullet SpawnBullet(TimeSpan startTime)
+        {
+            var gun0 = Body.GetWorldPoint(GetRefPoint("gun0").ToAether());
+            var gun1 = Body.GetWorldPoint(GetRefPoint("gun1").ToAether());
+            var launchDirection = gun1 - gun0;
+            var spawnPos = gun1 + launchDirection * 0.1f;
+            var velocityVector = Vector2.Normalize(launchDirection.ToXna()) * BulletSpeed;
+
+            return new Bullet(new Bullet.State(spawnPos.ToXna(), Vector2.Normalize(velocityVector), velocityVector), startTime);
+        }
     }
 }

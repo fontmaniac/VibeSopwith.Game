@@ -4,7 +4,7 @@ using VibeSopwith.Game.Utils;
 
 namespace VibeSopwith.Game.Core
 {
-    internal class Bomb : IHasLocation, ISimulated<Unit>, ICanRemoveRigging
+    internal class Bomb : IHasLocation, IAmBehaving<Unit>, ICanRemoveRigging
     {
         public Body Body = null!;
         public record State(Vector2 Position, Vector2 Direction, Vector2 Velocity);

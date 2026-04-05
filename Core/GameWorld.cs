@@ -1,5 +1,4 @@
 using Microsoft.Xna.Framework;
-using MLEM.Maths;
 using nkast.Aether.Physics2D.Dynamics;
 using nkast.Aether.Physics2D.Dynamics.Contacts;
 using VibeSopwith.Game.Utils;
@@ -115,7 +114,7 @@ namespace VibeSopwith.Game.Core
             var plane = new Airplane(new Vector2(parkingPos, runway.Level), spin);
             plane.CheckAndSetLandingMode(runway);
 
-            plane.SetupRigging(collisionWorld, () => new object[] { plane, MayDieByBomb(plane) });
+            plane.SetupRigging(collisionWorld, () => new object[] { plane, MayDieByBomb(plane), MayDieByBullet(plane) });
             plane.Body.Position = plane.Position.ToAether();
             plane.Body.Rotation = plane.Direction.ToAngle();
             return plane;
@@ -171,6 +170,14 @@ namespace VibeSopwith.Game.Core
                     planeExplosion = MakeBigExplosion(gameTime, plane.MidPoint.ToAether());
                     explosions.Add(MakeBigExplosion(gameTime, cp.ToAether()));
                 }));
+
+        private ICanDieByBullet<Unit> MayDieByBullet(Airplane plane) =>
+            new CanDieByBullet<Unit>(
+                "Plane",
+                pPlane.Embrace(plane),
+                Caps.AbsorbHits(5),
+                Caps.RemoveRigging(plane, collisionWorld),
+                Caps.ExecuteEffect((gameTime, cp) => { planeExplosion = MakeBigExplosion(gameTime, plane.MidPoint.ToAether()); }));
 
         private ICanDieByBomb<Ground.XRange> MayDieByBomb(Ground ground) =>
             new CanDieByBomb<Ground.XRange>(
@@ -253,6 +260,7 @@ namespace VibeSopwith.Game.Core
         {
             var doBeforeSimulation = () =>
             {
+                // 1. Execute "Plane.WhenDestroyed" behavior
                 if (Plane.Exploded)
                 {
                     if (planeExplosion?.IsExpired(gameTime.TotalGameTime) == true)
@@ -265,6 +273,8 @@ namespace VibeSopwith.Game.Core
                 }
                 else
                 {
+                    // Otherwise,
+                    // 2. execute "Plane.WhenAutoLanding" behavior
                     if (Plane.CurrentState.AutoLanding != null)
                     {
                         // Compute new ApproachPhase & set new inputs.
@@ -275,33 +285,49 @@ namespace VibeSopwith.Game.Core
                         }
                         else
                         {
+                            // Store Synthesized inputs back in the Plane instance, potentially overriding User inputs stored at previous Update.
                             Plane.Input = input;
                             Plane.CurrentState = Plane.CurrentState with { AutoLanding = phase };
                         }
                     }
 
+                    // 3. Execute "Plane.Ordinary" behavior
                     Plane.CheckAndSetLandingMode(Runways[0]);
+
+                    // 4. Compute "Plane.Projected" state by calling Plane.ApplyInputs, passing in:
+                    // - Stored Plane.Inputs (either User inputs from Update, or Synthetic inputs from AutoLanding FSM)
+                    // - AutoLanding init "factory" - in case inputs indicate the need to initiate.
                     var planeProjected = Plane.ApplyInputs(Plane.Input, () => Autopilot.InitiateAutoLanding(Plane, Approaches), gameTime);
 
-                    if (planeProjected.Bomb != null)
-                        Bombs.Add(planeProjected.Bomb.SetupRigging(collisionWorld, () => new object[] { planeProjected.Bomb, MayDieByBomb(planeProjected.Bomb) }));
-
-                    if (planeProjected.Bullet != null)
-                        Bullets.Add(planeProjected.Bullet.SetupRigging(collisionWorld));
-
+                    // 5. Modify necessary bits of Aether instrumentation before simulation step. 
                     Plane.PreSimulationPrepare(planeProjected);
 
+                    // 6. Prepare a closure to execute after physics simulation step.
                     return () =>
                     {
+                        // 7. Project simulated physicals (positions, velocities, etc.) back to Plane "world" instance.
                         Plane.PostSimulationUpdate(planeProjected);
                         Plane.ClearInputs();
+
+                        // Ideally #8 must be here
+                        // 8. Act upon finalized Plane state.
+                        {
+                            var planeState = Plane.CurrentState;
+                            if (planeState.Bomb != null)
+                                Bombs.Add(planeState.Bomb.SetupRigging(collisionWorld, () => new object[] { planeState.Bomb, MayDieByBomb(planeState.Bomb) }));
+
+                            if (planeState.Bullet != null)
+                                Bullets.Add(planeState.Bullet.SetupRigging(collisionWorld));
+                        }
                     };
                 }
             };
 
-            // Do plane-dependent things before simulation
+            // Execute pre-physics-simulation behaviors.
+            // Execute Plane behavior stack before simulation
             var planePostSimulation = doBeforeSimulation();
 
+            // Everything else except plane has much simple behavior stack.
             foreach (var bomb in Bombs)
                 bomb.PreSimulationPrepare(Unit.Value);
 
@@ -310,16 +336,26 @@ namespace VibeSopwith.Game.Core
 
             foreach (var flakGun in FlakGuns)
             {
-                flakGun.ApplyInputs(gameTime);
-                flakGun.PreSimulationPrepare(flakGun.BarrelAngle);
+                var projected = flakGun.ApplyInputs(gameTime);
+
+                if (projected.Bullet != null)
+                    Bullets.Add(projected.Bullet.SetupRigging(collisionWorld));
+
+                flakGun.PreSimulationPrepare(projected);
             }
 
-            // Simulate
-            collisionWorld.Step((float)gameTime.ElapsedGameTime.TotalSeconds);
+            //------------------------------------------------------------------//
+            // Simulate Physics.                                                //
+            collisionWorld.Step((float)gameTime.ElapsedGameTime.TotalSeconds);  //
+            //                                                                  //
+            //------------------------------------------------------------------//
 
+            // Execute post-physics-simulation behaviors.
+            
             // Update plane state if not exploded
             planePostSimulation();
 
+            // "Update" behaviors
             // Update bomb states
             foreach (var bomb in Bombs)
                 bomb.PostSimulationUpdate(Unit.Value);
@@ -330,8 +366,9 @@ namespace VibeSopwith.Game.Core
 
             // Update guns
             foreach (var flakGun in FlakGuns)
-                flakGun.PostSimulationUpdate(flakGun.BarrelAngle);
+                flakGun.PostSimulationUpdate(flakGun.CurrentState);
 
+            // "Expire" behaviors
             // Get rid of expired bullets
             var expiredBullets = Bullets.Where(e => e.IsExpired(gameTime.TotalGameTime)).ToArray();
             foreach (var eb in expiredBullets)
@@ -342,7 +379,7 @@ namespace VibeSopwith.Game.Core
             foreach (var ee in expiredExplosions)
                 explosions.Remove(ee);
 
-            // Collision check round.
+            // Collision check round - not a "behavior", a structural step.
             var postCheckActions = new Stack<Action>(); // Push here actions which manipulate collisionWorld, to avoid corruption mid-iteration.
             var makeCtx = (Aether.Vector2 cp) => new CollisionContext(cp, gameTime, postCheckActions);
 

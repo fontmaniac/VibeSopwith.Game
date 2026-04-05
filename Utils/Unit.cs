@@ -1,16 +1,15 @@
 ﻿namespace VibeSopwith.Game.Utils
 {
-    public readonly struct Unit : IEquatable<Unit>
+    // `bool Equal`, `==` & `!=` are provided by compiler for `record struct` as "structural equality"
+    public readonly record struct Unit : IEquatable<Unit>, IComparable<Unit>, IComparable
     {
         public static readonly Unit Value = new Unit();
 
-        public override bool Equals(object? obj) => obj is Unit;
-        public bool Equals(Unit other) => true;
+        bool IEquatable<Unit>.Equals(Unit other) => true;
+        int IComparable<Unit>.CompareTo(Unit other) => 0;
+        int IComparable.CompareTo(object? obj) => obj is Unit ? 0 : throw new ArgumentException("Object is not a Unit", nameof(obj));
 
         public override int GetHashCode() => 0;
-
-        public static bool operator ==(Unit left, Unit right) => true;
-        public static bool operator !=(Unit left, Unit right) => false;
 
         public override string ToString() => "()";
     }

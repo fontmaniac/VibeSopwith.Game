@@ -5,7 +5,7 @@ using Aether = nkast.Aether.Physics2D.Common;
 
 namespace VibeSopwith.Game.Core
 {
-    internal class Airplane : IHasLocation, ISimulated<Airplane.State>, ICanRemoveRigging
+    internal class Airplane : IHasLocation, IAmBehaving<Airplane.State>, ICanRemoveRigging
     {
         public Body Body = null!;
 
@@ -168,7 +168,7 @@ namespace VibeSopwith.Game.Core
             var gun0 = Body.GetWorldPoint(GetRefPoint("gun0").ToAether());
             var gun1 = Body.GetWorldPoint(GetRefPoint("gun1").ToAether());
             var launchDirection = gun1 - gun0;
-            var spawnPos = gun1 + launchDirection * 0.1f;
+            var spawnPos = gun1 + launchDirection * 1.5f;
             var velocityVector =
                 Direction * Speed   // From Plane's flight.
                 + Vector2.Normalize(launchDirection.ToXna()) * BulletSpeed;

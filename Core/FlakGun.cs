@@ -4,9 +4,12 @@ using VibeSopwith.Game.Utils;
 
 namespace VibeSopwith.Game.Core
 {
-    internal class FlakGun : IHasLocation, ICanRemoveRigging, ISimulated<float>
+    internal class FlakGun : IHasLocation, ICanRemoveRigging, IAmBehaving<FlakGun.State>
     {
         public Body Body = null!;
+
+        public record State(float BarrelAngle, Bullet? Bullet, BarrelMovement Movement, DateTime BulletTime);
+        public State CurrentState;
 
         public Vector2 Position { get; }
         public Vector2 Direction { get; }
@@ -18,11 +21,9 @@ namespace VibeSopwith.Game.Core
 
         public bool Exploded = false;
 
-        private enum BarrelMovement { Up, Down };
+        public enum BarrelMovement { Up, Down };
 
-        private BarrelMovement currentMovement = BarrelMovement.Up;
-        public float BarrelAngle { get; private set; } // Degrees
-
+        private const float MinGunAngle = 30f;          // Degrees.
         private const float MaxGunAngle = 85f;          // Degrees.
         private const float GunAngleChangeRate = 60f;   // Degree per second.
 
@@ -32,8 +33,8 @@ namespace VibeSopwith.Game.Core
             Spin = spin;
             Direction = Vector2.UnitX * (spin == BasisSpin.Down ? +1f : -1f);
 
-            BarrelAngle = (float)GameWorld.WorldSeed.NextDouble() * MaxGunAngle;
-            Barrel = new FlakGunBarrel(this, new LiveBasis(() => new Vector2(0f, 2f), () => Vector2.UnitX.RotateDeg(BarrelAngle * spin.ToFactor()), () => BasisSpin.Down));
+            CurrentState = new State((float)GameWorld.WorldSeed.NextDouble() * (MaxGunAngle-MinGunAngle)+MinGunAngle, null, BarrelMovement.Up, DateTime.MinValue);
+            Barrel = new FlakGunBarrel(this, new LiveBasis(() => new Vector2(0f, 2f), () => Vector2.UnitX.RotateDeg(CurrentState.BarrelAngle * spin.ToFactor()), () => BasisSpin.Down));
         }
 
         public void RemoveRigging(World collisionWorld)
@@ -94,24 +95,34 @@ namespace VibeSopwith.Game.Core
             Barrel.SetupRigging(collisionWorld, makeTag);
         }
 
-        public void ApplyInputs(GameTime gameTime)
+        public State ApplyInputs(GameTime gameTime)
         {
+            var nowTime = DateTime.UtcNow;
             var dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
-            BarrelAngle = BarrelAngle + (currentMovement == BarrelMovement.Up ? +1f : -1f) * GunAngleChangeRate * dt;
-            currentMovement =
-                BarrelAngle >= MaxGunAngle ? BarrelMovement.Down :
-                BarrelAngle <= 0f ? BarrelMovement.Up :
-                currentMovement;
+            var newAngle = CurrentState.BarrelAngle + (CurrentState.Movement == BarrelMovement.Up ? +1f : -1f) * GunAngleChangeRate * dt;
+            var newMovement =
+                newAngle >= MaxGunAngle ? BarrelMovement.Down :
+                newAngle <= MinGunAngle ? BarrelMovement.Up :
+                CurrentState.Movement;
+
+            var (newBullet, newBulletTime) = Exploded || ((nowTime - CurrentState.BulletTime).TotalSeconds < FlakGunBarrel.BulletGracePeriod)
+                ? (null, CurrentState.BulletTime)
+                : (Barrel.SpawnBullet(gameTime.TotalGameTime), nowTime);
+
+            return new(newAngle, newBullet, newMovement, newBulletTime);
         }
 
-        public void PreSimulationPrepare(float projected)
+        public void PreSimulationPrepare(State projected)
         {
             if (Barrel.Body == null) return;
+
+            // State must be "accepted" in the PostSimulationUpdate, but for now it is too inconvenient - I have to rethink it.
+            CurrentState = projected;
             Barrel.Body.Rotation = Barrel.Direction.ToAngle();
         }
 
-        public void PostSimulationUpdate(float projected)
+        public void PostSimulationUpdate(State projected)
         {
             
         }

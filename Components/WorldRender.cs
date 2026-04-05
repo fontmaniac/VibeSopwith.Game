@@ -152,7 +152,7 @@ namespace VibeSopwith.Game.Components
                 _explosionRender.Draw(explosion, gameTime);
 
             //_bodyRender.Draw(world.Plane.Body, gameTime);
-            _bodyRender.Draw(world.Ground.Body, gameTime);
+            //_bodyRender.Draw(world.Ground.Body, gameTime);
 
 
             TheGame.SpriteBatch.End();

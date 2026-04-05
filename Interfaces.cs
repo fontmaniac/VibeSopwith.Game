@@ -51,7 +51,7 @@ public record Location(Vector2 Position, Vector2 Direction, BasisSpin Spin, floa
 }
 
 
-public interface ISimulated<TState>
+public interface IAmBehaving<TState>
 {
     // Populate Aether2D Body properties from instance properties for simulation purposes.
     public void PreSimulationPrepare(TState projected);
