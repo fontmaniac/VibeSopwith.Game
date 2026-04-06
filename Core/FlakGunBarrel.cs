@@ -1,6 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
 using nkast.Aether.Physics2D.Dynamics;
-using System;
 using VibeSopwith.Game.Utils;
 
 namespace VibeSopwith.Game.Core

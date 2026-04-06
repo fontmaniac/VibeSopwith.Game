@@ -21,6 +21,8 @@ namespace VibeSopwith.Game.Components
             _skyTexture = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, tex2);
         }
 
+        private record struct ProfileBandSector(Vector2 p1, Vector2 p2, float p1by, float p2by);
+
         public void Draw(Ground ground, float thickness, float scaleVert, Matrix transform)
         {
             var gd = Game.GraphicsDevice;
@@ -39,14 +41,14 @@ namespace VibeSopwith.Game.Components
                 0, 1
             );
 
-            void singlePass(Action<int, Vector2, Vector2> execute)
+            void singlePass(float baseline, Action<int, ProfileBandSector> execute)
             {
                 for (int i = 1; i < ground.Points.Count; i++)
                 {
-                    var start = ground.Points[i - 1];
-                    var end = ground.Points[i];
+                    var startTop = ground.Points[i - 1];
+                    var endTop = ground.Points[i];
 
-                    execute(i-1, start, end);
+                    execute(i-1, new (startTop, endTop, baseline, baseline));
                 }
             }
 
@@ -57,16 +59,16 @@ namespace VibeSopwith.Game.Components
             {
                 if (_quadVertsTex.Length != vertCount)
                     _quadVertsTex = new VertexPositionColorTexture[vertCount];
-                singlePass((i, start, end) => FillUnderLineTexture(i, start, end, 0, Color.White, new Vector2(8, 8)));
-                //singlePass((i, start, end) => FillUnderLineTexture(i + triCount / 2, start, end, GameWorld.WorldHeight, Color.Black, new Vector2(64, 64)));
-                singlePass((i, start, end) => FillUnderLineTexture(i + triCount / 2, start, end, GameWorld.WorldHeight, Color.White, new Vector2(GameWorld.WorldLength, GameWorld.WorldHeight)));
+
+                singlePass(0, (i, pbs) => FillUnderLineTexture(i, pbs, Color.White, new Vector2(8, 8), 30));
+                singlePass(GameWorld.WorldHeight, (i, pbs) => FillUnderLineTexture(i + triCount / 2, pbs, Color.White, new Vector2(GameWorld.WorldLength, GameWorld.WorldHeight), 0));
             }
             _lastGroundHash = ground.Hash;
 
             DrawTextures(gd, _groundTexture, 0);
             DrawTextures(gd, _skyTexture, _quadVertsTex.Length/2);
 
-            singlePass((_, start, end) => TheGame.Primitives.DrawLine(start, end, Color.White, thickness / scaleVert));
+            singlePass(0, (_, pbs) => TheGame.Primitives.DrawLine(pbs.p1, pbs.p2, Color.White, thickness / scaleVert));
         }
 
         private static Vector2 RotateUV(Vector2 uv, float angle)
@@ -76,21 +78,21 @@ namespace VibeSopwith.Game.Components
             return new Vector2(uv.X * cos - uv.Y * sin, uv.X * sin + uv.Y * cos);
         }
 
-        private void FillUnderLineTexture(int i, Vector2 p1, Vector2 p2, float baseLine, Color color, Vector2 tileSizeWorld)
+        private void FillUnderLineTexture(int i, ProfileBandSector pbs, Color color, Vector2 tileSizeWorld, float uvRotationDegree)
         {
             var tile = tileSizeWorld; // world units per texture tile
-            var uvRotationAngle = MathHelper.ToRadians(15f);
+            var uvRotationAngle = MathHelper.ToRadians(uvRotationDegree);
 
-            Vector3 v1 = new(p1.X, p1.Y, 0);
-            Vector3 v2 = new(p2.X, p2.Y, 0);
-            Vector3 v3 = new(p2.X, baseLine, 0);
-            Vector3 v4 = new(p1.X, baseLine, 0);
+            Vector3 v1 = new(pbs.p1.X, pbs.p1.Y, 0);
+            Vector3 v2 = new(pbs.p2.X, pbs.p2.Y, 0);
+            Vector3 v3 = new(pbs.p2.X, pbs.p2by, 0);
+            Vector3 v4 = new(pbs.p1.X, pbs.p1by, 0);
 
             // UVs based on world coordinates. "Minus-Y" because our world is Y-flipped.
-            Vector2 uv1 = RotateUV(new Vector2(p1.X / tile.X, p1.Y / -tile.Y), uvRotationAngle);
-            Vector2 uv2 = RotateUV(new Vector2(p2.X / tile.X, p2.Y / -tile.Y), uvRotationAngle);
-            Vector2 uv3 = RotateUV(new Vector2(p2.X / tile.X, baseLine / -tile.Y), uvRotationAngle);
-            Vector2 uv4 = RotateUV(new Vector2(p1.X / tile.X, baseLine / -tile.Y), uvRotationAngle);
+            Vector2 uv1 = RotateUV(new Vector2(v1.X / tile.X, v1.Y / -tile.Y), uvRotationAngle);
+            Vector2 uv2 = RotateUV(new Vector2(v2.X / tile.X, v2.Y / -tile.Y), uvRotationAngle);
+            Vector2 uv3 = RotateUV(new Vector2(v2.X / tile.X, v3.Y / -tile.Y), uvRotationAngle);
+            Vector2 uv4 = RotateUV(new Vector2(v1.X / tile.X, v4.Y / -tile.Y), uvRotationAngle);
 
             // Two triangles
             i = i * 6;
