@@ -7,34 +7,34 @@ namespace VibeSopwith.Game.Components
 {
     internal class FlakGunRender(Microsoft.Xna.Framework.Game game) : DrawableGameComponent(game)
     {
-        private Texture2D _baseLRTexture = null!;
-        private Texture2D _baseRLTexture = null!;
-        private Texture2D _LRExplodedTexture = null!;
-        private Texture2D _RLExplodedTexture = null!;
-        private Texture2D _barrelLRTexture = null!;
-        private Texture2D _barrelRLTexture = null!;
+        private TextureAtlas _baseLRTexture = null!;
+        private TextureAtlas _baseRLTexture = null!;
+        private TextureAtlas _LRExplodedTexture = null!;
+        private TextureAtlas _RLExplodedTexture = null!;
+        private TextureAtlas _barrelLRTexture = null!;
+        private TextureAtlas _barrelRLTexture = null!;
 
         public new void LoadContent()
         {
             base.LoadContent();
 
-            _baseLRTexture = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, Game.Content.Load<Texture2D>("Textures\\Flak_1_LR.png"));
-            _baseRLTexture = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, Game.Content.Load<Texture2D>("Textures\\Flak_1_RL.png"));
-            _LRExplodedTexture = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, Game.Content.Load<Texture2D>("Textures\\Flak_1_Exploded_LR.png"));
-            _RLExplodedTexture = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, Game.Content.Load<Texture2D>("Textures\\Flak_1_Exploded_RL.png"));
-            _barrelLRTexture = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, Game.Content.Load<Texture2D>("Textures\\FlakBarrel_1_LR.png"));
-            _barrelRLTexture = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, Game.Content.Load<Texture2D>("Textures\\FlakBarrel_1_RL.png"));
+            _baseLRTexture = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, Game.Content.Load<Texture2D>("Textures\\Flak_1_LR.png")).ToAtlas();
+            _baseRLTexture = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, Game.Content.Load<Texture2D>("Textures\\Flak_1_RL.png")).ToAtlas();
+            _LRExplodedTexture = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, Game.Content.Load<Texture2D>("Textures\\Flak_1_Exploded_LR.png")).ToAtlas();
+            _RLExplodedTexture = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, Game.Content.Load<Texture2D>("Textures\\Flak_1_Exploded_RL.png")).ToAtlas();
+            _barrelLRTexture = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, Game.Content.Load<Texture2D>("Textures\\FlakBarrel_1_LR.png")).ToAtlas();
+            _barrelRLTexture = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, Game.Content.Load<Texture2D>("Textures\\FlakBarrel_1_RL.png")).ToAtlas();
         }
 
-        private DrawHelper.HandedTexture PickBaseTexture(FlakGun gun) =>
+        private HandedSlice PickBaseTexture(FlakGun gun) =>
             gun.Spin == BasisSpin.Down
-                ? DrawHelper.HandedTexture.LR.Wrap(gun.Exploded ? _LRExplodedTexture : _baseLRTexture)
-                : DrawHelper.HandedTexture.RL.Wrap(gun.Exploded ? _RLExplodedTexture : _baseRLTexture);
+                ? HandedSlice.LR.Wrap(gun.Exploded ? _LRExplodedTexture.GetSlice() : _baseLRTexture.GetSlice())
+                : HandedSlice.RL.Wrap(gun.Exploded ? _RLExplodedTexture.GetSlice() : _baseRLTexture.GetSlice());
 
-        private DrawHelper.HandedTexture PickBarrelTexture(FlakGun gun) =>
+        private HandedSlice PickBarrelTexture(FlakGun gun) =>
             gun.Spin == BasisSpin.Down
-                ? DrawHelper.HandedTexture.LR.Wrap(_barrelLRTexture)
-                : DrawHelper.HandedTexture.RL.Wrap(_barrelRLTexture);
+                ? HandedSlice.LR.Wrap(_barrelLRTexture.GetSlice())
+                : HandedSlice.RL.Wrap(_barrelRLTexture.GetSlice());
 
         public void Draw(FlakGun gun, GameTime gameTime)
         {

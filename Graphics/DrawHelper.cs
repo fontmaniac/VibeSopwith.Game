@@ -6,15 +6,6 @@ namespace VibeSopwith.Game.Graphics
 {
     internal static class DrawHelper
     {
-        public abstract record HandedTexture()
-        {
-            public sealed record LR(Texture2D Tex) : HandedTexture { public static HandedTexture Wrap(Texture2D x) => new LR(x); };
-            public sealed record RL(Texture2D Tex) : HandedTexture { public static HandedTexture Wrap(Texture2D x) => new RL(x); };
-
-            public float FlipFactor => this is LR ? +1f : this is RL ? -1f : throw new ArgumentException("Logic error");
-            public Texture2D Texture => this is LR lr ? lr.Tex : this is RL rl ? rl.Tex : throw new ArgumentException("Logic error");
-        }
-
         public static Vector2 SnapToPixel(this Vector2 pos, Vector2? worldPixelSize)
         {
             float snappedX = worldPixelSize != null ? MathF.Floor(pos.X / worldPixelSize.Value.X) * worldPixelSize.Value.X : pos.X;
@@ -23,9 +14,9 @@ namespace VibeSopwith.Game.Graphics
         }
 
         public static void DrawOriginated(this IHasLocation loc, Texture2D texture, Vector2 origin, SpriteBatch spriteBatch, Vector2? worldPixelSize) =>
-            DrawOriginatedHanded(loc, HandedTexture.LR.Wrap(texture), origin, spriteBatch, worldPixelSize);
+            DrawOriginatedHanded(loc, HandedSlice.LR.Wrap(texture.ToAtlas().GetSlice()), origin, spriteBatch, worldPixelSize);
 
-        public static void DrawOriginatedHanded(this IHasLocation location, HandedTexture tex, Vector2 origin, SpriteBatch spriteBatch, Vector2? worldPixelSize)
+        public static void DrawOriginatedHanded(this IHasLocation location, HandedSlice slice, Vector2 origin, SpriteBatch spriteBatch, Vector2? worldPixelSize)
         {
             // Assume location IS the world basis.            
             var wb = location;
@@ -33,30 +24,30 @@ namespace VibeSopwith.Game.Graphics
             Vector2 pos = wb.Position;
 
             // Rotation from direction vector (world-space)
-            var texDirection = wb.Direction * tex.FlipFactor;
+            var texDirection = wb.Direction * slice.FlipFactor;
             var rotation = texDirection.ToAngle();
 
-            var texture = tex.Texture;
+            var theSlice = slice.TheSlice;
 
             // Scale from object dimensions to texture size (in meters)
-            float scaleX = location.Length / texture.Width;
-            float scaleY = location.Height / texture.Height;
+            float scaleX = location.Length / theSlice.SourceRectangle.Width;
+            float scaleY = location.Height / theSlice.SourceRectangle.Height;
 
-            var adjOrigin = new Vector2(origin.X, texture.Height - origin.Y);
+            var adjOrigin = new Vector2(origin.X, theSlice.SourceRectangle.Height - origin.Y);
 
             // It is "flip : noFlip" to account for the fact that my world is Y-flipped relative to screen.
             // If it wasn't, the order would have been "noFlip : flip".
-            var (flip, noFlip) = tex switch
+            var (flip, noFlip) = slice switch
             {
-                HandedTexture.LR => (SpriteEffects.FlipVertically, SpriteEffects.None),
-                HandedTexture.RL => (SpriteEffects.None, SpriteEffects.FlipVertically),
+                HandedSlice.LR => (SpriteEffects.FlipVertically, SpriteEffects.None),
+                HandedSlice.RL => (SpriteEffects.None, SpriteEffects.FlipVertically),
                 _ => throw new ArgumentException("Logic error"),
             };
 
             spriteBatch.Draw(
-                texture,
+                theSlice.Texture,
                 pos.SnapToPixel(worldPixelSize), // in world units
-                null,
+                theSlice.SourceRectangle,
                 Color.White,
                 rotation,
                 adjOrigin,

@@ -72,14 +72,11 @@ namespace VibeSopwith.Game.Components
             if (_lastGroundHash != ground.Hash)
             {
                 if (_quadVertsTex.Length != vertCount)
-                {
-                    Console.WriteLine($"Allocating vertex buffer of {vertCount}");
                     _quadVertsTex = new VertexPositionColorTexture[vertCount];
-                }
 
-                singlePass(-2, new(0f, 0.3f), (i, pbs)   => FillUnderLineTexture(i + triCountPerBand / 2 * 0, pbs, Color.White, new Vector2(8, 8), 5));
-                singlePass(-2, new(0.3f, 0.7f), (i, pbs) => FillUnderLineTexture(i + triCountPerBand / 2 * 1, pbs, Color.White, new Vector2(8, 8), -10));
-                singlePass(-2, new(0.7f, 1f), (i, pbs)   => FillUnderLineTexture(i + triCountPerBand / 2 * 2, pbs, Color.White, new Vector2(8, 8), 15));
+                singlePass(-2, new(0f, 0.3f), (i, pbs)   => FillUnderLineTexture(i + triCountPerBand / 2 * 0, pbs, Color.White, new Vector2(16, 16), 5));
+                singlePass(-2, new(0.3f, 0.7f), (i, pbs) => FillUnderLineTexture(i + triCountPerBand / 2 * 1, pbs, Color.White, new Vector2(16, 16), -10));
+                singlePass(-2, new(0.7f, 1f), (i, pbs)   => FillUnderLineTexture(i + triCountPerBand / 2 * 2, pbs, Color.White, new Vector2(16, 16), 15));
                 singlePass(GameWorld.WorldHeight, new(1f, 0f), (i, pbs) => FillUnderLineTexture(i + triCountPerBand / 2 * 3, pbs, Color.White, new Vector2(GameWorld.WorldLength, GameWorld.WorldHeight), 0));
             }
             _lastGroundHash = ground.Hash;
