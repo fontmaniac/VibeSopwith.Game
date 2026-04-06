@@ -13,17 +13,17 @@ namespace VibeSopwith.Game.Components
         {
             base.LoadContent();
 
-            _airplaneTexture = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, Game.Content.Load<Texture2D>("Textures\\Plane_1_Q.png")).ToAtlas();
+            _airplaneTexture = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, Game.Content.Load<Texture2D>("Textures\\Plane_1_Q.png")).ToAtlas(new Vector2(115, 100));
         }
 
         public void Draw(Airplane airplane, GameTime gameTime)
         {
-            DrawHelper.DrawOriginatedHanded(airplane, HandedSlice.LR.Wrap(_airplaneTexture.GetSlice()), new Vector2(115, 100), TheGame.SpriteBatch, null);
+            DrawHelper.DrawOriginatedHanded(airplane, HandedSlice.LR.Wrap(_airplaneTexture.GetSlice()), TheGame.SpriteBatch, null);
         }
 
         public void DrawSnapped(Airplane airplane, GameTime gameTime, Vector2 worldPixelSize)
         {
-            DrawHelper.DrawOriginatedHanded(airplane, HandedSlice.LR.Wrap(_airplaneTexture.GetSlice()), new Vector2(115, 100), TheGame.SpriteBatch, worldPixelSize);
+            DrawHelper.DrawOriginatedHanded(airplane, HandedSlice.LR.Wrap(_airplaneTexture.GetSlice()), TheGame.SpriteBatch, worldPixelSize);
         }
 
     }

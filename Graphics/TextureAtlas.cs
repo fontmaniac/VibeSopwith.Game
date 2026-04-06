@@ -3,7 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace VibeSopwith.Game.Graphics
 {
-    public record struct TextureSlice(Texture2D Texture, Rectangle SourceRectangle);
+    public record struct TextureSlice(Texture2D Texture, Rectangle SourceRectangle, Vector2 TextureOrigin);
 
     public abstract record HandedSlice()
     {
@@ -14,34 +14,35 @@ namespace VibeSopwith.Game.Graphics
         public TextureSlice TheSlice => this is LR lr ? lr.Slice : this is RL rl ? rl.Slice : throw new ArgumentException("Logic error");
     }
 
-    internal static class TextureLoader
+    internal static class Atlas
     {
-        public static Texture2D Load(Microsoft.Xna.Framework.Game game, string fileName) => game.Content.Load<Texture2D>(fileName);
-        public static Texture2D LoadMipMap(Microsoft.Xna.Framework.Game game, GraphicsDevice gd, SpriteBatch sb, string fileName) => MipMap.CastWithMipMaps(gd, sb, Load(game, fileName));
-        public static TextureAtlas.Single ToAtlas(this Texture2D src) => new TextureAtlas.Single(src);
-        public static TextureAtlas.SpriteSheet ToAtlas(this Texture2D src, int cols, int rows) => new TextureAtlas.SpriteSheet(src, cols, rows);
+        public static TextureAtlas.Single ToAtlas(this Texture2D src, Vector2 origin) => new TextureAtlas.Single(src, origin);
+        public static TextureAtlas.SpriteSheet ToAtlas(this Texture2D src, Vector2 origin, int cols, int rows) => new TextureAtlas.SpriteSheet(src, origin, cols, rows);
+        public static TextureAtlas.SpriteSheet ToAtlas(this Texture2D src, Func<int, int, Vector2> getOrigin, int cols, int rows) => 
+            new TextureAtlas.SpriteSheet(
+                src, 
+                getOrigin(
+                    TextureAtlas.SpriteSheet.GetSpriteWidth(src, cols), 
+                    TextureAtlas.SpriteSheet.GetSpriteHeight(src, rows)), 
+                cols, 
+                rows);
     }
 
     internal abstract record TextureAtlas()
     {
-        public sealed record Single(Texture2D Texture) : TextureAtlas;
-        public sealed record SpriteSheet(Texture2D Texture, int Cols, int Rows) : TextureAtlas
+        public sealed record Single(Texture2D Texture, Vector2 OriginLRSD) : TextureAtlas;
+        public sealed record SpriteSheet(Texture2D Texture, Vector2 OriginLRSD, int Cols, int Rows) : TextureAtlas
         {
-            public int SpriteWidth = Texture.Width / Cols;
-            public int SpriteHeight = Texture.Height / Rows;
+            public static int GetSpriteWidth(Texture2D tex, int cols) => tex.Width / cols;
+            public static int GetSpriteHeight(Texture2D tex, int rows) => tex.Height / rows;
+            public int SpriteWidth = GetSpriteWidth(Texture, Cols);
+            public int SpriteHeight = GetSpriteHeight(Texture, Rows);
         }
-        public sealed record Atlas(Texture2D Texture, IDictionary<string, Rectangle> Regions) : TextureAtlas;
-
-        public static Single LoadSingle(Microsoft.Xna.Framework.Game game, GraphicsDevice gd, SpriteBatch sb, string fileName) =>
-            new Single(TextureLoader.LoadMipMap(game, gd, sb, fileName));
-
-        public static SpriteSheet LoadSpriteSheet(Microsoft.Xna.Framework.Game game, GraphicsDevice gd, SpriteBatch sb, int cols, int rows, string fileName) =>
-            new SpriteSheet(TextureLoader.LoadMipMap(game, gd, sb, fileName), cols, rows);
 
         public TextureSlice GetSlice() =>
             this switch
             {
-                Single s => new(s.Texture, new(0, 0, s.Texture.Width, s.Texture.Height)),
+                Single s => new(s.Texture, new(0, 0, s.Texture.Width, s.Texture.Height), s.OriginLRSD),
                 _ => throw new NotSupportedException()
             };
 
@@ -50,7 +51,7 @@ namespace VibeSopwith.Game.Graphics
             return this switch
             {
                 Single s when col == 0 && row == 0 => s.GetSlice(),
-                SpriteSheet ss => new(ss.Texture, new Rectangle(col * ss.SpriteWidth + 1, row * ss.SpriteHeight + 1, ss.SpriteWidth - 2, ss.SpriteHeight - 2)),
+                SpriteSheet ss => new(ss.Texture, new Rectangle(col * ss.SpriteWidth + 1, row * ss.SpriteHeight + 1, ss.SpriteWidth - 2, ss.SpriteHeight - 2), ss.OriginLRSD),
                 _ => throw new NotSupportedException()
             };
         }

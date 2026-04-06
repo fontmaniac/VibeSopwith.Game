@@ -14,9 +14,9 @@ namespace VibeSopwith.Game.Graphics
         }
 
         public static void DrawOriginated(this IHasLocation loc, Texture2D texture, Vector2 origin, SpriteBatch spriteBatch, Vector2? worldPixelSize) =>
-            DrawOriginatedHanded(loc, HandedSlice.LR.Wrap(texture.ToAtlas().GetSlice()), origin, spriteBatch, worldPixelSize);
+            DrawOriginatedHanded(loc, HandedSlice.LR.Wrap(texture.ToAtlas(origin).GetSlice()), spriteBatch, worldPixelSize);
 
-        public static void DrawOriginatedHanded(this IHasLocation location, HandedSlice slice, Vector2 origin, SpriteBatch spriteBatch, Vector2? worldPixelSize)
+        public static void DrawOriginatedHanded(this IHasLocation location, HandedSlice slice, SpriteBatch spriteBatch, Vector2? worldPixelSize)
         {
             // Assume location IS the world basis.            
             var wb = location;
@@ -36,9 +36,9 @@ namespace VibeSopwith.Game.Graphics
             var adjOrigin = (wb.Spin, slice) switch
             {
                 (BasisSpin.Up,   HandedSlice.RL) or
-                (BasisSpin.Down, HandedSlice.LR) => new Vector2(origin.X, theSlice.SourceRectangle.Height - origin.Y),
+                (BasisSpin.Down, HandedSlice.LR) => new Vector2(theSlice.TextureOrigin.X, theSlice.SourceRectangle.Height - theSlice.TextureOrigin.Y),
                 (BasisSpin.Up,   HandedSlice.LR) or
-                (BasisSpin.Down, HandedSlice.RL) => new Vector2(origin.X, origin.Y),
+                (BasisSpin.Down, HandedSlice.RL) => new Vector2(theSlice.TextureOrigin.X, theSlice.TextureOrigin.Y),
                 _ => throw new ArgumentException("Logic error"),
             };
 

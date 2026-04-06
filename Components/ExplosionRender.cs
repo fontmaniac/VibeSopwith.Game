@@ -20,11 +20,11 @@ namespace VibeSopwith.Game.Components
 
         private IDictionary<Explosion.ExplosionVariant, VariantInfo> Variants = null!;
 
-        private record ExplosionPhase(int phaseNumber, TextureSlice slice, Vector2 origin) : Animation.IPhase<Explosion>
+        private record ExplosionPhase(int phaseNumber, TextureSlice slice) : Animation.IPhase<Explosion>
         {
             public TimeSpan GetDuration(Explosion explosion) => explosion.Duration / phaseNumber;
 
-            public void Draw(SpriteBatch sb, Explosion explosion) => DrawHelper.DrawOriginatedHanded(explosion, HandedSlice.LR.Wrap(slice), origin, sb, null);
+            public void Draw(SpriteBatch sb, Explosion explosion) => DrawHelper.DrawOriginatedHanded(explosion, HandedSlice.LR.Wrap(slice), sb, null);
         }
 
         public new void LoadContent()
@@ -34,12 +34,12 @@ namespace VibeSopwith.Game.Components
             Variants = Textures
                 .Select(si =>
                 {
-                    var spriteSheet = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, Game.Content.Load<Texture2D>(si.TexturePath)).ToAtlas(si.SheetCols, si.SheetRows);
+                    var spriteSheet = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, Game.Content.Load<Texture2D>(si.TexturePath)).ToAtlas((w, h) => si.GetOrigin(new Vector2(w, h)), si.SheetCols, si.SheetRows);
                     var totalPhases = si.SheetRows * si.SheetCols;
 
                     var phases =
                         Enumerable.Range(0, totalPhases)
-                        .Select(i => new ExplosionPhase(totalPhases, spriteSheet.GetSlice(i), si.GetOrigin(new Vector2(spriteSheet.SpriteWidth, spriteSheet.SpriteHeight))))
+                        .Select(i => new ExplosionPhase(totalPhases, spriteSheet.GetSlice(i)))
                         .ToArray();
 
                     return (new VariantInfo(si, spriteSheet, phases), si.Variant);

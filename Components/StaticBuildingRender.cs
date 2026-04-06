@@ -23,21 +23,21 @@ namespace VibeSopwith.Game.Components
 
             foreach (var kvp in TextureSourceMap)
             {
-                _textures[kvp.Key] = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, Game.Content.Load<Texture2D>(kvp.Value.Item1)).ToAtlas();
-                _texturesExploded[kvp.Key] = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, Game.Content.Load<Texture2D>(kvp.Value.Item2)).ToAtlas();
+                _textures[kvp.Key] = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, Game.Content.Load<Texture2D>(kvp.Value.Item1)).ToAtlas(new Vector2(64, 128));
+                _texturesExploded[kvp.Key] = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, Game.Content.Load<Texture2D>(kvp.Value.Item2)).ToAtlas(new Vector2(64, 128));
             }
         }
 
         public void Draw(StaticBuilding building, GameTime gameTime)
         {
             var texture = building.Exploded ? _texturesExploded[building.TheType] : _textures[building.TheType];
-            DrawHelper.DrawOriginatedHanded(building, HandedSlice.LR.Wrap(texture.GetSlice()), new Vector2(64, 128), TheGame.SpriteBatch, null);
+            DrawHelper.DrawOriginatedHanded(building, HandedSlice.LR.Wrap(texture.GetSlice()), TheGame.SpriteBatch, null);
         }
 
         public void DrawSnapped(StaticBuilding building, GameTime gameTime, Vector2 worldPixelSize)
         {
             var texture = building.Exploded ? _texturesExploded[building.TheType] : _textures[building.TheType];
-            DrawHelper.DrawOriginatedHanded(building, HandedSlice.LR.Wrap(texture.GetSlice()), new Vector2(64, 128), TheGame.SpriteBatch, worldPixelSize);
+            DrawHelper.DrawOriginatedHanded(building, HandedSlice.LR.Wrap(texture.GetSlice()), TheGame.SpriteBatch, worldPixelSize);
         }
 
     }
