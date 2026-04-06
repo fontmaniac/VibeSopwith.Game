@@ -10,18 +10,25 @@ namespace VibeSopwith.Game.Components
         private Texture2D _groundTexture = null!;
         private Texture2D _skyTexture = null!;
 
+        private Texture2D _band0Texture = null!;
+        private Texture2D _band1Texture = null!;
+        private Texture2D _band2Texture = null!;
+
         private VertexPositionColorTexture[] _quadVertsTex = new VertexPositionColorTexture[0];
         private Guid _lastGroundHash = Guid.Empty;
 
         public void LoadContent(GraphicsDevice graphicsDevice)
         {
-            var tex1 = Game.Content.Load<Texture2D>("Textures\\Rock_Tile.png");
-            _groundTexture = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, tex1);
-            var tex2 = Game.Content.Load<Texture2D>("Textures\\Skybox_1.png");
-            _skyTexture = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, tex2);
+            _groundTexture = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, Game.Content.Load<Texture2D>("Textures\\Rock_Tile.png"));
+            _skyTexture = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, Game.Content.Load<Texture2D>("Textures\\Skybox_1.png"));
+
+            _band0Texture = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, Game.Content.Load<Texture2D>("Textures\\Rock_Tile_Light_1.png"));
+            _band1Texture = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, Game.Content.Load<Texture2D>("Textures\\Rock_Tile_Med_1.png"));
+            _band2Texture = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, Game.Content.Load<Texture2D>("Textures\\Rock_Tile_Dark_1.png"));
         }
 
         private record struct ProfileBandSector(Vector2 p1, Vector2 p2, float p1by, float p2by);
+        private record struct ProfileBandRange(float topPct, float bottomPct);
 
         public void Draw(Ground ground, float thickness, float scaleVert, Matrix transform)
         {
@@ -41,34 +48,48 @@ namespace VibeSopwith.Game.Components
                 0, 1
             );
 
-            void singlePass(float baseline, Action<int, ProfileBandSector> execute)
+            void singlePass(float baseline, ProfileBandRange bandRange, Action<int, ProfileBandSector> execute)
             {
                 for (int i = 1; i < ground.Points.Count; i++)
                 {
-                    var startTop = ground.Points[i - 1];
-                    var endTop = ground.Points[i];
+                    var p1 = ground.Points[i - 1];
+                    var p2 = ground.Points[i];
 
-                    execute(i-1, new (startTop, endTop, baseline, baseline));
+                    float getY(float baseY, float pct) => baseY - (baseY - baseline) * pct;
+
+                    var startTop = new Vector2(p1.X, getY(p1.Y, bandRange.topPct));
+                    var endTop = new Vector2(p2.X, getY(p2.Y, bandRange.topPct));
+                    var endBottom = getY(p2.Y, bandRange.bottomPct);
+                    var startBottom = getY(p1.Y, bandRange.bottomPct);
+
+                    execute(i-1, new(startTop, endTop, startBottom, endBottom));
                 }
             }
 
             // Allocate/Reallocate _quadVertsTex according to the number of segments, if necessary.
-            var triCount = (ground.Points.Count - 1) * 2;
-            var vertCount = triCount * 3 * 2;
+            var triCountPerBand = (ground.Points.Count - 1) * 2;
+            var vertCount = triCountPerBand * 3 * (3 + 1);  // Three verts per triangle x (three ground bands + one sky band)
             if (_lastGroundHash != ground.Hash)
             {
                 if (_quadVertsTex.Length != vertCount)
+                {
+                    Console.WriteLine($"Allocating vertex buffer of {vertCount}");
                     _quadVertsTex = new VertexPositionColorTexture[vertCount];
+                }
 
-                singlePass(0, (i, pbs) => FillUnderLineTexture(i, pbs, Color.White, new Vector2(8, 8), 30));
-                singlePass(GameWorld.WorldHeight, (i, pbs) => FillUnderLineTexture(i + triCount / 2, pbs, Color.White, new Vector2(GameWorld.WorldLength, GameWorld.WorldHeight), 0));
+                singlePass(-2, new(0f, 0.3f), (i, pbs)   => FillUnderLineTexture(i + triCountPerBand / 2 * 0, pbs, Color.White, new Vector2(8, 8), 5));
+                singlePass(-2, new(0.3f, 0.7f), (i, pbs) => FillUnderLineTexture(i + triCountPerBand / 2 * 1, pbs, Color.White, new Vector2(8, 8), -10));
+                singlePass(-2, new(0.7f, 1f), (i, pbs)   => FillUnderLineTexture(i + triCountPerBand / 2 * 2, pbs, Color.White, new Vector2(8, 8), 15));
+                singlePass(GameWorld.WorldHeight, new(1f, 0f), (i, pbs) => FillUnderLineTexture(i + triCountPerBand / 2 * 3, pbs, Color.White, new Vector2(GameWorld.WorldLength, GameWorld.WorldHeight), 0));
             }
             _lastGroundHash = ground.Hash;
 
-            DrawTextures(gd, _groundTexture, 0);
-            DrawTextures(gd, _skyTexture, _quadVertsTex.Length/2);
+            DrawTextures(gd, _band0Texture, _quadVertsTex.Length / 4 * 0, triCountPerBand);
+            DrawTextures(gd, _band1Texture, _quadVertsTex.Length / 4 * 1, triCountPerBand);
+            DrawTextures(gd, _band2Texture, _quadVertsTex.Length / 4 * 2, triCountPerBand);
+            DrawTextures(gd, _skyTexture,   _quadVertsTex.Length / 4 * 3, triCountPerBand);
 
-            singlePass(0, (_, pbs) => TheGame.Primitives.DrawLine(pbs.p1, pbs.p2, Color.White, thickness / scaleVert));
+            singlePass(0, new(0f, 0f), (_, pbs) => TheGame.Primitives.DrawLine(pbs.p1, pbs.p2, Color.White, thickness / scaleVert));
         }
 
         private static Vector2 RotateUV(Vector2 uv, float angle)
@@ -105,7 +126,7 @@ namespace VibeSopwith.Game.Components
             _quadVertsTex[i+5] = new VertexPositionColorTexture(v1, color, uv1);
         }
 
-        private void DrawTextures(GraphicsDevice gd, Texture2D texture, int offset)
+        private void DrawTextures(GraphicsDevice gd, Texture2D texture, int offset, int triCount)
         {
             gd.SamplerStates[0] = SamplerState.PointWrap;
             var effect = TheGame.BasicEffect;
@@ -118,7 +139,7 @@ namespace VibeSopwith.Game.Components
                     PrimitiveType.TriangleList,
                     _quadVertsTex,
                     offset,
-                    _quadVertsTex.Length / 2 / 3
+                    triCount
                 );
             }
         }
