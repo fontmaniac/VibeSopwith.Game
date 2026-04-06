@@ -33,7 +33,14 @@ namespace VibeSopwith.Game.Graphics
             float scaleX = location.Length / theSlice.SourceRectangle.Width;
             float scaleY = location.Height / theSlice.SourceRectangle.Height;
 
-            var adjOrigin = new Vector2(origin.X, theSlice.SourceRectangle.Height - origin.Y);
+            var adjOrigin = (wb.Spin, slice) switch
+            {
+                (BasisSpin.Up,   HandedSlice.RL) or
+                (BasisSpin.Down, HandedSlice.LR) => new Vector2(origin.X, theSlice.SourceRectangle.Height - origin.Y),
+                (BasisSpin.Up,   HandedSlice.LR) or
+                (BasisSpin.Down, HandedSlice.RL) => new Vector2(origin.X, origin.Y),
+                _ => throw new ArgumentException("Logic error"),
+            };
 
             // It is "flip : noFlip" to account for the fact that my world is Y-flipped relative to screen.
             // If it wasn't, the order would have been "noFlip : flip".
