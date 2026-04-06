@@ -24,7 +24,7 @@ namespace VibeSopwith.Game.Components
         {
             public TimeSpan GetDuration(Explosion explosion) => explosion.Duration / phaseNumber;
 
-            public void Draw(SpriteBatch sb, Explosion explosion) => DrawHelper.DrawOriginatedHanded(explosion, HandedSlice.LR.Wrap(slice), sb, null);
+            public void Draw(SpriteBatch sb, Explosion explosion) => DrawHelper.DrawSlice(explosion, HandedSlice.LR.Wrap(slice), sb, null);
         }
 
         public new void LoadContent()
@@ -34,7 +34,9 @@ namespace VibeSopwith.Game.Components
             Variants = Textures
                 .Select(si =>
                 {
-                    var spriteSheet = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, Game.Content.Load<Texture2D>(si.TexturePath)).ToAtlas((w, h) => si.GetOrigin(new Vector2(w, h)), si.SheetCols, si.SheetRows);
+                    var spriteSheet = 
+                        MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, Game.Content.Load<Texture2D>(si.TexturePath))
+                            .ToAtlas((w, h) => si.GetOrigin(new Vector2(w, h)), si.SheetCols, si.SheetRows);
                     var totalPhases = si.SheetRows * si.SheetCols;
 
                     var phases =

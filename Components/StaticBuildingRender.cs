@@ -31,13 +31,13 @@ namespace VibeSopwith.Game.Components
         public void Draw(StaticBuilding building, GameTime gameTime)
         {
             var texture = building.Exploded ? _texturesExploded[building.TheType] : _textures[building.TheType];
-            DrawHelper.DrawOriginatedHanded(building, HandedSlice.LR.Wrap(texture.GetSlice()), TheGame.SpriteBatch, null);
+            DrawHelper.DrawSlice(building, HandedSlice.LR.Wrap(texture.GetSlice()), TheGame.SpriteBatch, null);
         }
 
         public void DrawSnapped(StaticBuilding building, GameTime gameTime, Vector2 worldPixelSize)
         {
             var texture = building.Exploded ? _texturesExploded[building.TheType] : _textures[building.TheType];
-            DrawHelper.DrawOriginatedHanded(building, HandedSlice.LR.Wrap(texture.GetSlice()), TheGame.SpriteBatch, worldPixelSize);
+            DrawHelper.DrawSlice(building, HandedSlice.LR.Wrap(texture.GetSlice()), TheGame.SpriteBatch, worldPixelSize);
         }
 
     }

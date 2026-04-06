@@ -7,7 +7,7 @@ namespace VibeSopwith.Game.Components
 {
     internal class BulletRender(Microsoft.Xna.Framework.Game game) : DrawableGameComponent(game)
     {
-        private Texture2D _bulletTexture = null!;
+        private HandedSlice.LR _bulletTexture = null!;
         private const float BulletLengthPx = 4f;    // Bullet rendered at fixed pixel size regardless of scale.
         private const float BulletHeightPx = 4f;
 
@@ -15,14 +15,15 @@ namespace VibeSopwith.Game.Components
         {
             base.LoadContent();
 
-            _bulletTexture = new Texture2D(GraphicsDevice, 1, 1);
-            _bulletTexture.SetData(new[] { Color.White });
+            var texture = new Texture2D(GraphicsDevice, 1, 1);
+            texture.SetData(new[] { Color.White });
+            _bulletTexture = texture.ToAtlas(Atlas.OriginCentered).ToLRSlice();
 
         }
 
         public void Draw(Bullet bullet, float pxPerUnit, GameTime gameTime)
         {
-            DrawHelper.DrawCentered(
+            DrawHelper.DrawSlice(
                 Location.OffInterface(bullet) with 
                 { 
                     Length = BulletLengthPx / pxPerUnit,  

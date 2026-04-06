@@ -7,8 +7,8 @@ namespace VibeSopwith.Game.Graphics
 
     public abstract record HandedSlice()
     {
-        public sealed record LR(TextureSlice Slice) : HandedSlice { public static HandedSlice Wrap(TextureSlice x) => new LR(x); };
-        public sealed record RL(TextureSlice Slice) : HandedSlice { public static HandedSlice Wrap(TextureSlice x) => new RL(x); };
+        public sealed record LR(TextureSlice Slice) : HandedSlice { public static LR Wrap(TextureSlice x) => new LR(x); };
+        public sealed record RL(TextureSlice Slice) : HandedSlice { public static RL Wrap(TextureSlice x) => new RL(x); };
 
         public float FlipFactor => this is LR ? +1f : this is RL ? -1f : throw new ArgumentException("Logic error");
         public TextureSlice TheSlice => this is LR lr ? lr.Slice : this is RL rl ? rl.Slice : throw new ArgumentException("Logic error");
@@ -16,7 +16,14 @@ namespace VibeSopwith.Game.Graphics
 
     internal static class Atlas
     {
+        public static Func<int, int, Vector2> OriginCentered = (w, h) => new Vector2(w / 2, h / 2);
         public static TextureAtlas.Single ToAtlas(this Texture2D src, Vector2 origin) => new TextureAtlas.Single(src, origin);
+        public static TextureAtlas.Single ToAtlas(this Texture2D src, Func<int, int, Vector2> getOrigin) =>
+            new TextureAtlas.Single(
+                src,
+                getOrigin(
+                    TextureAtlas.SpriteSheet.GetSpriteWidth(src, 1),
+                    TextureAtlas.SpriteSheet.GetSpriteHeight(src, 1)));
         public static TextureAtlas.SpriteSheet ToAtlas(this Texture2D src, Vector2 origin, int cols, int rows) => new TextureAtlas.SpriteSheet(src, origin, cols, rows);
         public static TextureAtlas.SpriteSheet ToAtlas(this Texture2D src, Func<int, int, Vector2> getOrigin, int cols, int rows) => 
             new TextureAtlas.SpriteSheet(
@@ -26,6 +33,9 @@ namespace VibeSopwith.Game.Graphics
                     TextureAtlas.SpriteSheet.GetSpriteHeight(src, rows)), 
                 cols, 
                 rows);
+
+        public static HandedSlice.LR ToLRSlice(this TextureAtlas.Single s) => HandedSlice.LR.Wrap(s.GetSlice());
+        public static HandedSlice.RL ToRLSlice(this TextureAtlas.Single s) => HandedSlice.RL.Wrap(s.GetSlice());
     }
 
     internal abstract record TextureAtlas()

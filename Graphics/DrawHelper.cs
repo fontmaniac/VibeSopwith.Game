@@ -13,10 +13,7 @@ namespace VibeSopwith.Game.Graphics
             return new(snappedX, snappedY);
         }
 
-        public static void DrawOriginated(this IHasLocation loc, Texture2D texture, Vector2 origin, SpriteBatch spriteBatch, Vector2? worldPixelSize) =>
-            DrawOriginatedHanded(loc, HandedSlice.LR.Wrap(texture.ToAtlas(origin).GetSlice()), spriteBatch, worldPixelSize);
-
-        public static void DrawOriginatedHanded(this IHasLocation location, HandedSlice slice, SpriteBatch spriteBatch, Vector2? worldPixelSize)
+        public static void DrawSlice(this IHasLocation location, HandedSlice slice, SpriteBatch spriteBatch, Vector2? worldPixelSize = null)
         {
             // Assume location IS the world basis.            
             var wb = location;
@@ -63,16 +60,5 @@ namespace VibeSopwith.Game.Graphics
                 0f
             );
         }
-
-
-        public static void DrawOriginated(this IHasLocation loc, Texture2D texture, Vector2 origin, SpriteBatch spriteBatch) =>
-            DrawOriginated(loc, texture, origin, spriteBatch, null);
-
-        public static void DrawCentered(this IHasLocation loc, Texture2D texture, SpriteBatch spriteBatch, Vector2 worldPixelSize) =>
-            DrawOriginated(loc, texture, new Vector2(texture.Width / 2f, texture.Height / 2f), spriteBatch, worldPixelSize);
-
-        public static void DrawCentered(this IHasLocation loc, Texture2D texture, SpriteBatch spriteBatch) =>
-            DrawOriginated(loc, texture, new Vector2(texture.Width / 2f, texture.Height / 2f), spriteBatch, null);
-
     }
 }

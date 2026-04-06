@@ -7,14 +7,13 @@ namespace VibeSopwith.Game.Components
 {
     internal class AirplaneGizmoRender(Microsoft.Xna.Framework.Game game) : DrawableGameComponent(game)
     {
-        private Texture2D _airplaneTexture = null!;
+        private HandedSlice.LR _airplaneTexture = null!;
 
         public new void LoadContent()
         {
             base.LoadContent();
 
-            var tex1 = Game.Content.Load<Texture2D>("Textures\\Plane_1.png");
-            _airplaneTexture = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, tex1);
+            _airplaneTexture = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, Game.Content.Load<Texture2D>("Textures\\Plane_1.png")).ToAtlas(Atlas.OriginCentered).ToLRSlice();
 
         }
 
@@ -41,7 +40,7 @@ namespace VibeSopwith.Game.Components
                 null,
                 transform);
 
-            DrawHelper.DrawCentered(
+            DrawHelper.DrawSlice(
                 Location.OffInterface(airplane) with { Position = new Vector2(TheGame.PlaneGizmoWidth / 2f, TheGame.PlaneGizmoHeight / 2f) },
                 _airplaneTexture,
                 TheGame.SpriteBatch);

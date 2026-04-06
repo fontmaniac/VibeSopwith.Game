@@ -7,24 +7,18 @@ namespace VibeSopwith.Game.Components
 {
     internal class AirplaneRender(Microsoft.Xna.Framework.Game game) : DrawableGameComponent(game)
     {
-        private TextureAtlas _airplaneTexture = null!;
+        private HandedSlice.LR _airplaneTexture = null!;
 
         public new void LoadContent()
         {
             base.LoadContent();
 
-            _airplaneTexture = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, Game.Content.Load<Texture2D>("Textures\\Plane_1_Q.png")).ToAtlas(new Vector2(115, 100));
+            _airplaneTexture = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, Game.Content.Load<Texture2D>("Textures\\Plane_1_Q.png")).ToAtlas(new Vector2(115, 100)).ToLRSlice();
         }
 
-        public void Draw(Airplane airplane, GameTime gameTime)
+        public void Draw(Airplane airplane, GameTime gameTime, Vector2? worldPixelSize = null)
         {
-            DrawHelper.DrawOriginatedHanded(airplane, HandedSlice.LR.Wrap(_airplaneTexture.GetSlice()), TheGame.SpriteBatch, null);
+            DrawHelper.DrawSlice(airplane, _airplaneTexture, TheGame.SpriteBatch, worldPixelSize);
         }
-
-        public void DrawSnapped(Airplane airplane, GameTime gameTime, Vector2 worldPixelSize)
-        {
-            DrawHelper.DrawOriginatedHanded(airplane, HandedSlice.LR.Wrap(_airplaneTexture.GetSlice()), TheGame.SpriteBatch, worldPixelSize);
-        }
-
     }
 }

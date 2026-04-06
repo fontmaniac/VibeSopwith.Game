@@ -7,25 +7,18 @@ namespace VibeSopwith.Game.Components
 {
     internal class BaloonRender(Microsoft.Xna.Framework.Game game) : DrawableGameComponent(game)
     {
-        private Texture2D _baloonTexture = null!;
+        private HandedSlice.LR _baloonTexture = null!;
 
         public new void LoadContent()
         {
             base.LoadContent();
 
-            var tex1 = Game.Content.Load<Texture2D>("Textures\\Hot_Air_Balloon_1.png");
-            _baloonTexture = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, tex1);
+            _baloonTexture = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, Game.Content.Load<Texture2D>("Textures\\Hot_Air_Balloon_1.png")).ToAtlas(Atlas.OriginCentered).ToLRSlice(); ;
         }
 
-        public void Draw(Baloon baloon, GameTime gameTime)
+        public void Draw(Baloon baloon, GameTime gameTime, Vector2? worldPixelSize = null)
         {
-            DrawHelper.DrawCentered(baloon, _baloonTexture, TheGame.SpriteBatch);
+            DrawHelper.DrawSlice(baloon, _baloonTexture, TheGame.SpriteBatch, worldPixelSize);
         }
-
-        public void DrawSnapped(Baloon baloon, GameTime gameTime, Vector2 worldPixelSize)
-        {
-            DrawHelper.DrawCentered(baloon, _baloonTexture, TheGame.SpriteBatch, worldPixelSize);
-        }
-
     }
 }
