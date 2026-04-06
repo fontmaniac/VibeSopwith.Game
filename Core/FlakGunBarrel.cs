@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using nkast.Aether.Physics2D.Dynamics;
+using System;
 using VibeSopwith.Game.Utils;
 
 namespace VibeSopwith.Game.Core
@@ -96,7 +97,7 @@ namespace VibeSopwith.Game.Core
             Body.Tag = makeTag();
         }
 
-        public Bullet SpawnBullet(TimeSpan startTime)
+        public (Bullet? bullet, Explosion? muzzleFlash) SpawnBullet(TimeSpan startTime)
         {
             var gun0 = Body.GetWorldPoint(GetRefPoint("gun0").ToAether());
             var gun1 = Body.GetWorldPoint(GetRefPoint("gun1").ToAether());
@@ -104,7 +105,10 @@ namespace VibeSopwith.Game.Core
             var spawnPos = gun1 + launchDirection * 0.05f;
             var velocityVector = Vector2.Normalize(launchDirection.ToXna()) * BulletSpeed;
 
-            return new Bullet(new Bullet.State(spawnPos.ToXna(), Vector2.Normalize(velocityVector), velocityVector), startTime);
+            var boundBasis = LiveBasis.Bind(Basis.FixedPos(gun1.ToXna()), this);
+            var muzzleFlash = new Explosion(Explosion.ExplosionVariant.Centered1, 0.5f, 0.5f, startTime, TimeSpan.FromSeconds(0.08), boundBasis);
+
+            return (new Bullet(new Bullet.State(spawnPos.ToXna(), Vector2.Normalize(velocityVector), velocityVector), startTime), muzzleFlash);
         }
     }
 }

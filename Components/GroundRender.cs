@@ -69,9 +69,17 @@ namespace VibeSopwith.Game.Components
             singlePass((_, start, end) => TheGame.Primitives.DrawLine(start, end, Color.White, thickness / scaleVert));
         }
 
+        private static Vector2 RotateUV(Vector2 uv, float angle)
+        {
+            float cos = MathF.Cos(angle);
+            float sin = MathF.Sin(angle);
+            return new Vector2(uv.X * cos - uv.Y * sin, uv.X * sin + uv.Y * cos);
+        }
+
         private void FillUnderLineTexture(int i, Vector2 p1, Vector2 p2, float baseLine, Color color, Vector2 tileSizeWorld)
         {
             var tile = tileSizeWorld; // world units per texture tile
+            var uvRotationAngle = MathHelper.ToRadians(15f);
 
             Vector3 v1 = new(p1.X, p1.Y, 0);
             Vector3 v2 = new(p2.X, p2.Y, 0);
@@ -79,10 +87,10 @@ namespace VibeSopwith.Game.Components
             Vector3 v4 = new(p1.X, baseLine, 0);
 
             // UVs based on world coordinates. "Minus-Y" because our world is Y-flipped.
-            Vector2 uv1 = new(p1.X / tile.X, p1.Y / -tile.Y);
-            Vector2 uv2 = new(p2.X / tile.X, p2.Y / -tile.Y);
-            Vector2 uv3 = new(p2.X / tile.X, baseLine / -tile.Y);
-            Vector2 uv4 = new(p1.X / tile.X, baseLine / -tile.Y);
+            Vector2 uv1 = RotateUV(new Vector2(p1.X / tile.X, p1.Y / -tile.Y), uvRotationAngle);
+            Vector2 uv2 = RotateUV(new Vector2(p2.X / tile.X, p2.Y / -tile.Y), uvRotationAngle);
+            Vector2 uv3 = RotateUV(new Vector2(p2.X / tile.X, baseLine / -tile.Y), uvRotationAngle);
+            Vector2 uv4 = RotateUV(new Vector2(p1.X / tile.X, baseLine / -tile.Y), uvRotationAngle);
 
             // Two triangles
             i = i * 6;

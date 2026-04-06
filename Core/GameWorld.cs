@@ -359,6 +359,9 @@ namespace VibeSopwith.Game.Core
                 if (projected.Bullet != null)
                     Bullets.Add(projected.Bullet.SetupRigging(collisionWorld));
 
+                if (projected.MuzzleFlash != null)
+                    explosions.Add(projected.MuzzleFlash);
+
                 flakGun.PreSimulationPrepare(projected);
             }
 

@@ -8,7 +8,7 @@ namespace VibeSopwith.Game.Core
     {
         public Body Body = null!;
 
-        public record State(float BarrelAngle, Bullet? Bullet, BarrelMovement Movement, float RecoilShift, DateTime BulletTime, DateTime RecoilTime);
+        public record State(float BarrelAngle, Bullet? Bullet, Explosion? MuzzleFlash, BarrelMovement Movement, float RecoilShift, DateTime BulletTime, DateTime RecoilTime);
         public State CurrentState;
 
         public Vector2 Position { get; }
@@ -37,7 +37,7 @@ namespace VibeSopwith.Game.Core
             Direction = Vector2.UnitX * (spin == BasisSpin.Down ? +1f : -1f);
 
             var barrelAngle = (float)GameWorld.WorldSeed.NextDouble() * (MaxGunAngle - MinGunAngle) + MinGunAngle;
-            CurrentState = new State(barrelAngle, null, BarrelMovement.Up, 0f, DateTime.MinValue, DateTime.MinValue);
+            CurrentState = new State(barrelAngle, null, null, BarrelMovement.Up, 0f, DateTime.MinValue, DateTime.MinValue);
 
             var barrelDirection = () => Vector2.UnitX.RotateDeg(CurrentState.BarrelAngle * spin.ToFactor());
             var barrelPosition = () => new Vector2(0f, 2f) - Vector2.Normalize(barrelDirection()) * CurrentState.RecoilShift * spin.ToFactor();
@@ -115,7 +115,7 @@ namespace VibeSopwith.Game.Core
                 CurrentState.Movement;
 
             var (newBullet, newBulletTime) = Exploded || ((nowTime - CurrentState.BulletTime).TotalSeconds < BulletGracePeriod)
-                ? (null, CurrentState.BulletTime)
+                ? ((null, null), CurrentState.BulletTime)
                 : (Barrel.SpawnBullet(gameTime.TotalGameTime), nowTime);
 
             // Barrels goes fully back in RecoilHalfTime and then fully forward in another RecoilHalfTime. 
@@ -128,7 +128,7 @@ namespace VibeSopwith.Game.Core
 
             newRecoilShift = MathHelper.Clamp(newRecoilShift, 0f, RecoilShift);
 
-            return new(newAngle, newBullet, newMovement, newRecoilShift, newBulletTime, newBulletTime);
+            return new(newAngle, newBullet.bullet, newBullet.muzzleFlash, newMovement, newRecoilShift, newBulletTime, newBulletTime);
         }
 
         public void PreSimulationPrepare(State projected)
