@@ -36,6 +36,15 @@ namespace VibeSopwith.Game.Graphics
             IDynamicPhase<TCtx> GetPhase(TCtx ctx, GameTime gameTime);
         }
 
+        public record StaticPhase<TCtx>(TextureAtlas.BoundSpriteSheet<TCtx> ss, int idx, float durationSeconds, Func<TextureSlice, HandedSlice> wrap) : IStaticPhase<TCtx> where TCtx : IHasLocation
+        {
+            public TimeSpan GetDuration(TCtx ctx) => TimeSpan.FromSeconds(durationSeconds);
+            public HandedSlice GetSlice(TCtx ctx) => wrap(ss.GetSlice(idx));
+        }
+
+        public static IStaticPhase<TCtx> MakeStaticPhase<TCtx>(this TextureAtlas.BoundSpriteSheet<TCtx> bss, int idx, float durationSeconds, Func<TextureSlice, HandedSlice> wrap) where TCtx : IHasLocation =>
+            new StaticPhase<TCtx>(bss, idx, durationSeconds, wrap);
+
         public record StaticSequence<TCtx>(TimeSpan StartTime, IStaticPhase<TCtx>[] Phases, bool IsInfiniteLoop) : IStaticSequence<TCtx> where TCtx : IHasLocation;
 
         public static StaticSequence<TCtx> Make<TCtx>(TimeSpan startTime, IStaticPhase<TCtx>[] phases, bool isInfiniteLoop) where TCtx : IHasLocation =>
