@@ -36,13 +36,12 @@ namespace VibeSopwith.Game.Graphics
             IDynamicPhase<TCtx> GetPhase(TCtx ctx, GameTime gameTime);
         }
 
-
         public record StaticSequence<TCtx>(TimeSpan StartTime, IStaticPhase<TCtx>[] Phases, bool IsInfiniteLoop) : IStaticSequence<TCtx> where TCtx : IHasLocation;
 
         public static StaticSequence<TCtx> Make<TCtx>(TimeSpan startTime, IStaticPhase<TCtx>[] phases, bool isInfiniteLoop) where TCtx : IHasLocation =>
             new StaticSequence<TCtx>(startTime, phases, isInfiniteLoop);
 
-        public static AnimationStatus Draw<TCtx>(TCtx ctx, IStaticSequence<TCtx> sequence, GameTime gameTime, SpriteBatch spriteBatch) where TCtx : IHasLocation
+        public static AnimationStatus DrawStaticSequence<TCtx>(TCtx ctx, IStaticSequence<TCtx> sequence, GameTime gameTime, SpriteBatch spriteBatch) where TCtx : IHasLocation
         {
             var startTicks = sequence.StartTime.Ticks;
             var currentTicks = gameTime.TotalGameTime.Ticks;
@@ -77,5 +76,8 @@ namespace VibeSopwith.Game.Graphics
 
             return new AnimationStatus.Completed();
         }
+
+        public static void DrawDynamicSequence<TCtx>(TCtx ctx, IDynamicSequence<TCtx> sequence, GameTime gameTime, SpriteBatch spriteBatch) where TCtx : IHasLocation =>
+            DrawHelper.DrawSlice(ctx, sequence.GetPhase(ctx, gameTime).GetSlice(ctx), spriteBatch, null);
     }
 }

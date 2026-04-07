@@ -53,7 +53,7 @@ namespace VibeSopwith.Game.Components
         public void Draw(Explosion explosion, GameTime gameTime)
         {
             var variant = Templates[explosion.Variant];
-            Animation.Draw(explosion, Animation.Make(explosion.StartTime, variant.Phases, false), gameTime, TheGame.SpriteBatch);
+            Animation.DrawStaticSequence(explosion, Animation.Make(explosion.StartTime, variant.Phases, false), gameTime, TheGame.SpriteBatch);
         }
     }
 }
