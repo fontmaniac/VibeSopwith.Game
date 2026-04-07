@@ -16,41 +16,43 @@ namespace VibeSopwith.Game.Components
             new(Explosion.ExplosionVariant.BluePlasma, "Textures\\Explosion_3.png", 8, 5, m => new Vector2(m.X / 2f, m.Y / 2f)),
         };
 
-        private record struct VariantInfo(TextureInfo Info, TextureAtlas.SpriteSheet SpriteSheet, Animation.IPhase<Explosion>[] Phases);
+        private record struct SequenceTemplate(Animation.IStaticPhase<Explosion>[] Phases);
 
-        private IDictionary<Explosion.ExplosionVariant, VariantInfo> Variants = null!;
+        private IDictionary<Explosion.ExplosionVariant, SequenceTemplate> Templates = null!;
 
-        private record ExplosionPhase(int phaseNumber, TextureSlice slice) : Animation.IPhase<Explosion>
+        private record ExplosionPhase(int phaseNumber, TextureSlice slice) : Animation.IStaticPhase<Explosion>
         {
             public TimeSpan GetDuration(Explosion explosion) => explosion.Duration / phaseNumber;
             public HandedSlice GetSlice(Explosion explosion) => HandedSlice.LR.Wrap(slice);
+        }
+
+        private (Explosion.ExplosionVariant Variant, SequenceTemplate Template) MakeTemplate(TextureInfo ti)
+        {
+            var spriteSheet =
+                MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, Game.Content.Load<Texture2D>(ti.TexturePath))
+                    .ToAtlas((w, h) => ti.GetOrigin(new Vector2(w, h)), ti.SheetCols, ti.SheetRows);
+            var totalPhases = spriteSheet.Rows * spriteSheet.Cols;
+
+            var phases =
+                Enumerable.Range(0, totalPhases)
+                .Select(i => new ExplosionPhase(totalPhases, spriteSheet.GetSlice(i)))
+                .ToArray();
+
+            return (ti.Variant, new SequenceTemplate(phases));
         }
 
         public new void LoadContent()
         {
             base.LoadContent();
 
-            Variants = Textures
-                .Select(si =>
-                {
-                    var spriteSheet = 
-                        MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, Game.Content.Load<Texture2D>(si.TexturePath))
-                            .ToAtlas((w, h) => si.GetOrigin(new Vector2(w, h)), si.SheetCols, si.SheetRows);
-                    var totalPhases = si.SheetRows * si.SheetCols;
-
-                    var phases =
-                        Enumerable.Range(0, totalPhases)
-                        .Select(i => new ExplosionPhase(totalPhases, spriteSheet.GetSlice(i)))
-                        .ToArray();
-
-                    return (new VariantInfo(si, spriteSheet, phases), si.Variant);
-                })
-                .ToDictionary(x => x.Item2, x => x.Item1);
+            Templates = Textures
+                .Select(MakeTemplate)
+                .ToDictionary(x => x.Variant, x => x.Template);
         }
 
         public void Draw(Explosion explosion, GameTime gameTime)
         {
-            var variant = Variants[explosion.Variant];
+            var variant = Templates[explosion.Variant];
             Animation.Draw(explosion, Animation.Make(explosion.StartTime, variant.Phases, false), gameTime, TheGame.SpriteBatch);
         }
     }

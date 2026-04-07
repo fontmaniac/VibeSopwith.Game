@@ -5,10 +5,14 @@ namespace VibeSopwith.Game.Graphics
 {
     internal static class Animation
     {
-        public interface IPhase<TCtx> where TCtx : IHasLocation
+        public interface IDynamicPhase<TCtx> where TCtx : IHasLocation
+        {
+            HandedSlice GetSlice(TCtx ctx);
+        }
+
+        public interface IStaticPhase<TCtx> : IDynamicPhase<TCtx> where TCtx : IHasLocation
         {
             TimeSpan GetDuration(TCtx ctx);
-            HandedSlice GetSlice(TCtx ctx);
         }
 
         public abstract record AnimationStatus
@@ -20,46 +24,55 @@ namespace VibeSopwith.Game.Graphics
             public sealed record Completed() : AnimationStatus;
         }
 
-        public interface ISequence<TCtx> where TCtx : IHasLocation
+        public interface IStaticSequence<TCtx> where TCtx : IHasLocation
         {
             TimeSpan StartTime { get; }
-            IPhase<TCtx>[] Phases { get; }
+            IStaticPhase<TCtx>[] Phases { get; }
             bool IsInfiniteLoop { get; }
         }
 
-        public record Sequence<TCtx>(TimeSpan StartTime, IPhase<TCtx>[] Phases, bool IsInfiniteLoop) : ISequence<TCtx> where TCtx : IHasLocation;
-
-        public static Sequence<TCtx> Make<TCtx>(TimeSpan startTime, IPhase<TCtx>[] phases, bool isInfiniteLoop) where TCtx : IHasLocation =>
-            new Sequence<TCtx>(startTime, phases, isInfiniteLoop);
-
-        public static AnimationStatus Draw<TCtx>(TCtx ctx, ISequence<TCtx> sequence, GameTime gameTime, SpriteBatch spriteBatch) where TCtx : IHasLocation 
+        public interface IDynamicSequence<TCtx> where TCtx : IHasLocation
         {
-            var animationTicks = sequence.StartTime.Ticks;
+            IDynamicPhase<TCtx> GetPhase(TCtx ctx, GameTime gameTime);
+        }
+
+
+        public record StaticSequence<TCtx>(TimeSpan StartTime, IStaticPhase<TCtx>[] Phases, bool IsInfiniteLoop) : IStaticSequence<TCtx> where TCtx : IHasLocation;
+
+        public static StaticSequence<TCtx> Make<TCtx>(TimeSpan startTime, IStaticPhase<TCtx>[] phases, bool isInfiniteLoop) where TCtx : IHasLocation =>
+            new StaticSequence<TCtx>(startTime, phases, isInfiniteLoop);
+
+        public static AnimationStatus Draw<TCtx>(TCtx ctx, IStaticSequence<TCtx> sequence, GameTime gameTime, SpriteBatch spriteBatch) where TCtx : IHasLocation
+        {
+            var startTicks = sequence.StartTime.Ticks;
             var currentTicks = gameTime.TotalGameTime.Ticks;
 
-            if (currentTicks < animationTicks)
+            if (currentTicks < startTicks)
                 return new AnimationStatus.NotStarted();
 
-            // Draw phase instance corresponding to the gameTime.
-            for (var i = 0; i < sequence.Phases.Length; ++i) 
-            { 
-                var phase = sequence.Phases[i];
-                animationTicks += phase.GetDuration(ctx).Ticks;
-                if (animationTicks >= currentTicks)
-                {
-                    DrawHelper.DrawSlice(ctx, phase.GetSlice(ctx), spriteBatch, null);
-                    return new AnimationStatus.Ongoing(i);
-                }
-            }
+            // Compute local time inside the sequence
+            long localTicks = currentTicks - startTicks;
 
-            if (sequence.IsInfiniteLoop)
+            // Will repeat at least Once and at most Twice, effectively calculating total sequence length at first pass.
+            while (true)
             {
-                var sequenceLength = animationTicks - sequence.StartTime.Ticks;
-                var timeSinceStart = gameTime.TotalGameTime.Ticks - sequence.StartTime.Ticks;
-                var wholeCyclesPassed = timeSinceStart / sequenceLength;
-                var newStart = sequence.StartTime.Add(TimeSpan.FromTicks(wholeCyclesPassed * sequenceLength));
+                var accumulatedTicks = 0L;
+                for (int i = 0; i < sequence.Phases.Length; i++)
+                {
+                    var phase = sequence.Phases[i];
+                    accumulatedTicks += phase.GetDuration(ctx).Ticks;
 
-                return Draw(ctx, new Sequence<TCtx>(newStart, sequence.Phases, false), gameTime, spriteBatch);
+                    if (localTicks < accumulatedTicks)
+                    {
+                        DrawHelper.DrawSlice(ctx, phase.GetSlice(ctx), spriteBatch, null);
+                        return new AnimationStatus.Ongoing(i);
+                    }
+                }
+
+                if (!sequence.IsInfiniteLoop)
+                    break;
+
+                localTicks %= accumulatedTicks; // accumulatedTicks is total sequence length here.
             }
 
             return new AnimationStatus.Completed();

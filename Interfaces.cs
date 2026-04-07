@@ -103,6 +103,11 @@ public interface ICanRemoveRigging
     void RemoveRigging(World collisionWorld);
 }
 
+public interface IHasParts
+{
+    IBasis PickPart(object tag);
+}
+
 public interface IDescribeMyself { string WhoAmI { get; } }
 
 public record Poppet<T>(Func<T, bool> IsAlive, Action<T> Kill)
@@ -130,7 +135,7 @@ public interface ICanDieByBomb<T> : ICanDie<T>;
 public interface ICanDieByBullet<T> : ICanDie<T>
 {
     Func<bool> HitOnce { get; } // Returns true when target supposed to die.
-    IBasis ExplosionBindTarget { get; }
+    Func<object, IBasis> ExplosionBindTarget { get; }
 }
 
 public interface ICanDieByPlane<T> : ICanDie<T>;
@@ -142,7 +147,7 @@ public record CanDieByBomb<T>(string WhoAmI, Poppet Poppet, Action<T> RefreshRig
     : ICanDieByBomb<T>
     , IDescribeMyself;
 
-public record CanDieByBullet<T>(string WhoAmI, Poppet Poppet, Func<bool> HitOnce, IBasis ExplosionBindTarget, Action<T> RefreshRigging, Func<GameTime, Vector2, T> ExecuteEffect) 
+public record CanDieByBullet<T>(string WhoAmI, Poppet Poppet, Func<bool> HitOnce, Func<object, IBasis> ExplosionBindTarget, Action<T> RefreshRigging, Func<GameTime, Vector2, T> ExecuteEffect) 
     : ICanDieByBullet<T>
     , IDescribeMyself;
 
@@ -150,7 +155,7 @@ public record CanDieByPlane<T>(string WhoAmI, Poppet Poppet, Action<T> RefreshRi
     : ICanDieByPlane<T>
     , IDescribeMyself;
 
-public record CanDieByProjectile<T>(string WhoAmI, Poppet Poppet, Func<bool> HitOnce, IBasis ExplosionBindTarget, Action<T> RefreshRigging, Func<GameTime, Vector2, T> ExecuteEffect) 
+public record CanDieByProjectile<T>(string WhoAmI, Poppet Poppet, Func<bool> HitOnce, Func<object, IBasis> ExplosionBindTarget, Action<T> RefreshRigging, Func<GameTime, Vector2, T> ExecuteEffect) 
     : ICanDieByBullet<T>
     , ICanDieByBomb<T>
     , ICanDieByPlane<T>
@@ -178,7 +183,16 @@ public static class Caps
 
     public static Func<TCap, bool> CheckAlive<TCap>() where TCap : IHasPoppet => (TCap target) => target.Poppet.IsAlive();
 
-    public static IBasis BindToWorld() => Basis.Canonical;
+    public static Func<object, IBasis> BindToWorld() => (_) => Basis.Canonical;
+
+    public static Func<object, IBasis> BindTargetSelf<T>(T self) where T : IBasis => (_) => self;
+    public static Func<object, IBasis> BindTargetPart<T>(T self) =>
+        self switch
+        {
+            IHasParts parts => tag => parts.PickPart(tag),
+            IBasis basis => _ => basis,
+            _ => throw new NotSupportedException(),
+        };
 
 }
 

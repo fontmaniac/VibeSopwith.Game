@@ -4,7 +4,7 @@ using VibeSopwith.Game.Utils;
 
 namespace VibeSopwith.Game.Core
 {
-    internal class FlakGun : IHasLocation, ICanRemoveRigging, IAmBehaving<FlakGun.State>
+    internal class FlakGun : IHasLocation, ICanRemoveRigging, IHasParts, IAmBehaving<FlakGun.State>
     {
         public Body Body = null!;
 
@@ -43,6 +43,15 @@ namespace VibeSopwith.Game.Core
             var barrelPosition = () => new Vector2(0f, 2f) - Vector2.Normalize(barrelDirection()) * CurrentState.RecoilShift * spin.ToFactor();
 
             Barrel = new FlakGunBarrel(this, new LiveBasis(barrelPosition, barrelDirection, () => BasisSpin.Down));
+        }
+
+        public IBasis PickPart(object tag)
+        {
+            var fixture = tag as Fixture;
+            if (fixture == null) return this;
+            if (fixture.Body == Body) return this;
+            if (fixture.Body == Barrel.Body) return Barrel;
+            return this;
         }
 
         public void RemoveRigging(World collisionWorld)

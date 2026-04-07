@@ -164,7 +164,7 @@ namespace VibeSopwith.Game.Core
                 name,
                 poppet.Embrace(target),
                 Caps.AbsorbHits(hits),
-                target,
+                Caps.BindTargetPart(target),
                 Caps.RemoveRigging(target, collisionWorld),
                 Caps.ExecuteEffect((gameTime, _) => explosions.Add(MakeBasedExplosion(gameTime, target.Position.ToAether()))));
 
@@ -191,7 +191,7 @@ namespace VibeSopwith.Game.Core
                 "Plane",
                 pPlane.Embrace(plane),
                 Caps.AbsorbHits(5),
-                plane,
+                Caps.BindTargetSelf(plane),
                 Caps.RemoveRigging(plane, collisionWorld),
                 Caps.ExecuteEffect((gameTime, cp) => { planeExplosion = MakeBigExplosion(gameTime, plane.MidPoint.ToAether()); }));
 
@@ -233,7 +233,7 @@ namespace VibeSopwith.Game.Core
         private static Explosion MakeSmallExplosion(GameTime gameTime, IBasis boundBasis) =>
             new Explosion(Explosion.ExplosionVariant.Centered1, 1f, 1f, gameTime.TotalGameTime, TimeSpan.FromSeconds(1), boundBasis);
 
-        private record struct CollisionContext(Aether.Vector2 cp, GameTime gameTime, Stack<Action> postCheckActions);
+        private record struct CollisionContext(Aether.Vector2 cp, Fixture fixA, Fixture fixB, GameTime gameTime, Stack<Action> postCheckActions);
 
         private void ExecuteBounce(CollisionContext ctx, Airplane plane, Ceiling ceiling)
         {
@@ -269,7 +269,7 @@ namespace VibeSopwith.Game.Core
         private void ExecuteExplosion<T>(CollisionContext ctx, Bullet bullet, ICanDieByBullet<T> target)
         {
 
-            Kill(ctx, howBulletDies(bullet, target.ExplosionBindTarget));
+            Kill(ctx, howBulletDies(bullet, target.ExplosionBindTarget(ctx.fixB)));
             if (!target.HitOnce()) return;
             Kill(ctx, target);
         }
@@ -413,17 +413,17 @@ namespace VibeSopwith.Game.Core
 
             // Collision check round - not a "behavior", a structural step.
             var postCheckActions = new Stack<Action>(); // Push here actions which manipulate collisionWorld, to avoid corruption mid-iteration.
-            var makeCtx = (Aether.Vector2 cp) => new CollisionContext(cp, gameTime, postCheckActions);
+            var makeCtx = (Aether.Vector2 cp, Fixture a, Fixture b) => new CollisionContext(cp, a, b, gameTime, postCheckActions);
 
             for (Contact ct = collisionWorld.ContactList.Next; ct != collisionWorld.ContactList; ct = ct.Next)
             {
                 var _ = 
-                    Physics.OnCollision(ct, "Plane-Ceiling", pPlane.IsAlive,  pCeiling.IsAlive,                                 (cp, p, c) => ExecuteBounce   (makeCtx(cp), p,  c)) ||
-                    Physics.OnCollision(ct, "Plane-{0}",     pPlane.IsAlive,  Caps.CheckAlive<ICanDieByPlane<Unit>>(),          (cp, p, t) => ExecuteCollision(makeCtx(cp), p,  t)) ||
-                    Physics.OnCollision(ct, "Plane-{0}",     pPlane.IsAlive,  Caps.CheckAlive<ICanDieByPlane<Ground.XRange>>(), (cp, p, t) => ExecuteCollision(makeCtx(cp), p,  t)) ||
-                    Physics.OnCollision(ct, "Bullet-{0}",    pBullet.IsAlive, Caps.CheckAlive<ICanDieByBullet<Unit>>(),         (cp, b, t) => ExecuteExplosion(makeCtx(cp), b,  t)) ||
-                    Physics.OnCollision(ct, "Bomb-{0}",      pBomb.IsAlive,   Caps.CheckAlive<ICanDieByBomb<Unit>>(),           (cp, b, t) => ExecuteExplosion(makeCtx(cp), b,  t)) ||
-                    Physics.OnCollision(ct, "Bomb-{0}",      pBomb.IsAlive,   Caps.CheckAlive<ICanDieByBomb<Ground.XRange>>(),  (cp, b, t) => ExecuteExplosion(makeCtx(cp), b,  t)) ||
+                    Physics.OnCollision(ct, "Plane-Ceiling", pPlane.IsAlive,  pCeiling.IsAlive,                                 (cp, fa, fb, p, c) => ExecuteBounce   (makeCtx(cp, fa, fb), p,  c)) ||
+                    Physics.OnCollision(ct, "Plane-{0}",     pPlane.IsAlive,  Caps.CheckAlive<ICanDieByPlane<Unit>>(),          (cp, fa, fb, p, t) => ExecuteCollision(makeCtx(cp, fa, fb), p,  t)) ||
+                    Physics.OnCollision(ct, "Plane-{0}",     pPlane.IsAlive,  Caps.CheckAlive<ICanDieByPlane<Ground.XRange>>(), (cp, fa, fb, p, t) => ExecuteCollision(makeCtx(cp, fa, fb), p,  t)) ||
+                    Physics.OnCollision(ct, "Bullet-{0}",    pBullet.IsAlive, Caps.CheckAlive<ICanDieByBullet<Unit>>(),         (cp, fa, fb, b, t) => ExecuteExplosion(makeCtx(cp, fa, fb), b,  t)) ||
+                    Physics.OnCollision(ct, "Bomb-{0}",      pBomb.IsAlive,   Caps.CheckAlive<ICanDieByBomb<Unit>>(),           (cp, fa, fb, b, t) => ExecuteExplosion(makeCtx(cp, fa, fb), b,  t)) ||
+                    Physics.OnCollision(ct, "Bomb-{0}",      pBomb.IsAlive,   Caps.CheckAlive<ICanDieByBomb<Ground.XRange>>(),  (cp, fa, fb, b, t) => ExecuteExplosion(makeCtx(cp, fa, fb), b,  t)) ||
                     false;
             }
 

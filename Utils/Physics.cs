@@ -2,6 +2,7 @@ using Microsoft.Xna.Framework;
 using nkast.Aether.Physics2D.Collision.Shapes;
 using nkast.Aether.Physics2D.Dynamics;
 using nkast.Aether.Physics2D.Dynamics.Contacts;
+using System.Runtime.Intrinsics.X86;
 using Aether = nkast.Aether.Physics2D.Common;
 
 namespace VibeSopwith.Game.Utils
@@ -85,7 +86,7 @@ namespace VibeSopwith.Game.Utils
             string collisionType,
             Func<TFix1, bool> check1,
             Func<TFix2, bool> check2,
-            Action<Aether.Vector2, TFix1, TFix2> execute)
+            Action<Aether.Vector2, Fixture, Fixture, TFix1, TFix2> execute)
         {
             if (!ct.IsTouching) return false;
 
@@ -102,13 +103,13 @@ namespace VibeSopwith.Game.Utils
                 fix.Body.Tag is object[] arr && exists(arr, check, out var fixElement) ? (true, fixElement) : 
                 (false, default(T));
 
-            (TFix1 fix1, TFix2 fix2)? tryPair(Fixture fa, Fixture fb)
+            (TFix1 fix1, TFix2 fix2, Fixture aFix1, Fixture aFix2)? tryPair(Fixture fa, Fixture fb)
             {
                 var (ok1, v1) = castAndCheck<TFix1>(fa, check1);
                 if (!ok1) return null;
 
                 var (ok2, v2) = castAndCheck<TFix2>(fb, check2);
-                return ok2 ? (v1!, v2!) : null;
+                return ok2 ? (v1!, v2!, fa, fb) : null;
             }
 
             var fixtures =
@@ -134,7 +135,7 @@ namespace VibeSopwith.Game.Utils
             collisionType = formatCollision();
 
             var cp = ResolveContactPoint(ct, collisionType);
-            execute(cp, fixtures.Value.fix1, fixtures.Value.fix2);
+            execute(cp, fixtures.Value.aFix1, fixtures.Value.aFix2, fixtures.Value.fix1, fixtures.Value.fix2);
 
             return true;
         }
