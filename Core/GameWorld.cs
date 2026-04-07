@@ -274,7 +274,7 @@ namespace VibeSopwith.Game.Core
             Kill(ctx, target);
         }
 
-        public void Simulate(GameTime gameTime, float ups)
+        public void Simulate(GameTime gameTime, float ups, Airplane.Inputs airplaneInputs)
         {
             var doBeforeSimulation = () =>
             {
@@ -304,7 +304,7 @@ namespace VibeSopwith.Game.Core
                         else
                         {
                             // Store Synthesized inputs back in the Plane instance, potentially overriding User inputs stored at previous Update.
-                            Plane.Input = input;
+                            airplaneInputs = input;
                             Plane.CurrentState = Plane.CurrentState with { AutoLanding = phase };
                         }
                     }
@@ -313,9 +313,8 @@ namespace VibeSopwith.Game.Core
                     Plane.CheckAndSetLandingMode(Runways[0]);
 
                     // 4. Compute "Plane.Projected" state by calling Plane.ApplyInputs, passing in:
-                    // - Stored Plane.Inputs (either User inputs from Update, or Synthetic inputs from AutoLanding FSM)
                     // - AutoLanding init "factory" - in case inputs indicate the need to initiate.
-                    var planeProjected = Plane.ApplyInputs(Plane.Input, () => Autopilot.InitiateAutoLanding(Plane, Approaches), gameTime);
+                    var planeProjected = Plane.ApplyInputs(airplaneInputs, () => Autopilot.InitiateAutoLanding(Plane, Approaches), gameTime);
 
                     // 5. Modify necessary bits of Aether instrumentation before simulation step. 
                     Plane.PreSimulationPrepare(planeProjected);
@@ -325,7 +324,6 @@ namespace VibeSopwith.Game.Core
                     {
                         // 7. Project simulated physicals (positions, velocities, etc.) back to Plane "world" instance.
                         Plane.PostSimulationUpdate(planeProjected);
-                        Plane.ClearInputs();
 
                         // Ideally #8 must be here
                         // 8. Act upon finalized Plane state.
@@ -407,6 +405,7 @@ namespace VibeSopwith.Game.Core
             foreach (var ee in expiredExplosions)
                 explosions.Remove(ee);
 
+            // Get rid of exploded baloons
             var explodedBaloons = Baloons.Where(e => e.Exploded).ToArray();
             foreach (var eb in explodedBaloons)
                 Baloons.Remove(eb);

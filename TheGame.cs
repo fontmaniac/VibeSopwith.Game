@@ -86,7 +86,7 @@ namespace VibeSopwith.Game
 
             UPS.Update(gameTime);
 
-            _keyboardCustodian.Process(kc =>
+            var planeInputs = _keyboardCustodian.Process(kc =>
             {
                 // F11 - Fullscreen toggle
                 if (kc.IsKeyPressed(Keys.F11))
@@ -131,7 +131,7 @@ namespace VibeSopwith.Game
                 var autoLand =
                     kc.IsKeyDown(Keys.H) && _world.Plane.CurrentState.AutoLanding == null ? Airplane.AutoLandToggle.Active : Airplane.AutoLandToggle.Inactive;
 
-                _world.Plane.Input = _world.Plane.Input with
+                return Airplane.Inputs.Clean() with
                 {
                     Throttle = throttle,
                     Pitch = pitch,
@@ -142,7 +142,7 @@ namespace VibeSopwith.Game
                 };
             });
 
-            _world.Simulate(gameTime, UPS.UPS);
+            _world.Simulate(gameTime, UPS.UPS, planeInputs);
         }
 
         // This is almost cosmetic, as SpriteBatch ignores viewport settings completely.

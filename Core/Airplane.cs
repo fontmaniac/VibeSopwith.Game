@@ -216,8 +216,6 @@ namespace VibeSopwith.Game.Core
 
         public bool Landing = false;
 
-        public Inputs Input = new Inputs();
-
         public State ApplyInputs(Inputs input, Func<Autopilot.ApproachPhase> initiateAutoland, GameTime gameTime)
         {
             var nowTime = DateTime.UtcNow;
@@ -270,11 +268,6 @@ namespace VibeSopwith.Game.Core
                 : CurrentState.AutoLanding; // Keep
 
             return new State(newPosition, newDirection, newSpin, newSpeed, newBomb, newBullet, autoLand, newRollTime, newBombTime, newBulletTime);
-        }
-
-        public void ClearInputs()
-        {
-            Input = Inputs.Clean();
         }
 
         public bool CheckAndSetLandingMode(Ground.Runway runway)
