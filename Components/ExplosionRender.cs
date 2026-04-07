@@ -23,8 +23,7 @@ namespace VibeSopwith.Game.Components
         private record ExplosionPhase(int phaseNumber, TextureSlice slice) : Animation.IPhase<Explosion>
         {
             public TimeSpan GetDuration(Explosion explosion) => explosion.Duration / phaseNumber;
-
-            public void Draw(SpriteBatch sb, Explosion explosion) => DrawHelper.DrawSlice(explosion, HandedSlice.LR.Wrap(slice), sb, null);
+            public HandedSlice GetSlice(Explosion explosion) => HandedSlice.LR.Wrap(slice);
         }
 
         public new void LoadContent()
@@ -52,7 +51,7 @@ namespace VibeSopwith.Game.Components
         public void Draw(Explosion explosion, GameTime gameTime)
         {
             var variant = Variants[explosion.Variant];
-            Animation.Draw(explosion, explosion.StartTime, variant.Phases, false, gameTime, TheGame.SpriteBatch);
+            Animation.Draw(explosion, Animation.Make(explosion.StartTime, variant.Phases, false), gameTime, TheGame.SpriteBatch);
         }
     }
 }
