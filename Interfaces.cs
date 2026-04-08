@@ -151,6 +151,11 @@ public record CanDieByBullet<T>(string WhoAmI, Poppet Poppet, Func<bool> HitOnce
     : ICanDieByBullet<T>
     , IDescribeMyself;
 
+public record CanDieByBombOrBullet<T>(string WhoAmI, Poppet Poppet, Func<bool> HitOnce, Func<object, IBasis> ExplosionBindTarget, Action<T> RefreshRigging, Func<GameTime, Vector2, T> ExecuteEffect)
+    : ICanDieByBomb<T>
+    , ICanDieByBullet<T>
+    , IDescribeMyself;
+
 public record CanDieByPlane<T>(string WhoAmI, Poppet Poppet, Action<T> RefreshRigging, Func<GameTime, Vector2, T> ExecuteEffect)
     : ICanDieByPlane<T>
     , IDescribeMyself;

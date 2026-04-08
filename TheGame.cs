@@ -131,14 +131,17 @@ namespace VibeSopwith.Game
                 var autoLand =
                     kc.IsKeyDown(Keys.H) && _world.Plane.CurrentState.AutoLanding == null ? Airplane.AutoLandToggle.Active : Airplane.AutoLandToggle.Inactive;
 
-                return Airplane.Inputs.Clean() with
+                return new Airplane.InputStack() with
                 {
-                    Throttle = throttle,
-                    Pitch = pitch,
-                    Roll = roll,
-                    BombLaunch = bombLaunch,
-                    GunFire = gunFire,
-                    AutoLand = autoLand,
+                    User = Airplane.Inputs.Clean() with
+                    {
+                        Throttle = throttle,
+                        Pitch = pitch,
+                        Roll = roll,
+                        BombLaunch = bombLaunch,
+                        GunFire = gunFire,
+                        AutoLand = autoLand,
+                    }
                 };
             });
 

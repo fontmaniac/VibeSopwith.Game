@@ -24,6 +24,7 @@ namespace VibeSopwith.Game.Core
         public Vector2 MidPoint { get => Position + midPointOffset.Rotate(Direction.ToAngle()); }
 
         public bool Exploded = false;
+        public bool Landing = false;
 
         public Dial SpeedDial;
         public Dial AltDial;
@@ -214,10 +215,12 @@ namespace VibeSopwith.Game.Core
             public static Inputs Clean() => new Inputs(ThrottleInput.None, PitchInput.None, RollInput.None, BombInput.Inactive, GunInput.Inactive, AutoLandToggle.Inactive);
         }
 
-        public bool Landing = false;
+        public record struct InputStack(Inputs? User = null, Inputs? Autopilot = null);
 
-        public State ApplyInputs(Inputs input, Func<Autopilot.ApproachPhase> initiateAutoland, GameTime gameTime)
+        public State ApplyInputs(InputStack inputStack, Func<Autopilot.ApproachPhase> initiateAutoland, GameTime gameTime)
         {
+            var input = inputStack.Autopilot ?? inputStack.User ?? Inputs.Clean();
+
             var nowTime = DateTime.UtcNow;
             var dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
 

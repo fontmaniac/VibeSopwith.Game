@@ -168,10 +168,12 @@ namespace VibeSopwith.Game.Core
                 Caps.RemoveRigging(target, collisionWorld),
                 Caps.ExecuteEffect((gameTime, _) => explosions.Add(MakeBasedExplosion(gameTime, target.Position.ToAether()))));
 
-        private ICanDieByBomb<Unit> MayDieByBomb(Bomb bomb) =>
-            new CanDieByBomb<Unit>(
+        private CanDieByBombOrBullet<Unit> MayDieByBombOrBullet(Bomb bomb) =>
+            new CanDieByBombOrBullet<Unit>(
                 "Bomb",
                 pBomb.Embrace(bomb),
+                Caps.AbsorbHits(1),
+                Caps.BindTargetSelf(bomb),
                 Caps.RemoveRigging(bomb, collisionWorld),
                 Caps.ExecuteEffect((gameTime, cp) => explosions.Add(MakeBigExplosion(gameTime, cp.ToAether()))));
 
@@ -274,7 +276,7 @@ namespace VibeSopwith.Game.Core
             Kill(ctx, target);
         }
 
-        public void Simulate(GameTime gameTime, float ups, Airplane.Inputs airplaneInputs)
+        public void Simulate(GameTime gameTime, float ups, Airplane.InputStack airplaneInputs)
         {
             var doBeforeSimulation = () =>
             {
@@ -304,7 +306,7 @@ namespace VibeSopwith.Game.Core
                         else
                         {
                             // Store Synthesized inputs back in the Plane instance, potentially overriding User inputs stored at previous Update.
-                            airplaneInputs = input;
+                            airplaneInputs.Autopilot = input;
                             Plane.CurrentState = Plane.CurrentState with { AutoLanding = phase };
                         }
                     }
@@ -330,7 +332,7 @@ namespace VibeSopwith.Game.Core
                         {
                             var planeState = Plane.CurrentState;
                             if (planeState.Bomb != null)
-                                Bombs.Add(planeState.Bomb.SetupRigging(collisionWorld, () => new object[] { planeState.Bomb, MayDieByBomb(planeState.Bomb) }));
+                                Bombs.Add(planeState.Bomb.SetupRigging(collisionWorld, () => new object[] { planeState.Bomb, MayDieByBombOrBullet(planeState.Bomb) }));
 
                             if (planeState.Bullet != null)
                                 Bullets.Add(planeState.Bullet.SetupRigging(collisionWorld));
