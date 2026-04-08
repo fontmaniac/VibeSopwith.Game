@@ -1,6 +1,7 @@
 using Microsoft.Xna.Framework;
 using nkast.Aether.Physics2D.Dynamics;
 using nkast.Aether.Physics2D.Dynamics.Contacts;
+using System;
 using VibeSopwith.Game.Utils;
 using Aether = nkast.Aether.Physics2D.Common;
 
@@ -276,101 +277,152 @@ namespace VibeSopwith.Game.Core
             Kill(ctx, target);
         }
 
+        private record struct SimulationContext(GameTime gameTime, float ups, Airplane.InputStack airplaneInputs);
+
+        private interface IActor
+        {
+            Action DoBeforeSimulation(SimulationContext ctx);
+        }
+
+        private interface IPerishable
+        {
+            bool RemoveIfExpired(SimulationContext ctx);
+        }
+
+        private record struct Actor(Func<SimulationContext, Action> doBeforeSimulation) : IActor
+        {
+            public Action DoBeforeSimulation(SimulationContext ctx) => doBeforeSimulation(ctx);
+        }
+
+        private record struct Perishable(Func<SimulationContext, bool> removeIfExpired) : IPerishable
+        {
+            public bool RemoveIfExpired(SimulationContext ctx) => removeIfExpired(ctx);
+        }
+
+        private IPerishable GetPerishable(Func<SimulationContext, bool> removeIfExpired) => new Perishable(removeIfExpired);
+
+        private IEnumerable<IActor> EnumerateActors()
+        {
+            yield return GetPlaneActor();
+            foreach (var bomb in Bombs) yield return GetUnitActor(bomb);
+            foreach (var bullet in Bullets) yield return GetUnitActor(bullet);  
+            foreach (var flakGun in FlakGuns) yield return GetFlakActor(flakGun);
+            foreach (var baloon in Baloons) yield return GetBaloonActor(baloon);
+        }
+
+        private IEnumerable<IPerishable> EnumeratePerishables()
+        {
+            foreach (var bullet in Bullets) yield return GetPerishable((ctx) => { if (bullet.IsExpired(ctx.gameTime.TotalGameTime)) return Bullets.Remove(bullet); return false; });
+            foreach (var explosion in explosions) yield return GetPerishable((ctx) => { if (explosion.IsExpired(ctx.gameTime.TotalGameTime)) return explosions.Remove(explosion); return false; });
+            foreach (var baloon in Baloons) yield return GetPerishable((ctx) => { if (baloon.Exploded) return Baloons.Remove(baloon); return false; });
+        }
+
+        private IActor GetUnitActor(IAmBehaving<Unit> actor) => new Actor((ctx) => 
+        {
+            actor.PreSimulationPrepare(Unit.Value);
+            return () => actor.PostSimulationUpdate(Unit.Value);
+        });
+
+        private IActor GetActor<T>(T actor, Func<SimulationContext, Action> doBeforeSimulation) => new Actor(doBeforeSimulation);
+
+        private IActor GetFlakActor(FlakGun flakGun) => GetActor(flakGun, (ctx) => 
+        {
+            var projected = flakGun.ApplyInputs(ctx.gameTime);
+
+            if (projected.Bullet != null)
+                Bullets.Add(projected.Bullet.SetupRigging(collisionWorld));
+
+            if (projected.MuzzleFlash != null)
+                explosions.Add(projected.MuzzleFlash);
+
+            flakGun.PreSimulationPrepare(projected);
+
+            return () => flakGun.PostSimulationUpdate(projected);
+        });
+
+        private IActor GetBaloonActor(Baloon baloon) => GetActor(baloon, (ctx) => 
+        {
+            var projected = baloon.ApplyInputs(ctx.gameTime);
+            baloon.PreSimulationPrepare(projected);
+
+            return () => baloon.PostSimulationUpdate(projected);
+        });
+
+        private IActor GetPlaneActor() => GetActor(Plane, (ctx) => 
+        {
+            var airplaneInputs = ctx.airplaneInputs;
+
+            // 1. Execute "Plane.WhenDestroyed" behavior
+            if (Plane.Exploded)
+            {
+                if (planeExplosion?.IsExpired(ctx.gameTime.TotalGameTime) == true)
+                {
+                    planeExplosion = null;
+                    Plane = MakeNewPlane();
+                }
+
+                return () => { };
+            }
+            else
+            {
+                // Otherwise,
+                // 2. execute "Plane.WhenAutoLanding" behavior
+                if (Plane.CurrentState.AutoLanding != null)
+                {
+                    // Compute new ApproachPhase & set new inputs.
+                    var (phase, input) = Autopilot.Transition(Plane, Plane.CurrentState.AutoLanding, ctx.ups);
+                    if (phase == Autopilot.ApproachPhase.Fail)
+                    {
+                        Plane.CurrentState = Plane.CurrentState with { AutoLanding = null };
+                    }
+                    else
+                    {
+                        // Store Synthesized inputs back in the Plane instance, potentially overriding User inputs stored at previous Update.
+                        airplaneInputs.Autopilot = input;
+                        Plane.CurrentState = Plane.CurrentState with { AutoLanding = phase };
+                    }
+                }
+
+                // 3. Execute "Plane.Ordinary" behavior
+                Plane.CheckAndSetLandingMode(Runways[0]);
+
+                // 4. Compute "Plane.Projected" state by calling Plane.ApplyInputs, passing in:
+                // - AutoLanding init "factory" - in case inputs indicate the need to initiate.
+                var planeProjected = Plane.ApplyInputs(airplaneInputs, () => Autopilot.InitiateAutoLanding(Plane, Approaches), ctx.gameTime);
+
+                // 5. Modify necessary bits of Aether instrumentation before simulation step. 
+                Plane.PreSimulationPrepare(planeProjected);
+
+                // 6. Prepare a closure to execute after physics simulation step.
+                return () =>
+                {
+                    // 7. Project simulated physicals (positions, velocities, etc.) back to Plane "world" instance.
+                    Plane.PostSimulationUpdate(planeProjected);
+
+                    // Ideally #8 must be here
+                    // 8. Act upon finalized Plane state.
+                    {
+                        var planeState = Plane.CurrentState;
+                        if (planeState.Bomb != null)
+                            Bombs.Add(planeState.Bomb.SetupRigging(collisionWorld, () => new object[] { planeState.Bomb, MayDieByBombOrBullet(planeState.Bomb) }));
+
+                        if (planeState.Bullet != null)
+                            Bullets.Add(planeState.Bullet.SetupRigging(collisionWorld));
+                    }
+                };
+            }
+        });
+
+
         public void Simulate(GameTime gameTime, float ups, Airplane.InputStack airplaneInputs)
         {
-            var doBeforeSimulation = () =>
-            {
-                // 1. Execute "Plane.WhenDestroyed" behavior
-                if (Plane.Exploded)
-                {
-                    if (planeExplosion?.IsExpired(gameTime.TotalGameTime) == true)
-                    {
-                        planeExplosion = null;
-                        Plane = MakeNewPlane();
-                    }
-
-                    return () => { };
-                }
-                else
-                {
-                    // Otherwise,
-                    // 2. execute "Plane.WhenAutoLanding" behavior
-                    if (Plane.CurrentState.AutoLanding != null)
-                    {
-                        // Compute new ApproachPhase & set new inputs.
-                        var (phase, input) = Autopilot.Transition(Plane, Plane.CurrentState.AutoLanding, ups);
-                        if (phase == Autopilot.ApproachPhase.Fail)
-                        {
-                            Plane.CurrentState = Plane.CurrentState with { AutoLanding = null };
-                        }
-                        else
-                        {
-                            // Store Synthesized inputs back in the Plane instance, potentially overriding User inputs stored at previous Update.
-                            airplaneInputs.Autopilot = input;
-                            Plane.CurrentState = Plane.CurrentState with { AutoLanding = phase };
-                        }
-                    }
-
-                    // 3. Execute "Plane.Ordinary" behavior
-                    Plane.CheckAndSetLandingMode(Runways[0]);
-
-                    // 4. Compute "Plane.Projected" state by calling Plane.ApplyInputs, passing in:
-                    // - AutoLanding init "factory" - in case inputs indicate the need to initiate.
-                    var planeProjected = Plane.ApplyInputs(airplaneInputs, () => Autopilot.InitiateAutoLanding(Plane, Approaches), gameTime);
-
-                    // 5. Modify necessary bits of Aether instrumentation before simulation step. 
-                    Plane.PreSimulationPrepare(planeProjected);
-
-                    // 6. Prepare a closure to execute after physics simulation step.
-                    return () =>
-                    {
-                        // 7. Project simulated physicals (positions, velocities, etc.) back to Plane "world" instance.
-                        Plane.PostSimulationUpdate(planeProjected);
-
-                        // Ideally #8 must be here
-                        // 8. Act upon finalized Plane state.
-                        {
-                            var planeState = Plane.CurrentState;
-                            if (planeState.Bomb != null)
-                                Bombs.Add(planeState.Bomb.SetupRigging(collisionWorld, () => new object[] { planeState.Bomb, MayDieByBombOrBullet(planeState.Bomb) }));
-
-                            if (planeState.Bullet != null)
-                                Bullets.Add(planeState.Bullet.SetupRigging(collisionWorld));
-                        }
-                    };
-                }
-            };
+            var ctx = new SimulationContext(gameTime, ups, airplaneInputs);
 
             // Execute pre-physics-simulation behaviors.
-            // Execute Plane behavior stack before simulation
-            var planePostSimulation = doBeforeSimulation();
-
-            // Everything else except plane has much simple behavior stack.
-            foreach (var bomb in Bombs)
-                bomb.PreSimulationPrepare(Unit.Value);
-
-            foreach (var bullet in Bullets)
-                bullet.PreSimulationPrepare(Unit.Value);
-
-            foreach (var flakGun in FlakGuns)
-            {
-                var projected = flakGun.ApplyInputs(gameTime);
-
-                if (projected.Bullet != null)
-                    Bullets.Add(projected.Bullet.SetupRigging(collisionWorld));
-
-                if (projected.MuzzleFlash != null)
-                    explosions.Add(projected.MuzzleFlash);
-
-                flakGun.PreSimulationPrepare(projected);
-            }
-
-            foreach (var baloon in Baloons)
-            {
-                var projected = baloon.ApplyInputs(gameTime);
-                baloon.PreSimulationPrepare(projected);
-            }
-
+            var postSimulationActions = 
+                EnumerateActors()
+                .Select(actor => actor.DoBeforeSimulation(ctx))
+                .ToArray();
 
             //------------------------------------------------------------------//
             // Simulate Physics.                                                //
@@ -379,38 +431,12 @@ namespace VibeSopwith.Game.Core
             //------------------------------------------------------------------//
 
             // Execute post-physics-simulation behaviors.
-            
-            // Update plane state if not exploded
-            planePostSimulation();
-
-            // "Update" behaviors
-            // Update bomb states
-            foreach (var bomb in Bombs)
-                bomb.PostSimulationUpdate(Unit.Value);
-
-            // Update bullet states
-            foreach (var bullet in Bullets)
-                bullet.PostSimulationUpdate(Unit.Value);
-
-            // Update guns
-            foreach (var flakGun in FlakGuns)
-                flakGun.PostSimulationUpdate(flakGun.CurrentState);
+            foreach (var postSimAction in postSimulationActions)
+                postSimAction();
 
             // "Expire" behaviors
-            // Get rid of expired bullets
-            var expiredBullets = Bullets.Where(e => e.IsExpired(gameTime.TotalGameTime)).ToArray();
-            foreach (var eb in expiredBullets)
-                Bullets.Remove(eb);
-
-            // Get rid of expired explosions
-            var expiredExplosions = explosions.Where(e => e.IsExpired(gameTime.TotalGameTime)).ToArray();
-            foreach (var ee in expiredExplosions)
-                explosions.Remove(ee);
-
-            // Get rid of exploded baloons
-            var explodedBaloons = Baloons.Where(e => e.Exploded).ToArray();
-            foreach (var eb in explodedBaloons)
-                Baloons.Remove(eb);
+            foreach (var perishable in EnumeratePerishables().ToArray())
+                perishable.RemoveIfExpired(ctx);
 
             // Collision check round - not a "behavior", a structural step.
             var postCheckActions = new Stack<Action>(); // Push here actions which manipulate collisionWorld, to avoid corruption mid-iteration.
