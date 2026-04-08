@@ -110,16 +110,17 @@ public interface IHasParts
 
 public interface IDescribeMyself { string WhoAmI { get; } }
 
-public record Poppet<T>(Func<T, bool> IsAlive, Action<T> Kill)
+public record Poppet<T>(Func<T, bool> IsAlive, Action<T> Erase)
 {
-    public Poppet Embrace(T target) => new Poppet(() => IsAlive(target), () => Kill(target));
+    public Poppet Embrace(T target) => new Poppet(() => IsAlive(target), () => Erase(target));
 }
 
-public record Poppet(Func<bool> IsAlive, Action Kill)
+public record Poppet(Func<bool> IsAlive, Action Erase)
 {
-    public static Poppet<T> Make<T>(Func<T, bool> isAlive, Action<T> kill) => new Poppet<T>(isAlive, kill);
-    public static void Make<T>(out Poppet<T> popout, Func<T, bool> isAlive, Action<T> kill) => popout = new Poppet<T>(isAlive, kill);
-    public static void Make<T>(out Poppet<T> popout) => popout = new Poppet<T>(_ => true, _ => { });
+    public static Poppet<T> Make<T>(Func<T, bool> isAlive, Action<T> erase) => new Poppet<T>(isAlive, erase);
+    public static void Killable<T>(out Poppet<T> popout, Func<T, bool> isAlive, Action<T> erase) => popout = new Poppet<T>(isAlive, erase);
+    public static void KillableByEffect<T>(out Poppet<T> popout, Func<T, bool> isAlive) => popout = new Poppet<T>(isAlive, _ => { });
+    public static void AlwaysAlive<T>(out Poppet<T> popout) => popout = new Poppet<T>(_ => true, _ => { });
 }
 
 public interface IHasPoppet { Poppet Poppet { get; } }

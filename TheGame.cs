@@ -129,7 +129,7 @@ namespace VibeSopwith.Game
                     kc.IsKeyDown(Keys.Space) ? Airplane.GunInput.Active : Airplane.GunInput.Inactive;
 
                 var autoLand =
-                    kc.IsKeyDown(Keys.H) && _world.Plane.CurrentState.AutoLanding == null ? Airplane.AutoLandToggle.Active : Airplane.AutoLandToggle.Inactive;
+                    kc.IsKeyDown(Keys.H) && _world.Plane.CurrentState.EigenState is not Airplane.EigenState.AutoLanding ? Airplane.AutoLandToggle.Active : Airplane.AutoLandToggle.Inactive;
 
                 return new Airplane.InputStack() with
                 {

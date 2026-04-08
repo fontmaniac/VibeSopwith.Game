@@ -160,7 +160,7 @@ namespace VibeSopwith.Game.Components
                 foreach (var bullet in world.Bullets)
                     _bulletRender.Draw(bullet, scaleVert, gameTime);
 
-            foreach (var explosion in world.GetExplosions())
+            foreach (var explosion in world.Explosions)
                 _explosionRender.Draw(explosion, gameTime);
 
             //_bodyRender.Draw(world.Plane.Body, gameTime);

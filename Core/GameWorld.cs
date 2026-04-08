@@ -1,7 +1,6 @@
 using Microsoft.Xna.Framework;
 using nkast.Aether.Physics2D.Dynamics;
 using nkast.Aether.Physics2D.Dynamics.Contacts;
-using System;
 using VibeSopwith.Game.Utils;
 using Aether = nkast.Aether.Physics2D.Common;
 
@@ -18,14 +17,7 @@ namespace VibeSopwith.Game.Core
         public readonly Ground Ground;
         public readonly Ceiling Ceiling;
         public Airplane Plane;
-        private readonly List<Explosion> explosions = new List<Explosion>();
-        private Explosion? planeExplosion = null;
-        public IEnumerable<Explosion> GetExplosions()
-        {
-            if (planeExplosion != null) yield return planeExplosion;
-            foreach (var exp in explosions) yield return exp;
-        }
-
+        public readonly List<Explosion> Explosions = new List<Explosion>();
         public readonly List<Bomb> Bombs = new List<Bomb>();
         public readonly List<Bullet> Bullets = new List<Bullet>();
 
@@ -63,7 +55,7 @@ namespace VibeSopwith.Game.Core
             Ceiling.SetupRigging(collisionWorld);
 
             foreach (var baloon in Baloons)
-                baloon.SetupRigging(collisionWorld, () => new object[] { baloon, MayDieByProjectile(baloon, "Baloon", pBaloon, 10) with { ExecuteEffect = Caps.ExecuteEffect((gameTime, _) => explosions.Add(MakeBigExplosion(gameTime, baloon.Position.ToAether())))}});
+                baloon.SetupRigging(collisionWorld, () => new object[] { baloon, MayDieByProjectile(baloon, "Baloon", pBaloon, 10) with { ExecuteEffect = Caps.ExecuteEffect((gameTime, _) => Explosions.Add(MakeBigExplosion(gameTime, baloon.Position.ToAether())))}});
 
             foreach (var building in Buildings)
                 building.SetupRigging(collisionWorld, () => new object[] { building, MayDieByProjectile(building, "Building", pBuilding, 5) });
@@ -142,22 +134,22 @@ namespace VibeSopwith.Game.Core
         private Poppet<Ceiling> pCeiling = null!;
 
         private ICanDie<Unit> howPlaneDies(Airplane plane) => 
-            Caps.JustDie(pPlane,  plane,  collisionWorld, Caps.ExecuteEffect((gt, cp) => planeExplosion = MakeBigExplosion(gt, plane.MidPoint.ToAether())));
+            Caps.JustDie(pPlane,  plane,  collisionWorld, Caps.ExecuteEffect((gt, cp) => { Explosions.Add(plane.SetDestroyed(gt)); }));
         private ICanDie<Unit> howBombDies(Bomb bomb) => 
             Caps.JustDie(pBomb,   bomb,   collisionWorld, Caps.NoEffect());
         private ICanDie<Unit> howBulletDies(Bullet bullet, IBasis bindTarget) => 
-            Caps.JustDie(pBullet, bullet, collisionWorld, Caps.ExecuteEffect((gt, cp) => explosions.Add(MakeSmallExplosion(gt, LiveBasis.Bind(Basis.FixedPos(cp), bindTarget)))));
+            Caps.JustDie(pBullet, bullet, collisionWorld, Caps.ExecuteEffect((gt, cp) => Explosions.Add(MakeSmallExplosion(gt, LiveBasis.Bind(Basis.FixedPos(cp), bindTarget)))));
 
         private void RaisePoppets()
         {
-            Poppet.Make(out pGround);
-            Poppet.Make(out pCeiling);
-            Poppet.Make(out pBomb,      (bomb)     => Bombs.Exists(b => bomb == b),     bomb     => Bombs.Remove(bomb));
-            Poppet.Make(out pBullet,    (bullet)   => Bullets.Exists(b => bullet == b), bullet   => Bullets.Remove(bullet));
-            Poppet.Make(out pPlane,     (plane)    => !plane.Exploded,                  plane    => plane.Exploded = true);
-            Poppet.Make(out pBuilding,  (building) => !building.Exploded,               building => building.Exploded = true);
-            Poppet.Make(out pFlakGun,   (flakGun)  => !flakGun.Exploded,                flakGun  => flakGun.Exploded = true);
-            Poppet.Make(out pBaloon,    (baloon)   => !baloon.Exploded,                 baloon   => baloon.Exploded = true);
+            Poppet.AlwaysAlive(out pGround);
+            Poppet.AlwaysAlive(out pCeiling);
+            Poppet.KillableByEffect(out pPlane, (plane) => !plane.IsExploded);
+            Poppet.Killable(out pBomb,      (bomb)     => Bombs.Exists(b => bomb == b),     bomb     => Bombs.Remove(bomb));
+            Poppet.Killable(out pBullet,    (bullet)   => Bullets.Exists(b => bullet == b), bullet   => Bullets.Remove(bullet));
+            Poppet.Killable(out pBuilding,  (building) => !building.Exploded,               building => building.Exploded = true);
+            Poppet.Killable(out pFlakGun,   (flakGun)  => !flakGun.Exploded,                flakGun  => flakGun.Exploded = true);
+            Poppet.Killable(out pBaloon,    (baloon)   => !baloon.Exploded,                 baloon   => baloon.Exploded = true);
         }
 
         private CanDieByProjectile<Unit> MayDieByProjectile<T>(T target, string name, Poppet<T> poppet, int hits) where T : IHasLocation, ICanRemoveRigging =>
@@ -167,7 +159,7 @@ namespace VibeSopwith.Game.Core
                 Caps.AbsorbHits(hits),
                 Caps.BindTargetPart(target),
                 Caps.RemoveRigging(target, collisionWorld),
-                Caps.ExecuteEffect((gameTime, _) => explosions.Add(MakeBasedExplosion(gameTime, target.Position.ToAether()))));
+                Caps.ExecuteEffect((gameTime, _) => Explosions.Add(MakeBasedExplosion(gameTime, target.Position.ToAether()))));
 
         private CanDieByBombOrBullet<Unit> MayDieByBombOrBullet(Bomb bomb) =>
             new CanDieByBombOrBullet<Unit>(
@@ -176,7 +168,7 @@ namespace VibeSopwith.Game.Core
                 Caps.AbsorbHits(1),
                 Caps.BindTargetSelf(bomb),
                 Caps.RemoveRigging(bomb, collisionWorld),
-                Caps.ExecuteEffect((gameTime, cp) => explosions.Add(MakeBigExplosion(gameTime, cp.ToAether()))));
+                Caps.ExecuteEffect((gameTime, cp) => Explosions.Add(MakeBigExplosion(gameTime, cp.ToAether()))));
 
         private ICanDieByBomb<Unit> MayDieByBomb(Airplane plane) =>
             new CanDieByBomb<Unit>(
@@ -185,8 +177,8 @@ namespace VibeSopwith.Game.Core
                 Caps.RemoveRigging(plane, collisionWorld),
                 Caps.ExecuteEffect((gameTime, cp) =>
                 {
-                    planeExplosion = MakeBigExplosion(gameTime, plane.MidPoint.ToAether());
-                    explosions.Add(MakeBigExplosion(gameTime, cp.ToAether()));
+                    Explosions.Add(plane.SetDestroyed(gameTime));
+                    Explosions.Add(MakeBigExplosion(gameTime, cp.ToAether()));
                 }));
 
         private ICanDieByBullet<Unit> MayDieByBullet(Airplane plane) =>
@@ -196,7 +188,7 @@ namespace VibeSopwith.Game.Core
                 Caps.AbsorbHits(5),
                 Caps.BindTargetSelf(plane),
                 Caps.RemoveRigging(plane, collisionWorld),
-                Caps.ExecuteEffect((gameTime, cp) => { planeExplosion = MakeBigExplosion(gameTime, plane.MidPoint.ToAether()); }));
+                Caps.ExecuteEffect((gameTime, cp) => { Explosions.Add(plane.SetDestroyed(gameTime)); }));
 
         private ICanDieByBomb<Ground.XRange> MayDieByBomb(Ground ground) =>
             new CanDieByBomb<Ground.XRange>(
@@ -205,7 +197,7 @@ namespace VibeSopwith.Game.Core
                 (xr) => ground.ReRigRange(xr),
                 (gameTime, cp) => 
                 {
-                    explosions.Add(MakeBigExplosion(gameTime, cp.ToAether()));
+                    Explosions.Add(MakeBigExplosion(gameTime, cp.ToAether()));
                     return ground.PlaceDent(cp.X, 1.0f, 0.5f, segmentsPerMeter: 8);
                 });
 
@@ -255,7 +247,7 @@ namespace VibeSopwith.Game.Core
 
         private void Kill<T>(CollisionContext ctx, ICanDie<T> target)
         {
-            target.Poppet.Kill();
+            target.Poppet.Erase();
             var payload = target.ExecuteEffect(ctx.gameTime, ctx.cp.ToXna());
             ctx.postCheckActions.Push(() => { target.RefreshRigging(payload); });
         }
@@ -316,7 +308,7 @@ namespace VibeSopwith.Game.Core
         private IEnumerable<IPerishable> EnumeratePerishables()
         {
             foreach (var bullet in Bullets) yield return GetPerishable((ctx) => { if (bullet.IsExpired(ctx.gameTime.TotalGameTime)) return Bullets.Remove(bullet); return false; });
-            foreach (var explosion in explosions) yield return GetPerishable((ctx) => { if (explosion.IsExpired(ctx.gameTime.TotalGameTime)) return explosions.Remove(explosion); return false; });
+            foreach (var explosion in Explosions) yield return GetPerishable((ctx) => { if (explosion.IsExpired(ctx.gameTime.TotalGameTime)) return Explosions.Remove(explosion); return false; });
             foreach (var baloon in Baloons) yield return GetPerishable((ctx) => { if (baloon.Exploded) return Baloons.Remove(baloon); return false; });
         }
 
@@ -336,7 +328,7 @@ namespace VibeSopwith.Game.Core
                 Bullets.Add(projected.Bullet.SetupRigging(collisionWorld));
 
             if (projected.MuzzleFlash != null)
-                explosions.Add(projected.MuzzleFlash);
+                Explosions.Add(projected.MuzzleFlash);
 
             flakGun.PreSimulationPrepare(projected);
 
@@ -355,65 +347,56 @@ namespace VibeSopwith.Game.Core
         {
             var airplaneInputs = ctx.airplaneInputs;
 
-            // 1. Execute "Plane.WhenDestroyed" behavior
-            if (Plane.Exploded)
+            switch (Plane.CurrentState.EigenState)
             {
-                if (planeExplosion?.IsExpired(ctx.gameTime.TotalGameTime) == true)
-                {
-                    planeExplosion = null;
-                    Plane = MakeNewPlane();
-                }
+                case Airplane.EigenState.Destroyed dead:
+                    if (dead.Explosion.IsExpired(ctx.gameTime.TotalGameTime) == true)
+                        Plane = MakeNewPlane();
 
-                return () => { };
+                    return () => { };
+
+                case Airplane.EigenState.AutoLanding aland:
+                    var (phase, input) = Autopilot.Transition(Plane, aland.Phase, ctx.ups);
+                    switch (phase)
+                    {
+                        case Autopilot.ApproachPhase.Failure:
+                            Plane.SetControlledFlight();
+                            break;
+                        default:
+                            airplaneInputs.Autopilot = input;
+                            Plane.SetAutoLandingPhase(phase);
+                            break;
+                    }
+                    break;
             }
-            else
+
+            // 3. Execute "Plane.Ordinary" behavior
+            Plane.CheckAndSetLandingMode(Runways[0]);
+
+            // 4. Compute "Plane.Projected" state by calling Plane.ApplyInputs, passing in:
+            // - AutoLanding init "factory" - in case inputs indicate the need to initiate.
+            var planeProjected = Plane.ApplyInputs(airplaneInputs, () => Autopilot.InitiateAutoLanding(Plane, Approaches), ctx.gameTime);
+
+            // 5. Modify necessary bits of Aether instrumentation before simulation step. 
+            Plane.PreSimulationPrepare(planeProjected);
+
+            // 6. Prepare a closure to execute after physics simulation step.
+            return () =>
             {
-                // Otherwise,
-                // 2. execute "Plane.WhenAutoLanding" behavior
-                if (Plane.CurrentState.AutoLanding != null)
+                // 7. Project simulated physicals (positions, velocities, etc.) back to Plane "world" instance.
+                Plane.PostSimulationUpdate(planeProjected);
+
+                // Ideally #8 must be here
+                // 8. Act upon finalized Plane state.
                 {
-                    // Compute new ApproachPhase & set new inputs.
-                    var (phase, input) = Autopilot.Transition(Plane, Plane.CurrentState.AutoLanding, ctx.ups);
-                    if (phase == Autopilot.ApproachPhase.Fail)
-                    {
-                        Plane.CurrentState = Plane.CurrentState with { AutoLanding = null };
-                    }
-                    else
-                    {
-                        // Store Synthesized inputs back in the Plane instance, potentially overriding User inputs stored at previous Update.
-                        airplaneInputs.Autopilot = input;
-                        Plane.CurrentState = Plane.CurrentState with { AutoLanding = phase };
-                    }
+                    var planeState = Plane.CurrentState;
+                    if (planeState.Bomb != null)
+                        Bombs.Add(planeState.Bomb.SetupRigging(collisionWorld, () => new object[] { planeState.Bomb, MayDieByBombOrBullet(planeState.Bomb) }));
+
+                    if (planeState.Bullet != null)
+                        Bullets.Add(planeState.Bullet.SetupRigging(collisionWorld));
                 }
-
-                // 3. Execute "Plane.Ordinary" behavior
-                Plane.CheckAndSetLandingMode(Runways[0]);
-
-                // 4. Compute "Plane.Projected" state by calling Plane.ApplyInputs, passing in:
-                // - AutoLanding init "factory" - in case inputs indicate the need to initiate.
-                var planeProjected = Plane.ApplyInputs(airplaneInputs, () => Autopilot.InitiateAutoLanding(Plane, Approaches), ctx.gameTime);
-
-                // 5. Modify necessary bits of Aether instrumentation before simulation step. 
-                Plane.PreSimulationPrepare(planeProjected);
-
-                // 6. Prepare a closure to execute after physics simulation step.
-                return () =>
-                {
-                    // 7. Project simulated physicals (positions, velocities, etc.) back to Plane "world" instance.
-                    Plane.PostSimulationUpdate(planeProjected);
-
-                    // Ideally #8 must be here
-                    // 8. Act upon finalized Plane state.
-                    {
-                        var planeState = Plane.CurrentState;
-                        if (planeState.Bomb != null)
-                            Bombs.Add(planeState.Bomb.SetupRigging(collisionWorld, () => new object[] { planeState.Bomb, MayDieByBombOrBullet(planeState.Bomb) }));
-
-                        if (planeState.Bullet != null)
-                            Bullets.Add(planeState.Bullet.SetupRigging(collisionWorld));
-                    }
-                };
-            }
+            };
         });
 
 

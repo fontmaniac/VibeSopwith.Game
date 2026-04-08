@@ -9,7 +9,14 @@ namespace VibeSopwith.Game.Core
     {
         public Body Body = null!;
 
-        public record State(Basis Location, float Speed, Bomb? Bomb, Bullet? Bullet, Autopilot.ApproachPhase? AutoLanding, DateTime RollTime, DateTime BombTime, DateTime BulletTime);
+        public abstract record EigenState()
+        {
+            public sealed record Destroyed(Explosion Explosion) : EigenState;
+            public sealed record AutoLanding(Autopilot.ApproachPhase Phase) : EigenState;
+            public sealed record ControlledFlight() : EigenState;
+        }
+
+        public record State(Basis Location, float Speed, Bomb? Bomb, Bullet? Bullet, DateTime BombTime, DateTime BulletTime, DateTime RollTime, EigenState EigenState);
 
         public State CurrentState;
         public float Speed { get => CurrentState.Speed; }
@@ -22,7 +29,17 @@ namespace VibeSopwith.Game.Core
 
         public Vector2 MidPoint { get => Position + midPointOffset.Rotate(Direction.ToAngle()); }
 
-        public bool Exploded = false;
+        public bool IsExploded { get => CurrentState.EigenState is EigenState.Destroyed; } 
+        public Explosion SetDestroyed(GameTime gt) 
+        { 
+            var explosion = new Explosion(Explosion.ExplosionVariant.Centered1, 10f, 10f, gt.TotalGameTime, TimeSpan.FromSeconds(1.5), Basis.FixedPos(MidPoint));
+            CurrentState = CurrentState with { EigenState = new EigenState.Destroyed(explosion) }; 
+            return explosion; 
+        }
+
+        public void SetControlledFlight() => CurrentState = CurrentState with { EigenState = new Airplane.EigenState.ControlledFlight() };
+        public void SetAutoLandingPhase(Autopilot.ApproachPhase phase) => CurrentState = CurrentState with { EigenState = new EigenState.AutoLanding(phase) };
+
         public bool Landing = false;
 
         public Dial SpeedDial;
@@ -30,7 +47,7 @@ namespace VibeSopwith.Game.Core
 
         public Airplane(Vector2 pos, BasisSpin spin)
         {
-            CurrentState = new State(new Basis(pos, Vector2.UnitX * spin.ToFactor(), spin), 0f, null, null, null, DateTime.MinValue, DateTime.MinValue, DateTime.MinValue);
+            CurrentState = new State(new Basis(pos, Vector2.UnitX * spin.ToFactor(), spin), 0f, null, null, DateTime.MinValue, DateTime.MinValue, DateTime.MinValue, new EigenState.ControlledFlight());
 
             SpeedDial = new Dial("Spd\r\nm/s", 0, 40f, 20, new[] { 0f, 10f, 20f, 30f }, () => this.Speed);
             AltDial = new Dial("Alt,m", 0, 60f, 12, new[] { 0f, 15f, 30f, 45f }, () => this.Position.Y);
@@ -244,8 +261,8 @@ namespace VibeSopwith.Game.Core
             newSpeedRaw = gravityAcceleration < 0 && newSpeedRaw <= MinSpeed ? newSpeedRaw : newSpeedRaw + gravityAcceleration;
             var newSpeed = MathHelper.Clamp(newSpeedRaw, lowSpeedLimit, MaxSpeed);
 
-            var (newBomb, newBombTime) = (Landing || input.BombLaunch == BombInput.Inactive || (nowTime - CurrentState.BombTime).TotalSeconds < BombGracePeriod) 
-                ? (null, CurrentState.BombTime) 
+            var (newBomb, newBombTime) = (Landing || input.BombLaunch == BombInput.Inactive || (nowTime - CurrentState.BombTime).TotalSeconds < BombGracePeriod)
+                ? (null, CurrentState.BombTime)
                 : (SpawnBomb(), nowTime);
 
             var (newBullet, newBulletTime) = (input.GunFire == GunInput.Inactive || (nowTime - CurrentState.BulletTime).TotalSeconds < BulletGracePeriod)
@@ -261,14 +278,18 @@ namespace VibeSopwith.Game.Core
 
             var newPosition = Position + newDirection * newSpeed * dt;
 
-            var autoLand =
-                !Landing && input.AutoLand == AutoLandToggle.Active
-                ? (CurrentState.AutoLanding != null 
-                    ? null      // Drop
-                    : initiateAutoland())   // Initiate
-                : CurrentState.AutoLanding; // Keep
+            EigenState newEigenState =
+                CurrentState.EigenState switch
+                {
+                    EigenState.AutoLanding aland => aland,
+                    EigenState.ControlledFlight cflight => !Landing && input.AutoLand == AutoLandToggle.Active
+                        ? new EigenState.AutoLanding(initiateAutoland())   // Initiate autolanding
+                        : cflight,                                         // Keep flying,
+                    EigenState.Destroyed dead => dead,
+                    _ => throw new NotSupportedException("Unsupported Airplane EigenState")
+                };
 
-            return new State(new Basis(newPosition, newDirection, newSpin), newSpeed, newBomb, newBullet, autoLand, newRollTime, newBombTime, newBulletTime);
+            return new State(new Basis(newPosition, newDirection, newSpin), newSpeed, newBomb, newBullet, newBombTime, newBulletTime, newRollTime, newEigenState);
         }
 
         public bool CheckAndSetLandingMode(Ground.Runway runway)
