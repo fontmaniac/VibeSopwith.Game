@@ -9,15 +9,14 @@ namespace VibeSopwith.Game.Core
     {
         public Body Body = null!;
 
-        public record State(Vector2 Position, Vector2 Direction, BasisSpin Spin, float Speed, Bomb? Bomb, Bullet? Bullet, Autopilot.ApproachPhase? AutoLanding, DateTime RollTime, DateTime BombTime, DateTime BulletTime);
+        public record State(Basis Location, float Speed, Bomb? Bomb, Bullet? Bullet, Autopilot.ApproachPhase? AutoLanding, DateTime RollTime, DateTime BombTime, DateTime BulletTime);
 
         public State CurrentState;
         public float Speed { get => CurrentState.Speed; }
 
-        public Vector2 Position { get => CurrentState.Position; }       // World position of the plane in meters. 
-        public Vector2 Direction { get => CurrentState.Direction; }     // Direction where plane is facing.
-        public BasisSpin Spin { get => CurrentState.Spin; }             // Orientation of basis spin. Up is Y-up.
-        private float FlipFactor { get => Spin == BasisSpin.Down ? +1f : -1f; }
+        public Vector2 Position { get => CurrentState.Location.Position; }       // World position of the plane in meters. 
+        public Vector2 Direction { get => CurrentState.Location.Direction; }     // Direction where plane is facing.
+        public BasisSpin Spin { get => CurrentState.Location.Spin; }             // Orientation of basis spin. Up is Y-up.
         public float Length => 3.46f;
         public float Height => 2.0f;
 
@@ -31,8 +30,7 @@ namespace VibeSopwith.Game.Core
 
         public Airplane(Vector2 pos, BasisSpin spin)
         {
-            CurrentState = new State(pos, Vector2.UnitX, spin, 0f, null, null, null, DateTime.MinValue, DateTime.MinValue, DateTime.MinValue);
-            CurrentState = CurrentState with { Direction = Direction * FlipFactor };
+            CurrentState = new State(new Basis(pos, Vector2.UnitX * spin.ToFactor(), spin), 0f, null, null, null, DateTime.MinValue, DateTime.MinValue, DateTime.MinValue);
 
             SpeedDial = new Dial("Spd\r\nm/s", 0, 40f, 20, new[] { 0f, 10f, 20f, 30f }, () => this.Speed);
             AltDial = new Dial("Alt,m", 0, 60f, 12, new[] { 0f, 15f, 30f, 45f }, () => this.Position.Y);
@@ -67,7 +65,7 @@ namespace VibeSopwith.Game.Core
             foreach (var fixture in fixtures) 
                 body.Remove(fixture);
 
-            var ff = FlipFactor;
+            var ff = Spin.ToFactor();
 
             Fixture tagFixture(object tag, Fixture fix)
             {
@@ -148,7 +146,7 @@ namespace VibeSopwith.Game.Core
         private (float X, float Y) GetRefPoint(string name)
         {
             var refPoint = refPoints[name];
-            return (refPoint.X, FlipFactor * refPoint.Y);
+            return (refPoint.X, Spin.ToFactor() * refPoint.Y);
         }
 
         private Bomb SpawnBomb()
@@ -270,7 +268,7 @@ namespace VibeSopwith.Game.Core
                     : initiateAutoland())   // Initiate
                 : CurrentState.AutoLanding; // Keep
 
-            return new State(newPosition, newDirection, newSpin, newSpeed, newBomb, newBullet, autoLand, newRollTime, newBombTime, newBulletTime);
+            return new State(new Basis(newPosition, newDirection, newSpin), newSpeed, newBomb, newBullet, autoLand, newRollTime, newBombTime, newBulletTime);
         }
 
         public bool CheckAndSetLandingMode(Ground.Runway runway)
@@ -304,7 +302,15 @@ namespace VibeSopwith.Game.Core
             else if (Landing == false)
             {
                 Landing = true;
-                CurrentState = CurrentState with { Position = Position with { Y = runway.Level + LandingProximityMin }, Direction = Spin == BasisSpin.Down ? Vector2.UnitX : -Vector2.UnitX };
+                CurrentState = CurrentState with 
+                { 
+                    Location = CurrentState.Location with
+                    {
+                        Position = Position with { Y = runway.Level + LandingProximityMin },
+                        Direction = Vector2.UnitX * Spin.ToFactor()
+                    }
+                        
+                };
             }
             return true;
         }
@@ -324,7 +330,7 @@ namespace VibeSopwith.Game.Core
             {
                 // Executing a roll/flip.
                 // Reflect position across horizontal midline.
-                CurrentState = CurrentState with { Position = Position.ReflectPointAcrossLine(MidPoint, Direction) };
+                CurrentState = CurrentState with { Location = CurrentState.Location with { Position = Position.ReflectPointAcrossLine(MidPoint, Direction) } };
 
                 // Rebuild Aether2D Body from flipped perspective.
                 (bodyFixtures, midPointOffset) = RebuildFixtures(Body, bodyFixtures);

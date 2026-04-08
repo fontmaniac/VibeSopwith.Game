@@ -244,9 +244,12 @@ namespace VibeSopwith.Game.Core
             // Position plane facing direct down and with minimal speed.
             plane.PostSimulationUpdate(plane.CurrentState with
             {
-                Direction = -Vector2.UnitY,
+                Location = plane.CurrentState.Location with
+                {
+                    Position = new Vector2(ctx.cp.X, newY),
+                    Direction = -Vector2.UnitY,
+                },
                 Speed = Airplane.MinSpeed,
-                Position = new Vector2(ctx.cp.X, newY),
             });
         }
 
