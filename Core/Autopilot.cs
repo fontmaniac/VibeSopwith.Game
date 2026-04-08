@@ -59,17 +59,17 @@ namespace VibeSopwith.Game.Core
             }
         }
 
-        public abstract record ApproachPhase()
+        public abstract record ApproachPhase(Approach Approach)
         {
-            public sealed record Failure() : ApproachPhase;
-            public sealed record Initial(Approach Approach, Approach.Node TargetNode) : ApproachPhase;
-            public sealed record CounterDirect(Approach Approach, Approach.Node CoDirectNode, LoopDirection Loop) : ApproachPhase;
-            public sealed record CoDirect(Approach Approach, Approach.Node NextNode) : ApproachPhase;
-            public sealed record Final(Approach Approach, ApproachZone PreTouchZone) : ApproachPhase;
-            public sealed record PreTouch(Approach Approach) : ApproachPhase;
-            public sealed record Touchdown(Approach Approach) : ApproachPhase;
+            public sealed record Failure(Approach Approach) : ApproachPhase(Approach);
+            public sealed record Initial(Approach Approach, Approach.Node TargetNode) : ApproachPhase(Approach);
+            public sealed record CounterDirect(Approach Approach, Approach.Node CoDirectNode, LoopDirection Loop) : ApproachPhase(Approach);
+            public sealed record CoDirect(Approach Approach, Approach.Node NextNode) : ApproachPhase(Approach);
+            public sealed record Final(Approach Approach, ApproachZone PreTouchZone) : ApproachPhase(Approach);
+            public sealed record PreTouch(Approach Approach) : ApproachPhase(Approach);
+            public sealed record Touchdown(Approach Approach) : ApproachPhase(Approach);
 
-            public static Failure Fail = new Failure();
+            public static Failure Fail(Approach a) => new Failure(a);
         }
 
         private static bool AheadLeft(float zoneX, float planeX) => zoneX <= planeX;
@@ -118,7 +118,7 @@ namespace VibeSopwith.Game.Core
                 .Select(approach => new { approach, node = ChooseInitialZone(plane, approach) })
                 .Where(a => a.node != null)
                 .Select(a => new ApproachPhase.Initial(a.approach, a.node!) as ApproachPhase)
-                .Append(ApproachPhase.Fail)
+                .Append(ApproachPhase.Fail(approaches.First()))
                 .First();
 
 
@@ -299,7 +299,7 @@ namespace VibeSopwith.Game.Core
                 return (x, inputs);
             }
 
-            var approachFail = () => (ApproachPhase.Fail, Airplane.Inputs.Clean());
+            var approachFail = () => (ApproachPhase.Fail(phase.Approach), Airplane.Inputs.Clean());
             var pickAheadNode = (Approach a) => PickAheadNode(a.CoDirectNode, plane.Position.X, a.Direction == Cardinal.Left ? AheadLeft : AheadRight)!;
 
 

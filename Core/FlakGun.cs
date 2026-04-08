@@ -144,15 +144,13 @@ namespace VibeSopwith.Game.Core
         {
             if (Barrel.Body == null) return;
 
-            // State must be "accepted" in the PostSimulationUpdate, but for now it is too inconvenient - I have to rethink it.
-            CurrentState = projected;
             Barrel.Body.Position = Barrel.Position.ToAether();
             Barrel.Body.Rotation = Barrel.Direction.ToAngle();
         }
 
         public void PostSimulationUpdate(State projected)
         {
-            
+            CurrentState = projected;
         }
     }
 }

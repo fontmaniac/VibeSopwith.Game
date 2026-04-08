@@ -4,6 +4,7 @@
     public readonly record struct Unit : IEquatable<Unit>, IComparable<Unit>, IComparable
     {
         public static readonly Unit Value = new Unit();
+        public static readonly Func<Unit> Func = () => Unit.Value;
 
         bool IEquatable<Unit>.Equals(Unit other) => true;
         int IComparable<Unit>.CompareTo(Unit other) => 0;

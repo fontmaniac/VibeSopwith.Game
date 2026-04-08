@@ -5,7 +5,7 @@ using VibeSopwith.Game.Utils;
 
 namespace VibeSopwith.Game.Core
 {
-    internal class Baloon : IHasLocation, IAmBehaving<Unit>, ICanRemoveRigging
+    internal class Baloon : IHasLocation, IAmBehaving<Vector2>, ICanRemoveRigging
     {
         public Body Body = null!;
 
@@ -100,28 +100,25 @@ namespace VibeSopwith.Game.Core
             Body.Tag = makeTag();
         }
 
-        public Unit ApplyInputs(GameTime gameTime)
+        public Vector2 ApplyInputs(GameTime gameTime)
         {
             var dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
             var barrage = Position - barrageCenter;
             var degreesPerSecond = 360f * RPM / 60f;
 
-            Position = barrageCenter + barrage.RotateDeg(-degreesPerSecond * dt);
-
-            return Unit.Value;
+            return barrageCenter + barrage.RotateDeg(-degreesPerSecond * dt); ;
         }
 
-        public void PreSimulationPrepare(Unit _)
+        public void PreSimulationPrepare(Vector2 projectedPosition)
         {
             if (Body == null) return;
-
             Body.Position = Position.ToAether();
         }
 
-        public void PostSimulationUpdate(Unit _)
+        public void PostSimulationUpdate(Vector2 projectedPosition)
         {
-
+            Position = projectedPosition;
         }
     }
 }

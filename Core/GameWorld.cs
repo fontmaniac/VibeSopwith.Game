@@ -214,7 +214,7 @@ namespace VibeSopwith.Game.Core
                 pGround.Embrace(ground),
                 Caps.ImperviousToHits(),
                 Caps.BindToWorld(),
-                Caps.DoNothing(),
+                Caps.DoNothing<Unit>(),
                 Caps.NoEffect());
 
         #endregion
@@ -296,52 +296,50 @@ namespace VibeSopwith.Game.Core
 
         private IPerishable GetPerishable(Func<SimulationContext, bool> removeIfExpired) => new Perishable(removeIfExpired);
 
+        private Unit DoNothing(SimulationContext ctx) => Unit.Value;
+        private void DoAbsolutelyNothing(SimulationContext ctx) { }
+
         private IEnumerable<IActor> EnumerateActors()
         {
             yield return GetPlaneActor();
-            foreach (var bomb in Bombs) yield return GetUnitActor(bomb);
-            foreach (var bullet in Bullets) yield return GetUnitActor(bullet);  
+            foreach (var bomb in Bombs)       yield return GetActor(bomb, DoNothing, DoAbsolutelyNothing);
+            foreach (var bullet in Bullets)   yield return GetActor(bullet, DoNothing, DoAbsolutelyNothing);  
             foreach (var flakGun in FlakGuns) yield return GetFlakActor(flakGun);
-            foreach (var baloon in Baloons) yield return GetBaloonActor(baloon);
+            foreach (var baloon in Baloons)   yield return GetActor(baloon, (ctx) => baloon.ApplyInputs(ctx.gameTime), DoAbsolutelyNothing);
         }
 
         private IEnumerable<IPerishable> EnumeratePerishables()
         {
-            foreach (var bullet in Bullets) yield return GetPerishable((ctx) => { if (bullet.IsExpired(ctx.gameTime.TotalGameTime)) return Bullets.Remove(bullet); return false; });
+            foreach (var bullet in Bullets)       yield return GetPerishable((ctx) => { if (bullet.IsExpired(ctx.gameTime.TotalGameTime)) return Bullets.Remove(bullet); return false; });
             foreach (var explosion in Explosions) yield return GetPerishable((ctx) => { if (explosion.IsExpired(ctx.gameTime.TotalGameTime)) return Explosions.Remove(explosion); return false; });
-            foreach (var baloon in Baloons) yield return GetPerishable((ctx) => { if (baloon.Exploded) return Baloons.Remove(baloon); return false; });
+            foreach (var baloon in Baloons)       yield return GetPerishable((ctx) => { if (baloon.Exploded) return Baloons.Remove(baloon); return false; });
         }
 
-        private IActor GetUnitActor(IAmBehaving<Unit> actor) => new Actor((ctx) => 
+        private IActor GetActor<TAct, TState>(TAct actor, Func<SimulationContext, TState> project, Action<SimulationContext> doPostSimulation) where TAct : IAmBehaving<TState> => new Actor((ctx) => 
         {
-            actor.PreSimulationPrepare(Unit.Value);
-            return () => actor.PostSimulationUpdate(Unit.Value);
+            var projected = project(ctx);
+            actor.PreSimulationPrepare(projected);
+            return () => 
+            { 
+                actor.PostSimulationUpdate(projected);
+                doPostSimulation(ctx);
+            };
         });
 
-        private IActor GetActor<T>(T actor, Func<SimulationContext, Action> doBeforeSimulation) => new Actor(doBeforeSimulation);
+        private IActor GetActor<TAct>(TAct actor, Func<SimulationContext, Action> doBeforeSimulation) => new Actor(doBeforeSimulation);
 
-        private IActor GetFlakActor(FlakGun flakGun) => GetActor(flakGun, (ctx) => 
-        {
-            var projected = flakGun.ApplyInputs(ctx.gameTime);
+        private IActor GetFlakActor(FlakGun flakGun) => GetActor(
+            flakGun, 
+            (ctx) => flakGun.ApplyInputs(ctx.gameTime), 
+            (ctx) => 
+            {
+                var state = flakGun.CurrentState;
+                if (state.Bullet != null)
+                    Bullets.Add(state.Bullet.SetupRigging(collisionWorld));
 
-            if (projected.Bullet != null)
-                Bullets.Add(projected.Bullet.SetupRigging(collisionWorld));
-
-            if (projected.MuzzleFlash != null)
-                Explosions.Add(projected.MuzzleFlash);
-
-            flakGun.PreSimulationPrepare(projected);
-
-            return () => flakGun.PostSimulationUpdate(projected);
-        });
-
-        private IActor GetBaloonActor(Baloon baloon) => GetActor(baloon, (ctx) => 
-        {
-            var projected = baloon.ApplyInputs(ctx.gameTime);
-            baloon.PreSimulationPrepare(projected);
-
-            return () => baloon.PostSimulationUpdate(projected);
-        });
+                if (state.MuzzleFlash != null)
+                    Explosions.Add(state.MuzzleFlash);
+            });
 
         private IActor GetPlaneActor() => GetActor(Plane, (ctx) => 
         {
@@ -353,7 +351,7 @@ namespace VibeSopwith.Game.Core
                     if (dead.Explosion.IsExpired(ctx.gameTime.TotalGameTime) == true)
                         Plane = MakeNewPlane();
 
-                    return () => { };
+                    return Caps.DoAbsolutelyNothing();
 
                 case Airplane.EigenState.AutoLanding aland:
                     var (phase, input) = Autopilot.Transition(Plane, aland.Phase, ctx.ups);
@@ -365,13 +363,15 @@ namespace VibeSopwith.Game.Core
                         default:
                             airplaneInputs.Autopilot = input;
                             Plane.SetAutoLandingPhase(phase);
+                            Plane.CheckAndSetLandingMode(phase.Approach.Runway);
                             break;
                     }
                     break;
+
             }
 
-            // 3. Execute "Plane.Ordinary" behavior
-            Plane.CheckAndSetLandingMode(Runways[0]);
+            if (Plane.CurrentState.EigenState is Airplane.EigenState.ControlledFlight)
+                Runways.FirstOrDefault(runway => Plane.CheckAndSetLandingMode(runway));
 
             // 4. Compute "Plane.Projected" state by calling Plane.ApplyInputs, passing in:
             // - AutoLanding init "factory" - in case inputs indicate the need to initiate.
@@ -386,16 +386,13 @@ namespace VibeSopwith.Game.Core
                 // 7. Project simulated physicals (positions, velocities, etc.) back to Plane "world" instance.
                 Plane.PostSimulationUpdate(planeProjected);
 
-                // Ideally #8 must be here
                 // 8. Act upon finalized Plane state.
-                {
-                    var planeState = Plane.CurrentState;
-                    if (planeState.Bomb != null)
-                        Bombs.Add(planeState.Bomb.SetupRigging(collisionWorld, () => new object[] { planeState.Bomb, MayDieByBombOrBullet(planeState.Bomb) }));
+                var planeState = Plane.CurrentState;
+                if (planeState.Bomb != null)
+                    Bombs.Add(planeState.Bomb.SetupRigging(collisionWorld, () => new object[] { planeState.Bomb, MayDieByBombOrBullet(planeState.Bomb) }));
 
-                    if (planeState.Bullet != null)
-                        Bullets.Add(planeState.Bullet.SetupRigging(collisionWorld));
-                }
+                if (planeState.Bullet != null)
+                    Bullets.Add(planeState.Bullet.SetupRigging(collisionWorld));
             };
         });
 

@@ -182,7 +182,8 @@ public static class Caps
     public static Func<GameTime, Vector2, Unit> ExecuteEffect(Action<GameTime, Vector2> doExecute) => (gt, ct) => { doExecute(gt, ct); return Unit.Value; };
     public static Func<GameTime, Vector2, Unit> NoEffect() => (_, _) => default;
 
-    public static Action<Unit> DoNothing() => _ => { };
+    public static Action DoAbsolutelyNothing() => () => { };
+    public static Action<T> DoNothing<T>() => (T _) => { };
 
     public static ICanDie<Unit> JustDie<T>(Poppet<T> poppet, T target, World collisionWorld, Func<GameTime, Vector2, Unit> effect) where T : ICanRemoveRigging =>
         new CanDie<Unit>(poppet.Embrace(target), Caps.RemoveRigging(target, collisionWorld), effect);

@@ -11,9 +11,9 @@ namespace VibeSopwith.Game.Core
 
         public abstract record EigenState()
         {
-            public sealed record Destroyed(Explosion Explosion) : EigenState;
-            public sealed record AutoLanding(Autopilot.ApproachPhase Phase) : EigenState;
             public sealed record ControlledFlight() : EigenState;
+            public sealed record AutoLanding(Autopilot.ApproachPhase Phase) : EigenState;
+            public sealed record Destroyed(Explosion Explosion) : EigenState;
         }
 
         public record State(Basis Location, float Speed, Bomb? Bomb, Bullet? Bullet, DateTime BombTime, DateTime BulletTime, DateTime RollTime, EigenState EigenState);
