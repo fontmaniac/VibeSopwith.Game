@@ -112,7 +112,7 @@ namespace VibeSopwith.Game.Core
             Barrel.SetupRigging(collisionWorld, makeTag);
         }
 
-        public State ApplyInputs(GameTime gameTime)
+        public State DeriveState(GameTime gameTime)
         {
             var nowTime = DateTime.UtcNow;
             var dt = (float)gameTime.ElapsedGameTime.TotalSeconds;

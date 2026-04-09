@@ -100,7 +100,7 @@ namespace VibeSopwith.Game.Core
             Body.Tag = makeTag();
         }
 
-        public Vector2 ApplyInputs(GameTime gameTime)
+        public Vector2 DeriveState(GameTime gameTime)
         {
             var dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
 

@@ -280,7 +280,7 @@ namespace VibeSopwith.Game.Core
             Kill(ctx, target);
         }
 
-        private record struct SimulationContext(GameTime gameTime, float ups, Airplane.InputStack airplaneInputs);
+        private record struct SimulationContext(GameTime gameTime, float ups, Airplane.Inputs airplaneInputs);
 
         private interface IActor
         {
@@ -304,16 +304,15 @@ namespace VibeSopwith.Game.Core
 
         private IPerishable GetPerishable(Func<SimulationContext, bool> removeIfExpired) => new Perishable(removeIfExpired);
 
-        private Unit DoNothing(SimulationContext ctx) => Unit.Value;
-        private void DoAbsolutelyNothing(SimulationContext ctx) { }
+        private void DoNothing(SimulationContext ctx) { }
 
         private IEnumerable<IActor> EnumerateActors()
         {
-            yield return GetActor(Plane, (ctx) => PlanePreSimulation(ctx), (ctx) => PlanePostSimulation());
-            foreach (var bomb in Bombs)       yield return GetActor(bomb, DoNothing, DoAbsolutelyNothing);
-            foreach (var bullet in Bullets)   yield return GetActor(bullet, DoNothing, DoAbsolutelyNothing);  
-            foreach (var flakGun in FlakGuns) yield return GetActor(flakGun, (ctx) => flakGun.ApplyInputs(ctx.gameTime), (ctx) => FlakPostSimulation(flakGun));
-            foreach (var baloon in Baloons)   yield return GetActor(baloon, (ctx) => baloon.ApplyInputs(ctx.gameTime), DoAbsolutelyNothing);
+            yield return GetActor(Plane, (ctx) => Plane.DeriveState(ctx.airplaneInputs, ctx.ups, ctx.gameTime, Runways, Approaches), (ctx) => PlanePostSimulation(), () => Plane = MakeNewPlane());
+            foreach (var bomb in Bombs)       yield return GetActor(bomb, DSO.DoNothing, DoNothing);
+            foreach (var bullet in Bullets)   yield return GetActor(bullet, DSO.DoNothing, DoNothing);  
+            foreach (var flakGun in FlakGuns) yield return GetActor(flakGun, (ctx) => DSO.ProceeedWith(flakGun.DeriveState(ctx.gameTime)), (ctx) => FlakPostSimulation(flakGun));
+            foreach (var baloon in Baloons)   yield return GetActor(baloon, (ctx) => DSO.ProceeedWith(baloon.DeriveState(ctx.gameTime)), DoNothing);
         }
 
         private IEnumerable<IPerishable> EnumeratePerishables()
@@ -323,57 +322,33 @@ namespace VibeSopwith.Game.Core
             foreach (var baloon in Baloons)       yield return GetPerishable((ctx) => { if (baloon.Exploded) return Baloons.Remove(baloon); return false; });
         }
 
-        private IActor GetActor<TAct, TState>(TAct actor, Func<SimulationContext, TState?> projectPreSimulation, Action<SimulationContext> doPostSimulation) where TAct : IAmBehaving<TState> => new Actor((ctx) => 
-        {
-            var projected = projectPreSimulation(ctx);
-            if (projected == null) return Caps.DoAbsolutelyNothing();
-            actor.PreSimulationPrepare(projected);
-            return () => 
-            { 
-                actor.PostSimulationUpdate(projected);
-                doPostSimulation(ctx);
-            };
-        });
+        private IActor GetActor<TAct, TState>(
+            TAct actor, 
+            Func<SimulationContext, DeriveStateOutcome<TState>> deriveState, 
+            Action<SimulationContext> doPostSimulation,
+            Action? rebirth = null) where TAct : IAmBehaving<TState> => new Actor((ctx) => 
+            {
+                switch (deriveState(ctx))
+                {
+                    case DeriveStateOutcome<TState>.Proceed proceed:
+                        actor.PreSimulationPrepare(proceed.Projected);
+                        return () =>
+                        {
+                            actor.PostSimulationUpdate(proceed.Projected);
+                            doPostSimulation(ctx);
+                        };
+                    case DeriveStateOutcome<TState>.Hold: break;
+                    case DeriveStateOutcome<TState>.Rebirth:
+                        (rebirth ?? Caps.DoAbsolutelyNothing()).Invoke();
+                        break;
+                }
+                return Caps.DoAbsolutelyNothing();
+            });
 
         private void FlakPostSimulation(FlakGun flakGun)
         {
             RegisterBullet(flakGun.CurrentState.Bullet);
             RegisterExplosion(flakGun.CurrentState.MuzzleFlash);
-        }
-
-        private Airplane.State? PlanePreSimulation(SimulationContext ctx)
-        {
-            var airplaneInputs = ctx.airplaneInputs;
-
-            switch (Plane.CurrentState.EigenState)
-            {
-                case Airplane.EigenState.Destroyed dead:
-                    if (dead.Explosion.IsExpired(ctx.gameTime.TotalGameTime) == true)
-                        Plane = MakeNewPlane();
-
-                    return null;
-
-                case Airplane.EigenState.AutoLanding aland:
-                    var (phase, input) = Autopilot.Transition(Plane, aland.Phase, ctx.ups);
-                    switch (phase)
-                    {
-                        case Autopilot.ApproachPhase.Failure:
-                            Plane.SetControlledFlight();
-                            break;
-                        default:
-                            airplaneInputs.Autopilot = input;
-                            Plane.SetAutoLandingPhase(phase);
-                            Plane.CheckAndSetLandingMode(phase.Approach.Runway);
-                            break;
-                    }
-                    break;
-
-            }
-
-            if (Plane.CurrentState.EigenState is Airplane.EigenState.ControlledFlight)
-                Runways.FirstOrDefault(runway => Plane.CheckAndSetLandingMode(runway));
-
-            return Plane.ApplyInputs(airplaneInputs, () => Autopilot.InitiateAutoLanding(Plane, Approaches), ctx.gameTime);
         }
 
         private void PlanePostSimulation()
@@ -383,7 +358,7 @@ namespace VibeSopwith.Game.Core
         }
 
 
-        public void Simulate(GameTime gameTime, float ups, Airplane.InputStack airplaneInputs)
+        public void Simulate(GameTime gameTime, float ups, Airplane.Inputs airplaneInputs)
         {
             var ctx = new SimulationContext(gameTime, ups, airplaneInputs);
 

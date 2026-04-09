@@ -203,3 +203,15 @@ public static class Caps
 
 }
 
+public abstract record DeriveStateOutcome<TState>
+{
+    public sealed record Proceed(TState Projected) : DeriveStateOutcome<TState>;
+    public sealed record Hold() : DeriveStateOutcome<TState>;
+    public sealed record Rebirth() : DeriveStateOutcome<TState>;
+}
+
+public abstract class DSO
+{
+    public static DeriveStateOutcome<TState>.Proceed ProceeedWith<TState>(TState projected) => new DeriveStateOutcome<TState>.Proceed(projected);
+    public static DeriveStateOutcome<Unit>.Proceed DoNothing<TCtx>(TCtx ctx) => new DeriveStateOutcome<Unit>.Proceed(Unit.Value);
+}

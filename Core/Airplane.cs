@@ -1,6 +1,8 @@
 ﻿using Microsoft.Xna.Framework;
 using nkast.Aether.Physics2D.Dynamics;
+using System.ComponentModel.DataAnnotations;
 using VibeSopwith.Game.Utils;
+using static VibeSopwith.Game.Core.Ground;
 using Aether = nkast.Aether.Physics2D.Common;
 
 namespace VibeSopwith.Game.Core
@@ -230,9 +232,42 @@ namespace VibeSopwith.Game.Core
             public static Inputs Clean() => new Inputs(ThrottleInput.None, PitchInput.None, RollInput.None, BombInput.Inactive, GunInput.Inactive, AutoLandToggle.Inactive);
         }
 
-        public record struct InputStack(Inputs? User = null, Inputs? Autopilot = null);
+        private record struct InputStack(Inputs? User = null, Inputs? Autopilot = null);
 
-        public State ApplyInputs(InputStack inputStack, Func<Autopilot.ApproachPhase> initiateAutoland, GameTime gameTime)
+        public DeriveStateOutcome<State> DeriveState(Inputs inputs, float ups, GameTime gameTime, IEnumerable<Runway> runways, IEnumerable<Autopilot.Approach> approaches)
+        {
+            var airplaneInputs = new InputStack(inputs, null);
+            switch (CurrentState.EigenState)
+            {
+                case EigenState.Destroyed dead:
+                    if (dead.Explosion.IsExpired(gameTime.TotalGameTime) == true)
+                        return new DeriveStateOutcome<State>.Rebirth();
+
+                    return new DeriveStateOutcome<State>.Hold();
+
+                case EigenState.AutoLanding aland:
+                    var (phase, input) = Autopilot.Transition(this, aland.Phase, ups);
+                    switch (phase)
+                    {
+                        case Autopilot.ApproachPhase.Failure:
+                            this.SetControlledFlight();
+                            break;
+                        default:
+                            airplaneInputs.Autopilot = input;
+                            this.SetAutoLandingPhase(phase);
+                            this.CheckAndSetLandingMode(phase.Approach.Runway);
+                            break;
+                    }
+                    break;
+            }
+
+            if (CurrentState.EigenState is EigenState.ControlledFlight)
+                runways.FirstOrDefault(CheckAndSetLandingMode);
+
+            return DSO.ProceeedWith(InterpretInputs(airplaneInputs, () => Autopilot.InitiateAutoLanding(this, approaches), gameTime));
+        }
+
+        private State InterpretInputs(InputStack inputStack, Func<Autopilot.ApproachPhase> initiateAutoland, GameTime gameTime)
         {
             var input = inputStack.Autopilot ?? inputStack.User ?? Inputs.Clean();
 

@@ -71,7 +71,7 @@ The list is unordered and ungrouped.
     // Four-Phase Simulation Pipeline
 
     // 1. Compute "projected" state of user-controlled actors given current inputs
-    var actorProjected = Actor1.ApplyInputs(gameTime);
+    var actorProjected = Actor1.DeriveState(gameTime);
 
     // 2. Prepare all actors for simulation. May require on-the-fly reconstruction of collision bodies, or other preparations.
     Actor1.PreSimulationPrepare(truckProjected);
