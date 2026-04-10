@@ -3,7 +3,7 @@ using nkast.Aether.Physics2D.Dynamics;
 
 namespace VibeSopwith.Game.Core.ParticleSystem
 {
-    internal class APrototype : IBasis, ICanRemoveRigging, IAmBehaving<bool>
+    internal class Prototype : IBasis, ICanRemoveRigging, IAmBehaving<bool>
     {
         World CollisionWorld = null!;
 
@@ -15,7 +15,7 @@ namespace VibeSopwith.Game.Core.ParticleSystem
         public bool IsEmitting { get; private set; } = false;
         public readonly float EmissionRate = 0f;
 
-        public APrototype(IBasis WorldPosition, float emissionRate)
+        public Prototype(IBasis WorldPosition, float emissionRate)
         {
             WorldLocation = WorldPosition;
             EmissionRate = emissionRate;
