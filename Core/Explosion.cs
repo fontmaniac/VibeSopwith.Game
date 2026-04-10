@@ -9,24 +9,24 @@ namespace VibeSopwith.Game.Core
         public enum ExplosionVariant { Based1, Centered1, BluePlasma }
         public ExplosionVariant Variant { get; }
 
-        public IBasis World { get; }
-        public Vector2 Position { get => World.Position; }
-        public Vector2 Direction { get => World.Direction; }
-        public BasisSpin Spin { get => World.Spin; }
+        public IBasis WorldLocation { get; }
+        public Vector2 Position { get => WorldLocation.Position; }
+        public Vector2 Direction { get => WorldLocation.Direction; }
+        public BasisSpin Spin { get => WorldLocation.Spin; }
 
         public float Length { get; }
         public float Height { get; }
 
         public TimeSpan StartTime;
 
-        public Explosion(ExplosionVariant variant, float length, float height, TimeSpan startTime, TimeSpan duration, IBasis WorldPosition)
+        public Explosion(ExplosionVariant variant, float length, float height, TimeSpan startTime, TimeSpan duration, IBasis worldLocation)
         {
             Length = length;
             Height = height;
             StartTime = startTime;
             Variant = variant;
             Duration = duration;
-            World = WorldPosition;
+            WorldLocation = worldLocation;
         }
 
         public bool IsExpired(TimeSpan gameTime) => StartTime + Duration < gameTime; 
