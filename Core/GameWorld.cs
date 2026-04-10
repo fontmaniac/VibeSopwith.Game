@@ -23,6 +23,7 @@ namespace VibeSopwith.Game.Core
 
         public readonly List<Baloon> Baloons;
         public readonly List<FlakGun> FlakGuns;
+        public readonly List<Fountain> Fountains;
         public readonly List<StaticBuilding> Buildings;
         public readonly List<Ground.Runway> Runways;
         public readonly List<Autopilot.Approach> Approaches = new List<Autopilot.Approach>();
@@ -44,7 +45,7 @@ namespace VibeSopwith.Game.Core
             //Ground = Ground.MakeCustom();
 
             Ceiling = new Ceiling();
-            (Ground, Buildings, FlakGuns, Runways) = Ground.MakeWithBuildings();
+            (Ground, Buildings, FlakGuns, Fountains, Runways) = Ground.MakeWithBuildings();
 
             Baloons = new List<Baloon>();
             Baloons.Add(new Baloon(new Vector2(380, 35), BasisSpin.Down, new Vector2(385, 35)));
@@ -62,6 +63,10 @@ namespace VibeSopwith.Game.Core
 
             foreach (var flakGun in FlakGuns)
                 flakGun.SetupRigging(collisionWorld, () => new object[] { flakGun, MayDieByProjectile(flakGun, "FlakGun", pFlakGun, 5) });
+
+            foreach (var fountain in Fountains)
+                fountain.SetupRigging(collisionWorld, () => new object[] { fountain, MayDieByProjectile(fountain, "Fountain", pFountain, 500) });
+
 
             Plane = MakeNewPlane();
 
@@ -138,6 +143,7 @@ namespace VibeSopwith.Game.Core
         private Poppet<Airplane> pPlane = null!;
         private Poppet<StaticBuilding> pBuilding = null!;
         private Poppet<FlakGun> pFlakGun = null!;
+        private Poppet<Fountain> pFountain = null!;
         private Poppet<Baloon> pBaloon = null!;
         private Poppet<Ceiling> pCeiling = null!;
 
@@ -156,6 +162,7 @@ namespace VibeSopwith.Game.Core
             Poppet.Killable(out pBomb,      (bomb)     => Bombs.Exists(b => bomb == b),     bomb     => Bombs.Remove(bomb));
             Poppet.Killable(out pBullet,    (bullet)   => Bullets.Exists(b => bullet == b), bullet   => Bullets.Remove(bullet));
             Poppet.Killable(out pBuilding,  (building) => !building.Exploded,               building => building.Exploded = true);
+            Poppet.Killable(out pFountain,  (fountain) => !fountain.Exploded,               fountain => fountain.Exploded = true);
             Poppet.Killable(out pFlakGun,   (flakGun)  => !flakGun.Exploded,                flakGun  => flakGun.Exploded = true);
             Poppet.Killable(out pBaloon,    (baloon)   => !baloon.Exploded,                 baloon   => baloon.Exploded = true);
         }
@@ -310,7 +317,8 @@ namespace VibeSopwith.Game.Core
         {
             yield return GetActor(Plane, (ctx) => Plane.DeriveState(ctx.airplaneInputs, ctx.ups, ctx.gameTime, Runways, Approaches), (ctx) => PlanePostSimulation(), () => Plane = MakeNewPlane());
             foreach (var bomb in Bombs)       yield return GetActor(bomb, DSO.DoNothing, DoNothing);
-            foreach (var bullet in Bullets)   yield return GetActor(bullet, DSO.DoNothing, DoNothing);  
+            foreach (var bullet in Bullets)   yield return GetActor(bullet, DSO.DoNothing, DoNothing);
+            foreach (var fount in Fountains)  yield return GetActor(fount, (ctx) => DSO.ProceeedWith(fount.DeriveState(ctx.gameTime)), DoNothing);
             foreach (var flakGun in FlakGuns) yield return GetActor(flakGun, (ctx) => DSO.ProceeedWith(flakGun.DeriveState(ctx.gameTime)), (ctx) => FlakPostSimulation(flakGun));
             foreach (var baloon in Baloons)   yield return GetActor(baloon, (ctx) => DSO.ProceeedWith(baloon.DeriveState(ctx.gameTime)), DoNothing);
         }

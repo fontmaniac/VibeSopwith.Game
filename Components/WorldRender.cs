@@ -18,6 +18,7 @@ namespace VibeSopwith.Game.Components
         private StaticBuildingRender _buildingRender = null!;
         private FlakGunRender _flakGunRender = null!;
         private BaloonRender _balloonRender = null!;
+        private FountainRender _fountainRender = null!;
 
         private RenderTarget2D _upscaleTarget = null!;
         private RenderTarget2D _postTarget = null!;
@@ -54,6 +55,9 @@ namespace VibeSopwith.Game.Components
 
             _flakGunRender = new FlakGunRender(Game);
             _flakGunRender.LoadContent();
+
+            _fountainRender = new FountainRender(Game);
+            _fountainRender.LoadContent();
 
             _balloonRender = new BaloonRender(Game);
             _balloonRender.LoadContent();
@@ -100,6 +104,7 @@ namespace VibeSopwith.Game.Components
             _groundRender?.Dispose();
             _explosionRender?.Dispose();
             _balloonRender?.Dispose();
+            _fountainRender?.Dispose();
         }
 
         private void DrawStraight(GameWorld world, GameTime gameTime, float scaleHorz, float scaleVert, bool drawBullets, float groundThicknessPx, float cameraPositionX, Vector2 worldPixelSize)
@@ -143,6 +148,13 @@ namespace VibeSopwith.Game.Components
                 _flakGunRender.DrawSnapped(flakGun, gameTime, worldPixelSize);
                 //_bodyRender.Draw(flakGun.Barrel.Body, gameTime);
                 //_bodyRender.Draw(flakGun.Body, gameTime);
+            }
+
+            foreach (var fountain in world.Fountains)
+            {
+                _fountainRender.DrawSnapped(fountain, gameTime, worldPixelSize);
+                _bodyRender.Draw(fountain.Nozzle.Body, gameTime);
+                _bodyRender.Draw(fountain.Body, gameTime);
             }
 
             foreach (var baloon in world.Baloons)

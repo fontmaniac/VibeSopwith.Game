@@ -413,7 +413,7 @@ namespace VibeSopwith.Game.Core
                 .Segment(OffRight(0f, Units.Pct), OffCeiling(0f, Units.Met))
                 .Build();
 
-        public static (Ground, List<StaticBuilding>, List<FlakGun>, List<Runway>) MakeWithBuildings()
+        public static (Ground, List<StaticBuilding>, List<FlakGun>, List<Fountain>, List<Runway>) MakeWithBuildings()
         {
             var result = MakeQuasiRandom1(-5f);
             //var result = MakeRandomRollingHills(new RestrictionZone(270, 320, 25), segmentsPerMeter:8);
@@ -428,6 +428,7 @@ namespace VibeSopwith.Game.Core
 
             result = PlacePlatform(result, OffLeft(340, Units.Met), 5, OffFloor(17, Units.Met), float.Pi / 4f);
             result = PlacePlatform(result, OffLeft(360, Units.Met), 5, OffFloor(15, Units.Met), float.Pi / 4f);
+            result = PlacePlatform(result, OffLeft(245, Units.Met), 5, OffFloor(16, Units.Met), float.Pi / 4f);
 
             var buildings = new List<StaticBuilding>();
             buildings.Add(new StaticBuilding(StaticBuilding.BuildingType.Factory, new Vector2(11, 30f), BasisSpin.Up));
@@ -454,13 +455,18 @@ namespace VibeSopwith.Game.Core
             var (runway, withRunwayPlatform) = result.WithRunway(25, 300-20, 300+20, 5);
             runways.Add(runway);
 
+            // Flak guns
             var flakGuns = new List<FlakGun>();
             flakGuns.Add(new FlakGun(new Vector2(340, 17), BasisSpin.Down));
             flakGuns.Add(new FlakGun(new Vector2(360, 15), BasisSpin.Up));
 
+            // Fountains
+            var fountains = new List<Fountain>();
+            fountains.Add(new Fountain(Basis.FixedPos(new Vector2(245, 16))));
+
             Console.WriteLine($"Ground segments: {withRunwayPlatform.Points.Count}");
 
-            return (withRunwayPlatform, buildings, flakGuns, runways);
+            return (withRunwayPlatform, buildings, flakGuns, fountains, runways);
         }
 
         public static string ReverseBuild(Ground ground, Units horzUnits, Units vertUnits, bool useOffPrev = false, float flatThreshold = 0.03f)
