@@ -8,6 +8,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Core\ParticleSystem\Prototype.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Reference Include="FNA">
       <HintPath>..\..\..\..\Libs\FNA\bin\Debug\FNA.dll</HintPath>
     </Reference>
