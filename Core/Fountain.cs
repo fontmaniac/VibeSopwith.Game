@@ -8,7 +8,13 @@ namespace VibeSopwith.Game.Core
     {
         public Body Body = null!;
 
-        public record State(float NozzleAngle, NozzleMovement Movement);
+        public abstract record EigenState
+        {
+            public sealed record Idle() : EigenState;
+            public sealed record Emitting(bool justNow, ParticleSystem.Prototype particleSystem) : EigenState;
+        }
+
+        public record State(float NozzleAngle, NozzleMovement Movement, EigenState EigenState);
         public State CurrentState;
 
         public Vector2 Position { get => WorldLocation.Position; }
@@ -44,7 +50,7 @@ namespace VibeSopwith.Game.Core
             WorldLocation = worldLocation;
 
             var nozzleAngle = 0f;
-            CurrentState = new State(nozzleAngle, NozzleMovement.Left);
+            CurrentState = new State(nozzleAngle, NozzleMovement.Left, new EigenState.Idle());
 
             var nozzleDirection = () => Vector2.UnitY.RotateDeg(CurrentState.NozzleAngle * Spin.ToFactor());
             var nozzlePosition = () => GetRefPoint("nozzleMount").ToXna();
@@ -116,10 +122,13 @@ namespace VibeSopwith.Game.Core
             Nozzle.SetupRigging(collisionWorld, makeTag);
         }
 
-        public State DeriveState(GameTime gameTime)
+        public State DeriveState(bool emitActive, GameTime gameTime)
         {
             var nowTime = DateTime.UtcNow;
             var dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+            if (emitActive && CurrentState.EigenState is EigenState.Emitting em)
+                em.particleSystem.EmitParticles(gameTime);
 
             var newAngle =
                 CurrentState.Movement == NozzleMovement.Stop 
@@ -131,7 +140,14 @@ namespace VibeSopwith.Game.Core
                 newAngle <= -NozzleMaxAngle ? NozzleMovement.Left :
                 CurrentState.Movement;
 
-            return new(newAngle, newMovement);
+            var newEigenState =
+                !emitActive
+                ? new EigenState.Idle() as EigenState
+                : CurrentState.EigenState is EigenState.Emitting emit
+                    ? emit with { justNow = false }
+                    : new EigenState.Emitting(true, Nozzle.SpawnParticleSystem(gameTime.TotalGameTime));
+
+            return new(newAngle, newMovement, newEigenState);
         }
 
         public void PreSimulationPrepare(State projected)

@@ -1,7 +1,11 @@
-MANIFEST-2026-04-10T03:59:27Z-master-ea76556023f5433f92ee16e8400593f2
+MANIFEST-2026-04-11T01:25:18Z-master-133884fdee4b4a38877ea1e450939f23
 Content
 https://github.com/fontmaniac/VibeSopwith.Content.git
 
-+ Textures/FountainBase_1.png
-+ Textures/FountainBase_Exploded_1.png
-+ Textures/FountainNozzle_1.png
++ Textures/Flame_Shot_1.png
++ Textures/Laser_Turret_1_LR.png
++ Textures/Laser_Turret_Barrel_1_LR.png
++ Textures/Laser_Turret_Stand_1_LR.png
++ Textures/Water_Shot_1.png
++ Textures/Water_Shot_2.png
++ Textures/Water_Shot_3.png

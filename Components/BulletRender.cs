@@ -18,7 +18,6 @@ namespace VibeSopwith.Game.Components
             var texture = new Texture2D(GraphicsDevice, 1, 1);
             texture.SetData(new[] { Color.White });
             _bulletTexture = texture.ToAtlas(Atlas.OriginCentered).ToLRSlice();
-
         }
 
         public void Draw(Bullet bullet, float pxPerUnit, GameTime gameTime)

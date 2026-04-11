@@ -1,6 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
 using nkast.Aether.Physics2D.Dynamics;
-using System.ComponentModel.DataAnnotations;
 using VibeSopwith.Game.Utils;
 using static VibeSopwith.Game.Core.Ground;
 using Aether = nkast.Aether.Physics2D.Common;

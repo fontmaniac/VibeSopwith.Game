@@ -19,6 +19,7 @@ namespace VibeSopwith.Game.Components
         private FlakGunRender _flakGunRender = null!;
         private BaloonRender _balloonRender = null!;
         private FountainRender _fountainRender = null!;
+        private ParticleSystemRender _partSysRender = null!;
 
         private RenderTarget2D _upscaleTarget = null!;
         private RenderTarget2D _postTarget = null!;
@@ -58,6 +59,9 @@ namespace VibeSopwith.Game.Components
 
             _fountainRender = new FountainRender(Game);
             _fountainRender.LoadContent();
+
+            _partSysRender = new ParticleSystemRender(Game);
+            _partSysRender.LoadContent();
 
             _balloonRender = new BaloonRender(Game);
             _balloonRender.LoadContent();
@@ -156,6 +160,9 @@ namespace VibeSopwith.Game.Components
                 _bodyRender.Draw(fountain.Nozzle.Body, gameTime);
                 _bodyRender.Draw(fountain.Body, gameTime);
             }
+
+            foreach (var particleSystem in world.ParticleSystems)
+                _partSysRender.Draw(particleSystem, gameTime);
 
             foreach (var baloon in world.Baloons)
             {

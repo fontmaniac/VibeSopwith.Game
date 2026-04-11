@@ -17,6 +17,7 @@ namespace VibeSopwith.Game.Core
         public readonly Ground Ground;
         public readonly Ceiling Ceiling;
         public Airplane Plane;
+        public readonly List<ParticleSystem.Prototype> ParticleSystems = new List<ParticleSystem.Prototype>();
         public readonly List<Explosion> Explosions = new List<Explosion>();
         public readonly List<Bomb> Bombs = new List<Bomb>();
         public readonly List<Bullet> Bullets = new List<Bullet>();
@@ -134,6 +135,8 @@ namespace VibeSopwith.Game.Core
             IfNotNull(bullet, bullet => Bullets.Add(bullet.SetupRigging(collisionWorld)));
         private void RegisterExplosion(Explosion? explosion) =>
             IfNotNull(explosion, explosion => Explosions.Add(explosion));
+        private void RegisterParticleSystem(ParticleSystem.Prototype? particleSystem) =>
+            IfNotNull(particleSystem, particleSystem => ParticleSystems.Add(particleSystem.SetupRigging(collisionWorld)));
 
         #region Object Capabilities
 
@@ -287,7 +290,7 @@ namespace VibeSopwith.Game.Core
             Kill(ctx, target);
         }
 
-        private record struct SimulationContext(GameTime gameTime, float ups, Airplane.Inputs airplaneInputs);
+        private record struct SimulationContext(GameTime gameTime, float ups, Airplane.Inputs airplaneInputs, bool emitParticles);
 
         private interface IActor
         {
@@ -318,16 +321,26 @@ namespace VibeSopwith.Game.Core
             yield return GetActor(Plane, (ctx) => Plane.DeriveState(ctx.airplaneInputs, ctx.ups, ctx.gameTime, Runways, Approaches), (ctx) => PlanePostSimulation(), () => Plane = MakeNewPlane());
             foreach (var bomb in Bombs)       yield return GetActor(bomb, DSO.DoNothing, DoNothing);
             foreach (var bullet in Bullets)   yield return GetActor(bullet, DSO.DoNothing, DoNothing);
-            foreach (var fount in Fountains)  yield return GetActor(fount, (ctx) => DSO.ProceeedWith(fount.DeriveState(ctx.gameTime)), DoNothing);
+            foreach (var fount in Fountains)  yield return GetActor(fount, (ctx) => DSO.ProceeedWith(fount.DeriveState(ctx.emitParticles, ctx.gameTime)), (ctx) => FountainPostSimulation(fount));
             foreach (var flakGun in FlakGuns) yield return GetActor(flakGun, (ctx) => DSO.ProceeedWith(flakGun.DeriveState(ctx.gameTime)), (ctx) => FlakPostSimulation(flakGun));
             foreach (var baloon in Baloons)   yield return GetActor(baloon, (ctx) => DSO.ProceeedWith(baloon.DeriveState(ctx.gameTime)), DoNothing);
+            foreach (var partSys in ParticleSystems)
+                yield return GetActor(
+                    partSys, 
+                    (ctx) => 
+                    {
+                        partSys.RemoveParticles(ctx.gameTime);
+                        return DSO.DoNothing(ctx);
+                    },
+                    DoNothing);
         }
 
         private IEnumerable<IPerishable> EnumeratePerishables()
         {
-            foreach (var bullet in Bullets)       yield return GetPerishable((ctx) => { if (bullet.IsExpired(ctx.gameTime.TotalGameTime)) return Bullets.Remove(bullet); return false; });
-            foreach (var explosion in Explosions) yield return GetPerishable((ctx) => { if (explosion.IsExpired(ctx.gameTime.TotalGameTime)) return Explosions.Remove(explosion); return false; });
-            foreach (var baloon in Baloons)       yield return GetPerishable((ctx) => { if (baloon.Exploded) return Baloons.Remove(baloon); return false; });
+            foreach (var bullet in Bullets)          yield return GetPerishable((ctx) => { if (bullet.IsExpired(ctx.gameTime.TotalGameTime)) return Bullets.Remove(bullet); return false; });
+            foreach (var explosion in Explosions)    yield return GetPerishable((ctx) => { if (explosion.IsExpired(ctx.gameTime.TotalGameTime)) return Explosions.Remove(explosion); return false; });
+            foreach (var baloon in Baloons)          yield return GetPerishable((ctx) => { if (baloon.Exploded) return Baloons.Remove(baloon); return false; });
+            foreach (var partSys in ParticleSystems) yield return GetPerishable((ctx) => { if (partSys.IsExpired) return ParticleSystems.Remove(partSys); return false; });
         }
 
         private IActor GetActor<TAct, TState>(
@@ -365,10 +378,15 @@ namespace VibeSopwith.Game.Core
             RegisterBullet(Plane.CurrentState.Bullet);
         }
 
-
-        public void Simulate(GameTime gameTime, float ups, Airplane.Inputs airplaneInputs)
+        private void FountainPostSimulation(Fountain fountain)
         {
-            var ctx = new SimulationContext(gameTime, ups, airplaneInputs);
+            RegisterParticleSystem(fountain.CurrentState.EigenState is Fountain.EigenState.Emitting emit && emit.justNow ? emit.particleSystem : null);
+        }
+
+
+        public void Simulate(GameTime gameTime, float ups, Airplane.Inputs airplaneInputs, bool emitParticles)
+        {
+            var ctx = new SimulationContext(gameTime, ups, airplaneInputs, emitParticles);
 
             // Execute pre-physics-simulation behaviors.
             var postSimulationActions = 
@@ -396,10 +414,12 @@ namespace VibeSopwith.Game.Core
 
             for (Contact ct = collisionWorld.ContactList.Next; ct != collisionWorld.ContactList; ct = ct.Next)
             {
+                var planeVsGround = (Airplane plane) => pPlane.IsAlive(plane) && plane.Speed != 0;
+
                 var _ = 
                     Physics.OnCollision(ct, "Plane-Ceiling", pPlane.IsAlive,  pCeiling.IsAlive,                                 (cp, fa, fb, p, c) => ExecuteBounce   (makeCtx(cp, fa, fb), p,  c)) ||
                     Physics.OnCollision(ct, "Plane-{0}",     pPlane.IsAlive,  Caps.CheckAlive<ICanDieByPlane<Unit>>(),          (cp, fa, fb, p, t) => ExecuteCollision(makeCtx(cp, fa, fb), p,  t)) ||
-                    Physics.OnCollision(ct, "Plane-{0}",     pPlane.IsAlive,  Caps.CheckAlive<ICanDieByPlane<Ground.XRange>>(), (cp, fa, fb, p, t) => ExecuteCollision(makeCtx(cp, fa, fb), p,  t)) ||
+                    Physics.OnCollision(ct, "Plane-{0}",     planeVsGround,   Caps.CheckAlive<ICanDieByPlane<Ground.XRange>>(), (cp, fa, fb, p, t) => ExecuteCollision(makeCtx(cp, fa, fb), p,  t)) ||
                     Physics.OnCollision(ct, "Bullet-{0}",    pBullet.IsAlive, Caps.CheckAlive<ICanDieByBullet<Unit>>(),         (cp, fa, fb, b, t) => ExecuteExplosion(makeCtx(cp, fa, fb), b,  t)) ||
                     Physics.OnCollision(ct, "Bomb-{0}",      pBomb.IsAlive,   Caps.CheckAlive<ICanDieByBomb<Unit>>(),           (cp, fa, fb, b, t) => ExecuteExplosion(makeCtx(cp, fa, fb), b,  t)) ||
                     Physics.OnCollision(ct, "Bomb-{0}",      pBomb.IsAlive,   Caps.CheckAlive<ICanDieByBomb<Ground.XRange>>(),  (cp, fa, fb, b, t) => ExecuteExplosion(makeCtx(cp, fa, fb), b,  t)) ||
