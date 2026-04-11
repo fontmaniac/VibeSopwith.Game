@@ -1,11 +1,10 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using VibeSopwith.Game.Graphics;
-using VibeSopwith.Game.Utils.ParticleSystem.Special;
 
-namespace VibeSopwith.Game.Components
+namespace VibeSopwith.Game.Utils.ParticleSystem.Special
 {
-    internal class ParticleSystemRender(Microsoft.Xna.Framework.Game game) : DrawableGameComponent(game)
+    internal class EmitterWaterJetRender(Microsoft.Xna.Framework.Game game) : DrawableGameComponent(game)
     {
         private HandedSlice.LR _pixelTexture = null!;
         private HandedSlice.RL _dropletTexture0 = null!;
@@ -40,7 +39,7 @@ namespace VibeSopwith.Game.Components
                     particle.AgePct > 0.4f ? _dropletTexture2 :
                     particle.AgePct > 0.2f ? _dropletTexture1 :
                     _dropletTexture0;
-                DrawHelper.DrawSlice(particle, texture, TheGame.SpriteBatch);
+                particle.DrawSlice(texture, TheGame.SpriteBatch);
             }
         }
     }

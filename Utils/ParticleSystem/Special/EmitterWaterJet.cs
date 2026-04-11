@@ -23,11 +23,11 @@ namespace VibeSopwith.Game.Utils.ParticleSystem.Special
         {
             var linearFactor = InitialVelocity * ((float)GameWorld.WorldSeed.NextDouble() * 0.2f - 0.1f + 1f);
             var angleFactor = (float)GameWorld.WorldSeed.NextDouble() * 1f - 0.5f;
-            var velocity = Direction.RotateDeg(angleFactor) * linearFactor;
+            var velocity = Source.Direction.RotateDeg(angleFactor) * linearFactor;
 
             var ageFactor = (float)GameWorld.WorldSeed.NextDouble() * 2f * DeltaAge - DeltaAge;
 
-            return new ParticleWaterDroplet(Position, velocity, 0.6f, 0.6f, TimeSpan.FromSeconds(MidAge + ageFactor));
+            return new ParticleWaterDroplet(Source.Position, velocity, 0.6f, 0.6f, TimeSpan.FromSeconds(MidAge + ageFactor));
         }
     }
 }

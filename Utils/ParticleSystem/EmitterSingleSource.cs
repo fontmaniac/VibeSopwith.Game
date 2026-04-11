@@ -2,15 +2,11 @@
 
 namespace VibeSopwith.Game.Utils.ParticleSystem
 {
-    internal class EmitterSingleSource<TParticle, TSimWorld> : IBasis, IParticleSystem<TSimWorld> where TParticle : ICanRemoveRigging<TSimWorld>, IAmBehaving<Unit>, IParticle<TSimWorld>
+    internal class EmitterSingleSource<TParticle, TSimWorld> : IParticleSystem<TSimWorld> where TParticle : ICanRemoveRigging<TSimWorld>, IAmBehaving<Unit>, IParticle<TSimWorld>
     {
-        TSimWorld CollisionWorld = default(TSimWorld)!;
+        private TSimWorld CollisionWorld = default(TSimWorld)!;
 
-        public IBasis WorldLocation { get; }
-        public Vector2 Position { get => WorldLocation.Position; }
-        public Vector2 Direction { get => WorldLocation.Direction; }
-        public BasisSpin Spin { get => WorldLocation.Spin; }
-
+        protected IBasis Source { get; }
         protected Func<GameTime, int, int, TParticle> MakeParticle = null!;
 
         private readonly float _emissionRate;
@@ -25,7 +21,7 @@ namespace VibeSopwith.Game.Utils.ParticleSystem
 
         public EmitterSingleSource(IBasis worldLocation, float emissionRate)
         {
-            WorldLocation = worldLocation;
+            Source = worldLocation;
             _emissionRate = emissionRate;
             _particles = new AutoGrowArray<TParticle>((int)_emissionRate);    // Enough for one second.
         }
