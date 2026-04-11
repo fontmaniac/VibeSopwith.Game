@@ -61,17 +61,17 @@ namespace VibeSopwith.Game.Core
             AltDial = new Dial("Alt,m", 0, 60f, 12, new[] { 0f, 15f, 30f, 45f }, () => this.Position.Y);
         }
 
-        public void RemoveRigging(World collisionWorld)
+        public void RemoveRigging(World simWorld)
         {
-            collisionWorld.Remove(Body);
+            simWorld.Remove(Body);
         }
 
         private Fixture[] bodyFixtures = null!;
         private Vector2 midPointOffset = Vector2.Zero;
 
-        public void SetupRigging(World collisionWorld, Func<object>? makeTag = null)
+        public void SetupRigging(World simWorld, Func<object>? makeTag = null)
         {
-            var body = collisionWorld.CreateBody(Aether.Vector2.Zero, 0f, BodyType.Dynamic);
+            var body = simWorld.CreateBody(Aether.Vector2.Zero, 0f, BodyType.Dynamic);
             body.Tag = this;
             body.FixedRotation = true;
             body.Mass = 500f;

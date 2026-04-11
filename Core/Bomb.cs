@@ -25,14 +25,14 @@ namespace VibeSopwith.Game.Core
             CurrentState = initialState;
         }
 
-        public void RemoveRigging(World collisionWorld)
+        public void RemoveRigging(World simWorld)
         {
-            collisionWorld.Remove(Body);
+            simWorld.Remove(Body);
         }
 
-        public Bomb SetupRigging(World collisionWorld, Func<object>? makeTag = null)
+        public Bomb SetupRigging(World simWorld, Func<object>? makeTag = null)
         {
-            var body = collisionWorld.CreateBody(Position.ToAether(), Direction.ToAngle(), BodyType.Dynamic);
+            var body = simWorld.CreateBody(Position.ToAether(), Direction.ToAngle(), BodyType.Dynamic);
             body.LinearVelocity = CurrentState.Velocity.ToAether();
             body.Tag = this;
             body.FixedRotation = false;

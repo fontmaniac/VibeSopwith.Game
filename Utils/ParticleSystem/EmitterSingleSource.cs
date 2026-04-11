@@ -2,9 +2,14 @@
 
 namespace VibeSopwith.Game.Utils.ParticleSystem
 {
-    internal class EmitterSingleSource<TParticle, TSimWorld> : IParticleSystem<TSimWorld> where TParticle : ICanRemoveRigging<TSimWorld>, IAmBehaving<Unit>, IParticle<TSimWorld>
+    internal class EmitterSingleSource<TParticle, TSimWorld> 
+        : IParticleSystem<TSimWorld> 
+        where TParticle 
+            : ICanRemoveRigging<TSimWorld>
+            , IAmBehaving<Unit>
+            , IParticle<TSimWorld>
     {
-        private TSimWorld CollisionWorld = default(TSimWorld)!;
+        private TSimWorld SimWorld = default(TSimWorld)!;
 
         protected IBasis Source { get; }
         protected Func<GameTime, int, int, TParticle> MakeParticle = null!;
@@ -26,16 +31,16 @@ namespace VibeSopwith.Game.Utils.ParticleSystem
             _particles = new AutoGrowArray<TParticle>((int)_emissionRate);    // Enough for one second.
         }
 
-        public void RemoveRigging(TSimWorld collisionWorld)
+        public void RemoveRigging(TSimWorld simWorld)
         {
             for (var i = 0; i < _particles.Length; ++i)
-                _particles[i].RemoveRigging(CollisionWorld);
-            CollisionWorld = default(TSimWorld)!;
+                _particles[i].RemoveRigging(SimWorld);
+            SimWorld = default(TSimWorld)!;
         }
 
-        public IParticleSystem<TSimWorld> SetupRigging(TSimWorld collisionWorld)
+        public IParticleSystem<TSimWorld> SetupRigging(TSimWorld simWorld)
         {
-            CollisionWorld = collisionWorld;
+            SimWorld = simWorld;
             return this;
         }
 
@@ -48,7 +53,7 @@ namespace VibeSopwith.Game.Utils.ParticleSystem
             for (var i = 0; i < particlesToEmit; ++i)
             {
                 var particle = MakeParticle(gameTime, particlesToEmit, i);
-                particle.SetupRigging(CollisionWorld);
+                particle.SetupRigging(SimWorld);
                 _particles.Add(particle);
                 _totalParticlesEmitted++;
             }
@@ -73,7 +78,7 @@ namespace VibeSopwith.Game.Utils.ParticleSystem
                     continue;
                 }
 
-                particle.RemoveRigging(CollisionWorld);
+                particle.RemoveRigging(SimWorld);
                 _particles.RemoveAt(i);
 
             }

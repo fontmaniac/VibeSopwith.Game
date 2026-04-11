@@ -854,9 +854,9 @@ namespace VibeSopwith.Game.Core
 
         }
 
-        public void SetupRigging(World collisionWorld, Func<object>? makeTag = null)
+        public void SetupRigging(World simWorld, Func<object>? makeTag = null)
         {
-            var groundBody = collisionWorld.CreateBody(Aether.Vector2.Zero, 0f, BodyType.Static);
+            var groundBody = simWorld.CreateBody(Aether.Vector2.Zero, 0f, BodyType.Static);
 
             groundBody.Tag = this;
             groundBody.IgnoreGravity = true;

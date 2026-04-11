@@ -7,9 +7,9 @@ namespace VibeSopwith.Game.Core
     {
         public Body Body = null!;
 
-        public void SetupRigging(World collisionWorld)
+        public void SetupRigging(World simWorld)
         {
-            var body = collisionWorld.CreateBody(Aether.Vector2.Zero, 0f, BodyType.Static);
+            var body = simWorld.CreateBody(Aether.Vector2.Zero, 0f, BodyType.Static);
             body.Tag = this;
             body.IgnoreGravity = true;
             body.Mass = float.MaxValue;

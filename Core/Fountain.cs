@@ -68,16 +68,16 @@ namespace VibeSopwith.Game.Core
             return this;
         }
 
-        public void RemoveRigging(World collisionWorld)
+        public void RemoveRigging(World simWorld)
         {
-            Nozzle.RemoveRigging(collisionWorld);
-            collisionWorld.Remove(Body);
+            Nozzle.RemoveRigging(simWorld);
+            simWorld.Remove(Body);
             Body = null!;
         }
 
-        public void SetupRigging(World collisionWorld, Func<object>? makeTag = null)
+        public void SetupRigging(World simWorld, Func<object>? makeTag = null)
         {
-            var body = collisionWorld.CreateBody(Position.ToAether(), 0f, BodyType.Static);
+            var body = simWorld.CreateBody(Position.ToAether(), 0f, BodyType.Static);
             body.Rotation = Direction.ToAngle();
             body.Tag = this;
             body.FixedRotation = false;
@@ -120,7 +120,7 @@ namespace VibeSopwith.Game.Core
             makeTag = makeTag ?? (() => this);
             Body.Tag = makeTag();
 
-            Nozzle.SetupRigging(collisionWorld, makeTag);
+            Nozzle.SetupRigging(simWorld, makeTag);
         }
 
         public State DeriveState(bool emitActive, GameTime gameTime)

@@ -29,15 +29,15 @@ namespace VibeSopwith.Game.Core
             Direction = Vector2.UnitX * (spin == BasisSpin.Down ? +1f : -1f);
         }
 
-        public void RemoveRigging(World collisionWorld)
+        public void RemoveRigging(World simWorld)
         {
-            collisionWorld.Remove(Body); 
+            simWorld.Remove(Body); 
             Body = null!;
         }
 
-        private Body SetupRigging_Cistern(World collisionWorld)
+        private Body SetupRigging_Cistern(World simWorld)
         {
-            var body = collisionWorld.CreateBody(Position.ToAether(), 0f, BodyType.Static);
+            var body = simWorld.CreateBody(Position.ToAether(), 0f, BodyType.Static);
             body.Rotation = Direction.ToAngle();
             body.Tag = this;
             body.FixedRotation = true;
@@ -68,9 +68,9 @@ namespace VibeSopwith.Game.Core
             return body;
         }
 
-        private Body SetupRigging_Factory(World collisionWorld)
+        private Body SetupRigging_Factory(World simWorld)
         {
-            var body = collisionWorld.CreateBody(Position.ToAether(), 0f, BodyType.Static);
+            var body = simWorld.CreateBody(Position.ToAether(), 0f, BodyType.Static);
             body.Rotation = Direction.ToAngle();
             body.Tag = this;
             body.FixedRotation = true;
@@ -98,9 +98,9 @@ namespace VibeSopwith.Game.Core
             return body;
         }
 
-        public Body SetupRigging_ArmyBase(World collisionWorld)
+        public Body SetupRigging_ArmyBase(World simWorld)
         {
-            var body = collisionWorld.CreateBody(Position.ToAether(), 0f, BodyType.Static);
+            var body = simWorld.CreateBody(Position.ToAether(), 0f, BodyType.Static);
             body.Rotation = Direction.ToAngle();
             body.Tag = this;
             body.FixedRotation = true;
@@ -129,12 +129,12 @@ namespace VibeSopwith.Game.Core
             return body;
         }
 
-        public void SetupRigging(World collisionWorld, Func<object>? makeTag = null)
+        public void SetupRigging(World simWorld, Func<object>? makeTag = null)
         {
             Body =
-                TheType == BuildingType.Factory  ? SetupRigging_Factory(collisionWorld) :
-                TheType == BuildingType.Cistern  ? SetupRigging_Cistern(collisionWorld) :
-                TheType == BuildingType.ArmyBase ? SetupRigging_ArmyBase(collisionWorld) :
+                TheType == BuildingType.Factory  ? SetupRigging_Factory(simWorld) :
+                TheType == BuildingType.Cistern  ? SetupRigging_Cistern(simWorld) :
+                TheType == BuildingType.ArmyBase ? SetupRigging_ArmyBase(simWorld) :
                 throw new ApplicationException("Unsupported building type");
 
             makeTag = makeTag ?? (() => this);

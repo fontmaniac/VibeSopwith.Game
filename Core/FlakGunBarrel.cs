@@ -39,15 +39,15 @@ namespace VibeSopwith.Game.Core
             return (refPoint.X, Spin.ToFactor() * refPoint.Y);
         }
 
-        public void RemoveRigging(World collisionWorld)
+        public void RemoveRigging(World simWorld)
         {
-            collisionWorld.Remove(Body);
+            simWorld.Remove(Body);
             Body = null!;
         }
 
-        public void SetupRigging(World collisionWorld, Func<object>? makeTag = null)
+        public void SetupRigging(World simWorld, Func<object>? makeTag = null)
         {
-            var body = collisionWorld.CreateBody(Position.ToAether(), 0f, BodyType.Kinematic);
+            var body = simWorld.CreateBody(Position.ToAether(), 0f, BodyType.Kinematic);
             body.Tag = this;
             body.FixedRotation = false;
             body.Mass = 1000f;

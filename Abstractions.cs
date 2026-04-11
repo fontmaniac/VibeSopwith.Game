@@ -100,7 +100,7 @@ public interface IAmBehaving<TState>
 
 public interface ICanRemoveRigging<TSimWorld>
 {
-    void RemoveRigging(TSimWorld collisionWorld);
+    void RemoveRigging(TSimWorld simWorld);
 }
 
 public interface ICanRemoveRigging : ICanRemoveRigging<World>;
@@ -179,7 +179,7 @@ public static class Caps
 
     public static Func<bool> ImperviousToHits() => () => false;
 
-    public static Action<Unit> RemoveRigging(ICanRemoveRigging canRemove, World collisionWorld) => (_) => canRemove.RemoveRigging(collisionWorld);
+    public static Action<Unit> RemoveRigging(ICanRemoveRigging canRemove, World simWorld) => (_) => canRemove.RemoveRigging(simWorld);
 
     public static Func<GameTime, Vector2, Unit> ExecuteEffect(Action<GameTime, Vector2> doExecute) => (gt, ct) => { doExecute(gt, ct); return Unit.Value; };
     public static Func<GameTime, Vector2, Unit> NoEffect() => (_, _) => default;
@@ -187,8 +187,8 @@ public static class Caps
     public static Action DoAbsolutelyNothing() => () => { };
     public static Action<T> DoNothing<T>() => (T _) => { };
 
-    public static ICanDie<Unit> JustDie<T>(Poppet<T> poppet, T target, World collisionWorld, Func<GameTime, Vector2, Unit> effect) where T : ICanRemoveRigging =>
-        new CanDie<Unit>(poppet.Embrace(target), Caps.RemoveRigging(target, collisionWorld), effect);
+    public static ICanDie<Unit> JustDie<T>(Poppet<T> poppet, T target, World simWorld, Func<GameTime, Vector2, Unit> effect) where T : ICanRemoveRigging =>
+        new CanDie<Unit>(poppet.Embrace(target), Caps.RemoveRigging(target, simWorld), effect);
 
     public static Func<TCap, bool> CheckAlive<TCap>() where TCap : IHasPoppet => (TCap target) => target.Poppet.IsAlive();
 

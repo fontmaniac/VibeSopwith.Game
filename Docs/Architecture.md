@@ -77,7 +77,7 @@ The list is unordered and ungrouped.
     Actor1.PreSimulationPrepare(truckProjected);
 
     // 3. Run simulation step.
-    collisionWorld.Step((float)gameTime.ElapsedGameTime.TotalSeconds);
+    simWorld.Step((float)gameTime.ElapsedGameTime.TotalSeconds);
 
     // 4. Update actors based on projected state and outcome of simulation
     Actor1.PostSimulationUpdate(truckProjected);

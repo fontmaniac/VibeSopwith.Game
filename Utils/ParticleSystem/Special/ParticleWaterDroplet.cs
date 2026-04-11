@@ -16,9 +16,9 @@ namespace VibeSopwith.Game.Utils.ParticleSystem.Special
 
         public Body Body = null!;
 
-        public void SetupRiggingCircle(World collisionWorld)
+        public void SetupRiggingCircle(World simWorld)
         {
-            var body = collisionWorld.CreateBody(Position.ToAether(), Direction.ToAngle(), BodyType.Dynamic);
+            var body = simWorld.CreateBody(Position.ToAether(), Direction.ToAngle(), BodyType.Dynamic);
             body.LinearVelocity = Velocity.ToAether();
             body.Tag = this;
             body.FixedRotation = true;
@@ -37,13 +37,13 @@ namespace VibeSopwith.Game.Utils.ParticleSystem.Special
             Body = body;
         }
 
-        public void SetupRigging(World collisionWorld) => SetupRiggingCircle(collisionWorld);
+        public void SetupRigging(World simWorld) => SetupRiggingCircle(simWorld);
 
         public void AdvanceAge(TimeSpan dt) => Age = Age.Add(dt);
 
-        public void RemoveRigging(World collisionWorld)
+        public void RemoveRigging(World simWorld)
         {
-            if (Body != null) collisionWorld.Remove(Body);
+            if (Body != null) simWorld.Remove(Body);
             Body = null!;
         }
 

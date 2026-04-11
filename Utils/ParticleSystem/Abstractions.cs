@@ -4,7 +4,7 @@ namespace VibeSopwith.Game.Utils.ParticleSystem
 {
     public interface IParticleSystem<TSimWorld> : ICanRemoveRigging<TSimWorld>, IAmBehaving<Unit>
     {
-        IParticleSystem<TSimWorld> SetupRigging(TSimWorld collisionWorld);
+        IParticleSystem<TSimWorld> SetupRigging(TSimWorld simWorld);
         void EmitParticles(GameTime gameTime);
         bool IsExpired { get; }
     }
@@ -15,6 +15,6 @@ namespace VibeSopwith.Game.Utils.ParticleSystem
         TimeSpan MaxAge { get; }
         void AdvanceAge(TimeSpan dt);
 
-        void SetupRigging(TSimWorld collisionWorld);
+        void SetupRigging(TSimWorld simWorld);
     }
 }

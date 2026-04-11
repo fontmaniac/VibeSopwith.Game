@@ -30,14 +30,14 @@ namespace VibeSopwith.Game.Core
         public readonly List<Ground.Runway> Runways;
         public readonly List<Autopilot.Approach> Approaches = new List<Autopilot.Approach>();
 
-        private readonly World collisionWorld;
+        private readonly World simWorld;
 
         public GameWorld()
         {
             // Poppets are unshakeable pillars of the world.
             RaisePoppets();
 
-            collisionWorld = new World()
+            simWorld = new World()
             {
                 //Gravity = Vector2.Zero.ToAether(),
                 //Gravity = (-Vector2.UnitY * 10f).ToAether(),
@@ -55,20 +55,20 @@ namespace VibeSopwith.Game.Core
             Baloons.Add(new Baloon(new Vector2(555, 25), BasisSpin.Up, new Vector2(558, 25)));
 
 
-            Ground.SetupRigging(collisionWorld, () => new object[] { Ground, MayDieByBomb(Ground), MayDieByBullet(Ground), MayDieByPlane(Ground) });
-            Ceiling.SetupRigging(collisionWorld);
+            Ground.SetupRigging(simWorld, () => new object[] { Ground, MayDieByBomb(Ground), MayDieByBullet(Ground), MayDieByPlane(Ground) });
+            Ceiling.SetupRigging(simWorld);
 
             foreach (var baloon in Baloons)
-                baloon.SetupRigging(collisionWorld, () => new object[] { baloon, MayDieByProjectile(baloon, "Baloon", pBaloon, 10) with { ExecuteEffect = Caps.ExecuteEffect((gameTime, _) => RegisterExplosion(MakeBigExplosion(gameTime, baloon.Position.ToAether())))}});
+                baloon.SetupRigging(simWorld, () => new object[] { baloon, MayDieByProjectile(baloon, "Baloon", pBaloon, 10) with { ExecuteEffect = Caps.ExecuteEffect((gameTime, _) => RegisterExplosion(MakeBigExplosion(gameTime, baloon.Position.ToAether())))}});
 
             foreach (var building in Buildings)
-                building.SetupRigging(collisionWorld, () => new object[] { building, MayDieByProjectile(building, "Building", pBuilding, 5) });
+                building.SetupRigging(simWorld, () => new object[] { building, MayDieByProjectile(building, "Building", pBuilding, 5) });
 
             foreach (var flakGun in FlakGuns)
-                flakGun.SetupRigging(collisionWorld, () => new object[] { flakGun, MayDieByProjectile(flakGun, "FlakGun", pFlakGun, 5) });
+                flakGun.SetupRigging(simWorld, () => new object[] { flakGun, MayDieByProjectile(flakGun, "FlakGun", pFlakGun, 5) });
 
             foreach (var fountain in Fountains)
-                fountain.SetupRigging(collisionWorld, () => new object[] { fountain, MayDieByProjectile(fountain, "Fountain", pFountain, 500) });
+                fountain.SetupRigging(simWorld, () => new object[] { fountain, MayDieByProjectile(fountain, "Fountain", pFountain, 500) });
 
 
             Plane = MakeNewPlane();
@@ -124,7 +124,7 @@ namespace VibeSopwith.Game.Core
             var plane = new Airplane(new Vector2(parkingPos, runway.Level), spin);
             plane.CheckAndSetLandingMode(runway);
 
-            plane.SetupRigging(collisionWorld, () => new object[] { plane, MayDieByBomb(plane), MayDieByBullet(plane) });
+            plane.SetupRigging(simWorld, () => new object[] { plane, MayDieByBomb(plane), MayDieByBullet(plane) });
             plane.Body.Position = plane.Position.ToAether();
             plane.Body.Rotation = plane.Direction.ToAngle();
             return plane;
@@ -132,13 +132,13 @@ namespace VibeSopwith.Game.Core
 
         private void IfNotNull<T>(T? thing, Action<T> doWithThing) { if (thing != null) doWithThing(thing); }
         private void RegisterBomb(Bomb? bomb) =>
-            IfNotNull(bomb, bomb => Bombs.Add(bomb.SetupRigging(collisionWorld, () => new object[] { bomb, MayDieByBombOrBullet(bomb) })));
+            IfNotNull(bomb, bomb => Bombs.Add(bomb.SetupRigging(simWorld, () => new object[] { bomb, MayDieByBombOrBullet(bomb) })));
         private void RegisterBullet(Bullet? bullet) =>
-            IfNotNull(bullet, bullet => Bullets.Add(bullet.SetupRigging(collisionWorld)));
+            IfNotNull(bullet, bullet => Bullets.Add(bullet.SetupRigging(simWorld)));
         private void RegisterExplosion(Explosion? explosion) =>
             IfNotNull(explosion, explosion => Explosions.Add(explosion));
         private void RegisterParticleSystem(IParticleSystem<World>? particleSystem) =>
-            IfNotNull(particleSystem, particleSystem => ParticleSystems.Add(particleSystem.SetupRigging(collisionWorld)));
+            IfNotNull(particleSystem, particleSystem => ParticleSystems.Add(particleSystem.SetupRigging(simWorld)));
 
         #region Object Capabilities
 
@@ -153,11 +153,11 @@ namespace VibeSopwith.Game.Core
         private Poppet<Ceiling> pCeiling = null!;
 
         private ICanDie<Unit> howPlaneDies(Airplane plane) => 
-            Caps.JustDie(pPlane,  plane,  collisionWorld, Caps.ExecuteEffect((gt, cp) => { RegisterExplosion(plane.SetDestroyed(gt)); }));
+            Caps.JustDie(pPlane,  plane,  simWorld, Caps.ExecuteEffect((gt, cp) => { RegisterExplosion(plane.SetDestroyed(gt)); }));
         private ICanDie<Unit> howBombDies(Bomb bomb) => 
-            Caps.JustDie(pBomb,   bomb,   collisionWorld, Caps.NoEffect());
+            Caps.JustDie(pBomb,   bomb,   simWorld, Caps.NoEffect());
         private ICanDie<Unit> howBulletDies(Bullet bullet, IBasis bindTarget) => 
-            Caps.JustDie(pBullet, bullet, collisionWorld, Caps.ExecuteEffect((gt, cp) => RegisterExplosion(MakeSmallExplosion(gt, LiveBasis.Bind(Basis.FixedPos(cp), bindTarget)))));
+            Caps.JustDie(pBullet, bullet, simWorld, Caps.ExecuteEffect((gt, cp) => RegisterExplosion(MakeSmallExplosion(gt, LiveBasis.Bind(Basis.FixedPos(cp), bindTarget)))));
 
         private void RaisePoppets()
         {
@@ -178,7 +178,7 @@ namespace VibeSopwith.Game.Core
                 poppet.Embrace(target),
                 Caps.AbsorbHits(hits),
                 Caps.BindTargetPart(target),
-                Caps.RemoveRigging(target, collisionWorld),
+                Caps.RemoveRigging(target, simWorld),
                 Caps.ExecuteEffect((gameTime, _) => RegisterExplosion(MakeBasedExplosion(gameTime, target.Position.ToAether()))));
 
         private CanDieByBombOrBullet<Unit> MayDieByBombOrBullet(Bomb bomb) =>
@@ -187,14 +187,14 @@ namespace VibeSopwith.Game.Core
                 pBomb.Embrace(bomb),
                 Caps.AbsorbHits(1),
                 Caps.BindTargetSelf(bomb),
-                Caps.RemoveRigging(bomb, collisionWorld),
+                Caps.RemoveRigging(bomb, simWorld),
                 Caps.ExecuteEffect((gameTime, cp) => RegisterExplosion(MakeBigExplosion(gameTime, cp.ToAether()))));
 
         private ICanDieByBomb<Unit> MayDieByBomb(Airplane plane) =>
             new CanDieByBomb<Unit>(
                 "Plane",
                 pPlane.Embrace(plane),
-                Caps.RemoveRigging(plane, collisionWorld),
+                Caps.RemoveRigging(plane, simWorld),
                 Caps.ExecuteEffect((gameTime, cp) =>
                 {
                     RegisterExplosion(plane.SetDestroyed(gameTime));
@@ -207,7 +207,7 @@ namespace VibeSopwith.Game.Core
                 pPlane.Embrace(plane),
                 Caps.AbsorbHits(5),
                 Caps.BindTargetSelf(plane),
-                Caps.RemoveRigging(plane, collisionWorld),
+                Caps.RemoveRigging(plane, simWorld),
                 Caps.ExecuteEffect((gameTime, cp) => { RegisterExplosion(plane.SetDestroyed(gameTime)); }));
 
         private ICanDieByBomb<Ground.XRange> MayDieByBomb(Ground ground) =>
@@ -338,7 +338,7 @@ namespace VibeSopwith.Game.Core
             {
                 if (partSys.IsExpired)
                 {
-                    partSys.RemoveRigging(collisionWorld);
+                    partSys.RemoveRigging(simWorld);
                     return ParticleSystems.Remove(partSys);
                 }
                 return false; 
@@ -399,7 +399,7 @@ namespace VibeSopwith.Game.Core
 
             //------------------------------------------------------------------//
             // Simulate Physics.                                                //
-            collisionWorld.Step((float)gameTime.ElapsedGameTime.TotalSeconds);  //
+            simWorld.Step((float)gameTime.ElapsedGameTime.TotalSeconds);  //
             //                                                                  //
             //------------------------------------------------------------------//
 
@@ -412,10 +412,10 @@ namespace VibeSopwith.Game.Core
                 perishable.RemoveIfExpired(ctx);
 
             // Collision check round - not a "behavior", a structural step.
-            var postCheckActions = new Stack<Action>(); // Push here actions which manipulate collisionWorld, to avoid corruption mid-iteration.
+            var postCheckActions = new Stack<Action>(); // Push here actions which manipulate simWorld, to avoid corruption mid-iteration.
             var makeCtx = (Aether.Vector2 cp, Fixture a, Fixture b) => new CollisionContext(cp, a, b, gameTime, postCheckActions);
 
-            for (Contact ct = collisionWorld.ContactList.Next; ct != collisionWorld.ContactList; ct = ct.Next)
+            for (Contact ct = simWorld.ContactList.Next; ct != simWorld.ContactList; ct = ct.Next)
             {
                 var planeVsGround = (Airplane plane) => pPlane.IsAlive(plane) && plane.Speed != 0;
 
