@@ -1,24 +1,22 @@
-﻿using Microsoft.Xna.Framework;
-
-namespace VibeSopwith.Game.Core
+﻿namespace VibeSopwith.Game.Core
 {
     public class UpsCounter
     {
         private int _frameCounter = 0;
-        private double _elapsedTime = 0;
+        private DateTime _startTime = DateTime.UtcNow;
 
         public int UPS { get; private set; }
 
-        public void Update(GameTime gameTime)
+        public void Update(DateTime utcTime)
         {
-            _elapsedTime += gameTime.ElapsedGameTime.TotalSeconds;
+            var elapsedTime = (utcTime - _startTime).TotalSeconds;
             _frameCounter++;
 
-            if (_elapsedTime >= 1.0)
+            if (elapsedTime >= 1.0)
             {
-                UPS = _frameCounter;
+                UPS = (int)((double)_frameCounter / elapsedTime);
                 _frameCounter = 0;
-                _elapsedTime = 0;
+                _startTime = DateTime.UtcNow;
             }
         }
     }

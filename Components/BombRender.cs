@@ -12,12 +12,12 @@ namespace VibeSopwith.Game.Components
         public new void LoadContent()
         {
             base.LoadContent();
-            _bombTexture = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, Game.Content.Load<Texture2D>("Textures\\Bomb_1.png")).ToAtlas(Atlas.OriginCentered).ToLRSlice();
+            _bombTexture = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatchPoint, Game.Content.Load<Texture2D>("Textures\\Bomb_1.png")).ToAtlas(Atlas.OriginCentered).ToLRSlice();
         }
 
         public void Draw(Bomb bomb, GameTime gameTime)
         {
-            DrawHelper.DrawSlice(bomb, _bombTexture, TheGame.SpriteBatch);
+            DrawHelper.DrawSlice(bomb, _bombTexture, TheGame.SpriteBatchPoint);
         }
     }
 }

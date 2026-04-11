@@ -13,7 +13,7 @@ namespace VibeSopwith.Game.Components
         {
             base.LoadContent();
 
-            _airplaneTexture = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, Game.Content.Load<Texture2D>("Textures\\Plane_1.png")).ToAtlas(Atlas.OriginCentered).ToLRSlice();
+            _airplaneTexture = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatchPoint, Game.Content.Load<Texture2D>("Textures\\Plane_1.png")).ToAtlas(Atlas.OriginCentered).ToLRSlice();
 
         }
 
@@ -31,7 +31,7 @@ namespace VibeSopwith.Game.Components
             // Final transform
             var transform = scale * translateY;
 
-            TheGame.SpriteBatch.Begin(
+            TheGame.SpriteBatchPoint.Begin(
                 SpriteSortMode.Deferred,
                 BlendState.AlphaBlend,
                 SamplerState.LinearClamp,
@@ -43,9 +43,9 @@ namespace VibeSopwith.Game.Components
             DrawHelper.DrawSlice(
                 Location.Capture(airplane) with { Position = new Vector2(TheGame.PlaneGizmoWidth / 2f, TheGame.PlaneGizmoHeight / 2f) },
                 _airplaneTexture,
-                TheGame.SpriteBatch);
+                TheGame.SpriteBatchPoint);
 
-            TheGame.SpriteBatch.End();
+            TheGame.SpriteBatchPoint.End();
 
         }
     }

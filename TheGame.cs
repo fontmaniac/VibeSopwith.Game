@@ -13,7 +13,8 @@ namespace VibeSopwith.Game
         private GraphicsDeviceManager _graphics;
         private KeyboardCustodian _keyboardCustodian = new KeyboardCustodian();
 
-        public static SpriteBatch SpriteBatch = null!;
+        public static SpriteBatch SpriteBatchLinear = null!;
+        public static SpriteBatch SpriteBatchPoint = null!;
         public static BasicEffect BasicEffect = null!;
         public static PrimitivesRender Primitives = null!;
 
@@ -55,7 +56,8 @@ namespace VibeSopwith.Game
         {
             base.LoadContent();
 
-            SpriteBatch = new SpriteBatch(GraphicsDevice);
+            SpriteBatchLinear = new SpriteBatch(GraphicsDevice);
+            SpriteBatchPoint = new SpriteBatch(GraphicsDevice);
             BasicEffect = new BasicEffect(GraphicsDevice);
 
             Primitives = new PrimitivesRender(this);
@@ -77,14 +79,20 @@ namespace VibeSopwith.Game
         protected override void UnloadContent()
         {
             BasicEffect?.Dispose();
-            SpriteBatch?.Dispose();
+            SpriteBatchPoint?.Dispose();
+            SpriteBatchLinear?.Dispose();
         }
+
+        public  record ControlScheme(Keys LThrottle, Keys RThrottle, Keys UPitch, Keys DPitch, Keys Roll, Keys Bomb, Keys Gun, Keys Autoland, Keys Particles, bool SpinIndependent);
+        private static ControlScheme MyControlScheme = new(Keys.A, Keys.D, Keys.W, Keys.S, Keys.X, Keys.B, Keys.Space, Keys.H, Keys.D0, false);
+        private static ControlScheme ClassicControlScheme = new(Keys.Z, Keys.X, Keys.OemComma, Keys.OemQuestion, Keys.OemPeriod, Keys.B, Keys.Space, Keys.H, Keys.D0, true);
+        public  static ControlScheme ActiveControlScheme = ClassicControlScheme;
 
         protected override void Update(GameTime gameTime)
         {
             base.Update(gameTime);
 
-            UPS.Update(gameTime);
+            UPS.Update(DateTime.UtcNow);
 
             var inputs = _keyboardCustodian.Process(kc =>
             {
@@ -102,37 +110,32 @@ namespace VibeSopwith.Game
                 if (kc.IsKeyPressed(Keys.F12))
                     Console.WriteLine($"Updates per second: {UPS.UPS}");
 
-                var throttle =
-                    (kc.IsKeyDown(Keys.A) && !kc.IsKeyDown(Keys.D)) ? Airplane.ThrottleInput.Reversing :
-                    (!kc.IsKeyDown(Keys.A) && kc.IsKeyDown(Keys.D)) ? Airplane.ThrottleInput.Throttling :
-                    Airplane.ThrottleInput.None;
+                var cs = ActiveControlScheme;
 
-                // Adjust throttle if flipped.
-                throttle =
-                    _world.Plane.CurrentState.Location.Spin == BasisSpin.Down ? throttle :
-                    throttle == Airplane.ThrottleInput.Throttling ? Airplane.ThrottleInput.Reversing :
-                    throttle == Airplane.ThrottleInput.Reversing ? Airplane.ThrottleInput.Throttling :
+                var throttle =
+                    (kc.IsKeyDown(cs.LThrottle) && !kc.IsKeyDown(cs.RThrottle)) ? Airplane.ThrottleInput.Reversing :
+                    (!kc.IsKeyDown(cs.LThrottle) && kc.IsKeyDown(cs.RThrottle)) ? Airplane.ThrottleInput.Throttling :
                     Airplane.ThrottleInput.None;
 
                 var pitch =
-                    (kc.IsKeyDown(Keys.W) && !kc.IsKeyDown(Keys.S)) ? Airplane.PitchInput.Backward :
-                    (!kc.IsKeyDown(Keys.W) && kc.IsKeyDown(Keys.S)) ? Airplane.PitchInput.Forward :
+                    (kc.IsKeyDown(cs.UPitch) && !kc.IsKeyDown(cs.DPitch)) ? Airplane.PitchInput.Backward :
+                    (!kc.IsKeyDown(cs.UPitch) && kc.IsKeyDown(cs.DPitch)) ? Airplane.PitchInput.Forward :
                     Airplane.PitchInput.None;
 
                 var roll =
-                    kc.IsKeyDown(Keys.X) ? Airplane.RollInput.Roll : Airplane.RollInput.None;
+                    kc.IsKeyDown(cs.Roll) ? Airplane.RollInput.Roll : Airplane.RollInput.None;
 
                 var bombLaunch =
-                    kc.IsKeyDown(Keys.B) ? Airplane.BombInput.Active : Airplane.BombInput.Inactive;
+                    kc.IsKeyDown(cs.Bomb) ? Airplane.BombInput.Active : Airplane.BombInput.Inactive;
 
                 var gunFire =
-                    kc.IsKeyDown(Keys.Space) ? Airplane.GunInput.Active : Airplane.GunInput.Inactive;
+                    kc.IsKeyDown(cs.Gun) ? Airplane.GunInput.Active : Airplane.GunInput.Inactive;
 
                 var autoLand =
-                    kc.IsKeyDown(Keys.H) && _world.Plane.CurrentState.EigenState is not Airplane.EigenState.AutoLanding ? Airplane.AutoLandToggle.Active : Airplane.AutoLandToggle.Inactive;
+                    kc.IsKeyDown(cs.Autoland) ? Airplane.AutoLandToggle.Active : Airplane.AutoLandToggle.Inactive;
 
                 var emitParticles =
-                    kc.IsKeyDown(Keys.D0) ? true : false;
+                    kc.IsKeyDown(cs.Particles) ? true : false;
 
                 return new
                 {
@@ -152,7 +155,6 @@ namespace VibeSopwith.Game
             _world.Simulate(gameTime, UPS.UPS, inputs.planeInputs, inputs.emitParticles);
         }
 
-        // This is almost cosmetic, as SpriteBatch ignores viewport settings completely.
         private void DrawInViewport(Viewport vp, Viewport full, Action draw)
         {
             GraphicsDevice.Viewport = vp;
@@ -165,7 +167,7 @@ namespace VibeSopwith.Game
         {
             base.Draw(gameTime);
 
-            FPS.Update(gameTime);
+            FPS.Update(DateTime.UtcNow);
 
             var full = GraphicsDevice.Viewport;
             var bnd = full.Height - 120;
@@ -202,12 +204,12 @@ namespace VibeSopwith.Game
 
             DrawInViewport(dialsViewport, full, () =>
             {
-                TheGame.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.PointClamp, DepthStencilState.None,RasterizerState.CullNone, null, Matrix.Identity);
+                TheGame.SpriteBatchPoint.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.PointClamp, DepthStencilState.None,RasterizerState.CullNone, null, Matrix.Identity);
                 
                 _dialRoundRender.Draw(_world.Plane.SpeedDial, new(60, 60), 36, Color.Green, DialRoundRender.DefaultStyle, gameTime);
                 _dialRoundRender.Draw(_world.Plane.AltDial, new(180, 60), 36, Color.Green, DialRoundRender.DefaultStyle, gameTime);
 
-                TheGame.SpriteBatch.End();
+                TheGame.SpriteBatchPoint.End();
             });
 
             DrawInViewport(minimapViewport, full, () =>

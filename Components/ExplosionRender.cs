@@ -29,7 +29,7 @@ namespace VibeSopwith.Game.Components
         private (Explosion.ExplosionVariant Variant, SequenceTemplate Template) MakeTemplate(TextureInfo ti)
         {
             var spriteSheet =
-                MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, Game.Content.Load<Texture2D>(ti.TexturePath))
+                MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatchPoint, Game.Content.Load<Texture2D>(ti.TexturePath))
                     .ToAtlas((w, h) => ti.GetOrigin(new Vector2(w, h)), ti.SheetCols, ti.SheetRows);
             var totalPhases = spriteSheet.Rows * spriteSheet.Cols;
 
@@ -53,7 +53,7 @@ namespace VibeSopwith.Game.Components
         public void Draw(Explosion explosion, GameTime gameTime)
         {
             var variant = Templates[explosion.Variant];
-            Animation.DrawStaticSequence(explosion, Animation.Make(explosion.StartTime, variant.Phases, false), gameTime, TheGame.SpriteBatch);
+            Animation.DrawStaticSequence(explosion, Animation.Make(explosion.StartTime, variant.Phases, false), gameTime, TheGame.SpriteBatchPoint);
         }
     }
 }

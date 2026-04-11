@@ -1,6 +1,7 @@
 using Microsoft.Xna.Framework;
 using nkast.Aether.Physics2D.Dynamics;
 using nkast.Aether.Physics2D.Dynamics.Contacts;
+using System.Diagnostics;
 using VibeSopwith.Game.Utils;
 using VibeSopwith.Game.Utils.ParticleSystem;
 using Aether = nkast.Aether.Physics2D.Common;
@@ -399,7 +400,7 @@ namespace VibeSopwith.Game.Core
 
             //------------------------------------------------------------------//
             // Simulate Physics.                                                //
-            simWorld.Step((float)gameTime.ElapsedGameTime.TotalSeconds);  //
+            simWorld.Step((float)gameTime.ElapsedGameTime.TotalSeconds);        //
             //                                                                  //
             //------------------------------------------------------------------//
 

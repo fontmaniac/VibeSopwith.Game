@@ -28,7 +28,7 @@ namespace VibeSopwith.Game.Components
                     Length = BulletLengthPx / pxPerUnit,  
                     Height = BulletHeightPx / pxPerUnit,
                 }, 
-                _bulletTexture, TheGame.SpriteBatch);
+                _bulletTexture, TheGame.SpriteBatchPoint);
         }
 
     }

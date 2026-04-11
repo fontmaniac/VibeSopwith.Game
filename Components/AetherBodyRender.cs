@@ -27,7 +27,7 @@ namespace VibeSopwith.Game.Components
                 foreach (var vertex in poly.Vertices)
                 {
                     var worldPos = fixture.Body.GetWorldPoint(vertex).ToXna();
-                    TheGame.SpriteBatch.Draw(TheGame.Primitives.Pixel, worldPos, null, color, 0f, new Vector2(0.5f, 0.5f), 0.1f, SpriteEffects.None, 0f);
+                    TheGame.SpriteBatchPoint.Draw(TheGame.Primitives.Pixel, worldPos, null, color, 0f, new Vector2(0.5f, 0.5f), 0.1f, SpriteEffects.None, 0f);
                 }
 
                 for (int i = 0; i < poly.Vertices.Count; i++)

@@ -20,7 +20,7 @@ namespace VibeSopwith.Game.Components
             var edge = end - start;
             var angle = MathF.Atan2(edge.Y, edge.X);
 
-            TheGame.SpriteBatch.Draw(
+            TheGame.SpriteBatchPoint.Draw(
                 Pixel,
                 start,
                 null,

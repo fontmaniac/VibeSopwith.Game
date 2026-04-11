@@ -15,9 +15,9 @@ namespace VibeSopwith.Game.Components
         {
             base.LoadContent();
 
-            _baseTexture = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, Game.Content.Load<Texture2D>("Textures\\FountainBase_1.png")).ToAtlas(new Vector2(64, 128)).ToLRSlice();
-            _explodedTexture = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, Game.Content.Load<Texture2D>("Textures\\FountainBase_Exploded_1.png")).ToAtlas(new Vector2(64, 128)).ToLRSlice();
-            _nozzleTexture = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, Game.Content.Load<Texture2D>("Textures\\FountainNozzle_1.png")).ToAtlas(new Vector2(6, 64)).ToLRSlice();
+            _baseTexture = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatchPoint, Game.Content.Load<Texture2D>("Textures\\FountainBase_1.png")).ToAtlas(new Vector2(64, 128)).ToLRSlice();
+            _explodedTexture = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatchPoint, Game.Content.Load<Texture2D>("Textures\\FountainBase_Exploded_1.png")).ToAtlas(new Vector2(64, 128)).ToLRSlice();
+            _nozzleTexture = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatchPoint, Game.Content.Load<Texture2D>("Textures\\FountainNozzle_1.png")).ToAtlas(new Vector2(6, 64)).ToLRSlice();
         }
 
         private HandedSlice.LR PickBaseTexture(Fountain f) =>
@@ -27,15 +27,15 @@ namespace VibeSopwith.Game.Components
         public void Draw(Fountain fountain, GameTime gameTime)
         {
             if (!fountain.Exploded)
-                DrawHelper.DrawSlice(fountain.Nozzle, _nozzleTexture, TheGame.SpriteBatch, null);
-            DrawHelper.DrawSlice(fountain, PickBaseTexture(fountain), TheGame.SpriteBatch, null);
+                DrawHelper.DrawSlice(fountain.Nozzle, _nozzleTexture, TheGame.SpriteBatchPoint, null);
+            DrawHelper.DrawSlice(fountain, PickBaseTexture(fountain), TheGame.SpriteBatchPoint, null);
         }
 
         public void DrawSnapped(Fountain fountain, GameTime gameTime, Vector2 worldPixelSize)
         {
             if (!fountain.Exploded)
-                DrawHelper.DrawSlice(fountain.Nozzle, _nozzleTexture, TheGame.SpriteBatch, worldPixelSize);
-            DrawHelper.DrawSlice(fountain, PickBaseTexture(fountain), TheGame.SpriteBatch, worldPixelSize);
+                DrawHelper.DrawSlice(fountain.Nozzle, _nozzleTexture, TheGame.SpriteBatchPoint, worldPixelSize);
+            DrawHelper.DrawSlice(fountain, PickBaseTexture(fountain), TheGame.SpriteBatchPoint, worldPixelSize);
         }
 
     }

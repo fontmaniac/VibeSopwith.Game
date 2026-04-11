@@ -35,7 +35,7 @@ namespace VibeSopwith.Game.Components
                 zone.TopEntryY - zone.BottomEntryY
             );
 
-            TheGame.SpriteBatch.Draw(TheGame.Primitives.Pixel, rectPos, null, color, 0f, Vector2.Zero, rectSize, SpriteEffects.None, 0f);
+            TheGame.SpriteBatchPoint.Draw(TheGame.Primitives.Pixel, rectPos, null, color, 0f, Vector2.Zero, rectSize, SpriteEffects.None, 0f);
 
             // Outline (optional but useful)
             TheGame.Primitives.DrawLine(topLeft, topRight, Color.Blue, 0.1f);

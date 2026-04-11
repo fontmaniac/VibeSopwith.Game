@@ -24,7 +24,7 @@ namespace VibeSopwith.Game.Components
         {
             _font = Game.Content.Load<SpriteFont>("Fonts\\Arial16");
 
-            var untexturedStyle = new UntexturedStyle(TheGame.SpriteBatch)
+            var untexturedStyle = new UntexturedStyle(TheGame.SpriteBatchPoint)
             {
                 PanelColor = Color.FromNonPremultiplied(64, 64, 64, 255),
                 TextScale = 1.0f,
@@ -65,7 +65,7 @@ namespace VibeSopwith.Game.Components
             _spd.Text = $"Speed: {plane.Speed:0.000}";
             _ups.Text = $"FPS/UPS: {fps.UPS}/{ups.UPS}";
 
-            _uiSystem.Draw(gameTime, TheGame.SpriteBatch);
+            _uiSystem.Draw(gameTime, TheGame.SpriteBatchPoint);
         }
     }
 }

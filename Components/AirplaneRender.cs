@@ -15,8 +15,8 @@ namespace VibeSopwith.Game.Components
         {
             base.LoadContent();
 
-            _airplaneTexture = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, Game.Content.Load<Texture2D>("Textures\\Plane_1_Q.png")).ToAtlas(new Vector2(115, 100)).ToLRSlice();
-            _airplaneSprites = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, Game.Content.Load<Texture2D>("Textures\\Plane_SS_1.png")).ToAtlas(new Vector2(115, 100), 1, 4).Bind<Airplane>();
+            _airplaneTexture = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatchPoint, Game.Content.Load<Texture2D>("Textures\\Plane_1_Q.png")).ToAtlas(new Vector2(115, 100)).ToLRSlice();
+            _airplaneSprites = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatchPoint, Game.Content.Load<Texture2D>("Textures\\Plane_SS_1.png")).ToAtlas(new Vector2(115, 100), 1, 4).Bind<Airplane>();
             var phases = new[] 
             {
                 _airplaneSprites.MakeStaticPhase(0, 0.25f, HandedSlice.LR.Wrap),
@@ -29,7 +29,7 @@ namespace VibeSopwith.Game.Components
 
         public void Draw(Airplane airplane, GameTime gameTime, Vector2? worldPixelSize = null)
         {
-            Animation.DrawStaticSequence(airplane, _sequence, gameTime, TheGame.SpriteBatch);
+            Animation.DrawStaticSequence(airplane, _sequence, gameTime, TheGame.SpriteBatchPoint);
             //DrawHelper.DrawSlice(airplane, _airplaneTexture, TheGame.SpriteBatch, worldPixelSize);
         }
     }

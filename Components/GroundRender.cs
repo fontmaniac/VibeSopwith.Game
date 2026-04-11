@@ -19,12 +19,12 @@ namespace VibeSopwith.Game.Components
 
         public void LoadContent(GraphicsDevice graphicsDevice)
         {
-            _groundTexture = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, Game.Content.Load<Texture2D>("Textures\\Rock_Tile.png"));
-            _skyTexture = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, Game.Content.Load<Texture2D>("Textures\\Skybox_1.png"));
+            _groundTexture = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatchPoint, Game.Content.Load<Texture2D>("Textures\\Rock_Tile.png"));
+            _skyTexture = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatchPoint, Game.Content.Load<Texture2D>("Textures\\Skybox_1.png"));
 
-            _band0Texture = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, Game.Content.Load<Texture2D>("Textures\\Rock_Tile_Light_1.png"));
-            _band1Texture = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, Game.Content.Load<Texture2D>("Textures\\Rock_Tile_Med_1.png"));
-            _band2Texture = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, Game.Content.Load<Texture2D>("Textures\\Rock_Tile_Dark_1.png"));
+            _band0Texture = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatchPoint, Game.Content.Load<Texture2D>("Textures\\Rock_Tile_Light_1.png"));
+            _band1Texture = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatchPoint, Game.Content.Load<Texture2D>("Textures\\Rock_Tile_Med_1.png"));
+            _band2Texture = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatchPoint, Game.Content.Load<Texture2D>("Textures\\Rock_Tile_Dark_1.png"));
         }
 
         private record struct ProfileBandSector(Vector2 p1, Vector2 p2, float p1by, float p2by);

@@ -54,7 +54,7 @@ namespace VibeSopwith.Game.Components
                 var text = markVal.ToString();
                 Vector2 size = _font.MeasureString(text);
                 Vector2 origin = size / 2f;
-                TheGame.SpriteBatch.DrawString(_font, text, p3 - origin, color);
+                TheGame.SpriteBatchPoint.DrawString(_font, text, p3 - origin, color);
             }
 
             // Draw submarks
@@ -79,7 +79,7 @@ namespace VibeSopwith.Game.Components
                 Vector2 origin = size / 2f;
                 var angle = getAngle(dial.MinVal);
                 var p = center + new Vector2(radius/2f * MathF.Cos(angle), radius/2f * MathF.Sin(angle));
-                TheGame.SpriteBatch.DrawString(_font, text, p - origin, color);
+                TheGame.SpriteBatchPoint.DrawString(_font, text, p - origin, color);
             }
 
             // Draw Arm

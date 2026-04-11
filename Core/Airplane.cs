@@ -208,7 +208,7 @@ namespace VibeSopwith.Game.Core
             var spawnPos = gun1 + launchDirection * 0.05f;
 
             var boundBasis = LiveBasis.Bind(new Basis(spawnPos.ToXna(), Direction, Spin), this);
-            var result = new Utils.ParticleSystem.Special.EmitterWaterJet(boundBasis, 200f, 70f, 2f, 1.5f);
+            var result = new Utils.ParticleSystem.Special.EmitterWaterJet(boundBasis, 200f, 70f, 1.5f, 1.5f, 0.2f);
 
             return result;
         }
@@ -240,6 +240,12 @@ namespace VibeSopwith.Game.Core
         public enum GunInput { Active, Inactive }
         public enum AutoLandToggle { Active, Inactive }
 
+        private static ThrottleInput ToggleThrottle(ThrottleInput throttle) =>
+            throttle == ThrottleInput.None ? ThrottleInput.None :
+            throttle == ThrottleInput.Throttling ? ThrottleInput.Reversing :
+            throttle == ThrottleInput.Reversing ? ThrottleInput.Throttling :
+            throttle;
+
         public record struct Inputs(
             ThrottleInput Throttle,
             PitchInput Pitch,
@@ -251,7 +257,7 @@ namespace VibeSopwith.Game.Core
             public static Inputs Clean() => new Inputs(ThrottleInput.None, PitchInput.None, RollInput.None, BombInput.Inactive, GunInput.Inactive, AutoLandToggle.Inactive);
         }
 
-        private record struct InputStack(Inputs? User = null, Inputs? Autopilot = null);
+        private record struct InputStack(Inputs User, Inputs? Autopilot = null);
 
         public DeriveStateOutcome<State> DeriveState(Inputs inputs, bool emitActive, float ups, GameTime gameTime, IEnumerable<Ground.Runway> runways, IEnumerable<Autopilot.Approach> approaches)
         {
@@ -287,12 +293,18 @@ namespace VibeSopwith.Game.Core
                 if (emitActive && CurrentState.WaterGun is WaterGun.Emitting em)
                     em.particleSystem.EmitParticles(gameTime);
 
+            // User throttle input may come in spin-independent. Need to toggle if Spin Up.
+            airplaneInputs = TheGame.ActiveControlScheme.SpinIndependent || airplaneInputs.User.Throttle == ThrottleInput.None ? airplaneInputs :
+                Spin == BasisSpin.Down
+                ? airplaneInputs
+                : airplaneInputs with { User = airplaneInputs.User with { Throttle = ToggleThrottle(airplaneInputs.User.Throttle) } };
+
             return DSO.ProceeedWith(InterpretInputs(airplaneInputs, emitActive, () => Autopilot.InitiateAutoLanding(this, approaches), gameTime));
         }
 
         private State InterpretInputs(InputStack inputStack, bool emitActive, Func<Autopilot.ApproachPhase> initiateAutoland, GameTime gameTime)
         {
-            var input = inputStack.Autopilot ?? inputStack.User ?? Inputs.Clean();
+            var input = inputStack.Autopilot ?? inputStack.User;
 
             var nowTime = DateTime.UtcNow;
             var dt = (float)gameTime.ElapsedGameTime.TotalSeconds;

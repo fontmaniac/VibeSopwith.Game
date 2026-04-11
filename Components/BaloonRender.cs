@@ -13,12 +13,12 @@ namespace VibeSopwith.Game.Components
         {
             base.LoadContent();
 
-            _baloonTexture = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, Game.Content.Load<Texture2D>("Textures\\Hot_Air_Balloon_1.png")).ToAtlas(Atlas.OriginCentered).ToLRSlice(); ;
+            _baloonTexture = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatchPoint, Game.Content.Load<Texture2D>("Textures\\Hot_Air_Balloon_1.png")).ToAtlas(Atlas.OriginCentered).ToLRSlice(); ;
         }
 
         public void Draw(Baloon baloon, GameTime gameTime, Vector2? worldPixelSize = null)
         {
-            DrawHelper.DrawSlice(baloon, _baloonTexture, TheGame.SpriteBatch, worldPixelSize);
+            DrawHelper.DrawSlice(baloon, _baloonTexture, TheGame.SpriteBatchPoint, worldPixelSize);
         }
     }
 }

@@ -85,7 +85,7 @@ namespace VibeSopwith.Game.Core
             var spawnPos = tip + launchDirection * 0.00f;
 
             var boundBasis = LiveBasis.Bind(new Basis(spawnPos.ToXna(), Direction, Spin), this);
-            var result = new Utils.ParticleSystem.Special.EmitterWaterJet(boundBasis, 300f, 54f, 3f, 2f);
+            var result = new Utils.ParticleSystem.Special.EmitterWaterJet(boundBasis, 300f, 54f, 3f, 2f, 1f);
 
             return result;
         }

@@ -127,10 +127,19 @@ namespace VibeSopwith.Game.Components
             // Final: world -> camera -> scale+flip -> move to screen
             var transform = translateCamera * scale * translateY;
 
-            TheGame.SpriteBatch.Begin(
+            TheGame.SpriteBatchLinear.Begin(
                 SpriteSortMode.Deferred,
                 BlendState.AlphaBlend,
-                SamplerState.LinearWrap, 
+                SamplerState.LinearClamp,
+                DepthStencilState.None,
+                RasterizerState.CullNone,
+                null,
+                transform);
+
+            TheGame.SpriteBatchPoint.Begin(
+                SpriteSortMode.Deferred,
+                BlendState.AlphaBlend,
+                SamplerState.PointClamp, 
                 DepthStencilState.None,
                 RasterizerState.CullNone, 
                 null,
@@ -186,8 +195,8 @@ namespace VibeSopwith.Game.Components
             //_bodyRender.Draw(world.Plane.Body, gameTime);
             //_bodyRender.Draw(world.Ground.Body, gameTime);
 
-
-            TheGame.SpriteBatch.End();
+            TheGame.SpriteBatchPoint.End();
+            TheGame.SpriteBatchLinear.End();
         }
 
 
@@ -220,17 +229,17 @@ namespace VibeSopwith.Game.Components
             //_postEffect.Parameters["worldPixelSize"].SetValue(new Vector2(worldPixelSize, worldPixelSize));
             //_postEffect.Parameters["screenSize"].SetValue(new Vector2(vp.Width, vp.Height));
 
-            TheGame.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, null, null, null);
-            TheGame.SpriteBatch.Draw(_postTarget, destination, source, Color.White);
-            TheGame.SpriteBatch.End();
+            TheGame.SpriteBatchPoint.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, null, null, null);
+            TheGame.SpriteBatchPoint.Draw(_postTarget, destination, source, Color.White);
+            TheGame.SpriteBatchPoint.End();
 
             GraphicsDevice.SetRenderTarget(null);
             GraphicsDevice.Clear(Color.Black);
             GraphicsDevice.Viewport = vp;
 
-            TheGame.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, null, null, effect: null);
-            TheGame.SpriteBatch.Draw(_upscaleTarget, Vector2.Zero, Color.White);
-            TheGame.SpriteBatch.End();
+            TheGame.SpriteBatchPoint.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, null, null, effect: null);
+            TheGame.SpriteBatchPoint.Draw(_upscaleTarget, Vector2.Zero, Color.White);
+            TheGame.SpriteBatchPoint.End();
         }
 
         public void DrawMinimap(GameWorld world, GameTime gameTime)

@@ -22,11 +22,11 @@ namespace VibeSopwith.Game.Utils.ParticleSystem.Special
             _pixelTexture = texture.ToAtlas(Atlas.OriginCentered).ToLRSlice();
 
             var dropletTexture = Game.Content.Load<Texture2D>("Textures\\Water_Shot_4.png");
-            _dropletTexture0 = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, dropletTexture.PremultiplyAlpha()).ToAtlas(new Vector2(18, 18)).ToRLSlice();
-            _dropletTexture1 = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, dropletTexture.ScaleAlpha(0.8f, 48).PremultiplyAlpha()).ToAtlas(new Vector2(18, 18)).ToRLSlice();
-            _dropletTexture2 = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, dropletTexture.ScaleAlpha(0.6f, 48).PremultiplyAlpha()).ToAtlas(new Vector2(18, 18)).ToRLSlice();
-            _dropletTexture3 = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, dropletTexture.ScaleAlpha(0.4f, 48).PremultiplyAlpha()).ToAtlas(new Vector2(18, 18)).ToRLSlice();
-            _dropletTexture4 = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, dropletTexture.ScaleAlpha(0.2f, 48).PremultiplyAlpha()).ToAtlas(new Vector2(18, 18)).ToRLSlice();
+            _dropletTexture0 = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatchPoint, dropletTexture.PremultiplyAlpha()).ToAtlas(new Vector2(18, 18)).ToRLSlice();
+            _dropletTexture1 = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatchPoint, dropletTexture.ScaleAlpha(0.8f, 48).PremultiplyAlpha()).ToAtlas(new Vector2(18, 18)).ToRLSlice();
+            _dropletTexture2 = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatchPoint, dropletTexture.ScaleAlpha(0.6f, 48).PremultiplyAlpha()).ToAtlas(new Vector2(18, 18)).ToRLSlice();
+            _dropletTexture3 = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatchPoint, dropletTexture.ScaleAlpha(0.4f, 48).PremultiplyAlpha()).ToAtlas(new Vector2(18, 18)).ToRLSlice();
+            _dropletTexture4 = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatchPoint, dropletTexture.ScaleAlpha(0.2f, 48).PremultiplyAlpha()).ToAtlas(new Vector2(18, 18)).ToRLSlice();
         }
 
         public void Draw(EmitterWaterJet particleSystem, GameTime gameTime)
@@ -39,7 +39,7 @@ namespace VibeSopwith.Game.Utils.ParticleSystem.Special
                     particle.AgePct > 0.4f ? _dropletTexture2 :
                     particle.AgePct > 0.2f ? _dropletTexture1 :
                     _dropletTexture0;
-                particle.DrawSlice(texture, TheGame.SpriteBatch);
+                particle.DrawSlice(texture, TheGame.SpriteBatchLinear);
             }
         }
     }
