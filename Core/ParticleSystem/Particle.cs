@@ -72,10 +72,7 @@ namespace VibeSopwith.Game.Core.ParticleSystem
 
         public void SetupRigging(World collisionWorld) => SetupRiggingDroplet(collisionWorld);
 
-        public void AdvanceAge(float dtSec)
-        {
-            Age = Age.Add(TimeSpan.FromSeconds(dtSec));
-        }
+        public void AdvanceAge(TimeSpan dt) => Age = Age.Add(dt);
 
         public void RemoveRigging(World collisionWorld)
         {

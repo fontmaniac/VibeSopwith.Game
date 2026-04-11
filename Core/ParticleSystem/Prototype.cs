@@ -16,15 +16,19 @@ namespace VibeSopwith.Game.Core.ParticleSystem
         public readonly float EmissionRate;
         private TimeSpan? _emissionStart = null;
 
-        public IList<Particle> Particles = new List<Particle>();
+        private Particle[] _particles = null!;
+        private int _particlesUsed = 0;
         private int _totalParticlesEmitted = 0;
 
-        public bool IsExpired { get => _emissionStart != null && Particles.Count == 0; }
+        public bool IsExpired { get => _emissionStart != null && _particlesUsed == 0; }
+
+        public ReadOnlySpan<Particle> Particles => _particles.AsSpan(0, _particlesUsed);
 
         public Prototype(IBasis WorldPosition, float emissionRate)
         {
             WorldLocation = WorldPosition;
             EmissionRate = emissionRate;
+            _particles = new Particle[Math.Max(16, (int)EmissionRate)];    // Enough for one second.
         }
 
         public void RemoveRigging(World collisionWorld)
@@ -42,22 +46,29 @@ namespace VibeSopwith.Game.Core.ParticleSystem
         {
             var age = TimeSpan.FromSeconds(5);
 
-            var indicesToRemove = new List<int>();
-            for (var i = 0; i < Particles.Count; ++i)
+            for (var i = 0; i < _particlesUsed; )
             {
-                var particle = Particles[i];
-                particle.AdvanceAge((float)gameTime.ElapsedGameTime.TotalSeconds);
-                if (particle.Age > age)
-                {
-                    particle.RemoveRigging(CollisionWorld);
-                    indicesToRemove.Add(i);
+                ref var particle = ref _particles[i];
+                particle.AdvanceAge(gameTime.ElapsedGameTime);
+                if (particle.Age <= age) 
+                { 
+                    i++;  
+                    continue; 
                 }
-                Particles[i] = particle;
-            }
 
-            foreach (var i in indicesToRemove.AsEnumerable().Reverse())
-                Particles.RemoveAt(i);
+                particle.RemoveRigging(CollisionWorld);
+                particle = _particles[--_particlesUsed]; // Copy the last particle here and forget about it.
+            }
         }
+
+        private void AddParticle(Particle particle)
+        {
+            if (_particlesUsed == _particles.Length)
+                Array.Resize(ref _particles, _particles.Length + Math.Max(16, (int)EmissionRate)); // Add another second worth of capacity.
+
+            _particles[_particlesUsed++] = particle;
+        }
+
 
         public void EmitParticles(GameTime gameTime)
         {
@@ -67,30 +78,25 @@ namespace VibeSopwith.Game.Core.ParticleSystem
 
             for (var i = 0; i < particlesToEmit; ++i)
             {
-                var randomFactor = 26f * (((float)GameWorld.WorldSeed.NextDouble() * 0.2f - 0.1f) + 1f);
-                var velocity = Vector2.Normalize(Direction.RotateDeg((float)GameWorld.WorldSeed.NextDouble() * 1f - 0.5f)) * randomFactor;
+                var randomFactor = 24f * (((float)GameWorld.WorldSeed.NextDouble() * 0.2f - 0.1f) + 1f);
+                var velocity = Direction.RotateDeg((float)GameWorld.WorldSeed.NextDouble() * 1f - 0.5f) * randomFactor;
                 var particle = new Particle(Position, velocity, 0.6f, 0.6f);
                 particle.SetupRigging(CollisionWorld);
-                Particles.Add(particle);
+                AddParticle(particle);
                 _totalParticlesEmitted++;
             }
         }
 
         public void PreSimulationPrepare(Unit _)
         {
-            foreach (var particle in Particles)
-                particle.PreSimulationPrepare(Unit.Value);
+            for (var i = 0; i < _particlesUsed; ++i)
+                _particles[i].PreSimulationPrepare(Unit.Value);
         }
 
         public void PostSimulationUpdate(Unit _)
         {
-            Particles = Particles.Select(particle =>
-            {
-                particle.PostSimulationUpdate(Unit.Value);
-                return particle;
-            })
-            .ToList();
-                
+            for (var i = 0; i < _particlesUsed; ++i)
+                _particles[i].PostSimulationUpdate(Unit.Value);
         }
 
     }
