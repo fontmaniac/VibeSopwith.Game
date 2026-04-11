@@ -4,8 +4,10 @@ using VibeSopwith.Game.Utils;
 
 namespace VibeSopwith.Game.Core.ParticleSystem
 {
-    internal record struct Particle(Vector2 Position, Vector2 Velocity, float Length, float Height) : IHasLocation, ICanRemoveRigging, IAmBehaving<Unit>
+    internal record struct Particle(Vector2 Position, Vector2 Velocity, float BaseLength, float BaseHeight) : IHasLocation, ICanRemoveRigging, IAmBehaving<Unit>
     {
+        public float Length => BaseLength * (0.4f + Velocity.Length() * 0.03f);
+        public float Height => BaseHeight;
         public Vector2 Direction { get; private set; } = Vector2.Normalize(Velocity);
         public BasisSpin Spin { get; } = BasisSpin.Down;
 
@@ -25,7 +27,7 @@ namespace VibeSopwith.Game.Core.ParticleSystem
             body.AngularDamping = 0.0f;
             body.IgnoreGravity = false;
 
-            var fixture0 = body.CreateCircle(0.01f, 1.0f);
+            var fixture0 = body.CreateCircle(0.6f, 1.0f);
             fixture0.Friction = 0f;
             fixture0.Restitution = 0.05f;
             fixture0.CollisionCategories = GameWorld.WorldCollider.AddCategories("Particle");
@@ -70,7 +72,7 @@ namespace VibeSopwith.Game.Core.ParticleSystem
             this.Body = body;
         }
 
-        public void SetupRigging(World collisionWorld) => SetupRiggingDroplet(collisionWorld);
+        public void SetupRigging(World collisionWorld) => SetupRiggingCircle(collisionWorld);
 
         public void AdvanceAge(TimeSpan dt) => Age = Age.Add(dt);
 
@@ -95,7 +97,7 @@ namespace VibeSopwith.Game.Core.ParticleSystem
         {
             var oldPos = Position;
             Position = Body.Position.ToXna();
-            Velocity = Body.LinearVelocity.ToXna();
+            Velocity = Body.LinearVelocity.ToXna().RotateDeg((float)GameWorld.WorldSeed.NextDouble() * 1f - 0.5f);
 
             var newPos = Position;
             Direction = Vector2.Normalize(newPos - oldPos);

@@ -18,7 +18,7 @@ namespace VibeSopwith.Game.Components
             texture.SetData(new[] { Color.White });
             _pixelTexture = texture.ToAtlas(Atlas.OriginCentered).ToLRSlice();
 
-            _dropletTexture = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, Game.Content.Load<Texture2D>("Textures\\Water_Shot_3.png")).ToAtlas(new Vector2(18, 18)).ToRLSlice();
+            _dropletTexture = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, Game.Content.Load<Texture2D>("Textures\\Water_Shot_4.png")).ToAtlas(new Vector2(18, 18)).ToRLSlice();
 
         }
 
