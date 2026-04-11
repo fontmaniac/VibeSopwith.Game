@@ -16,19 +16,18 @@ namespace VibeSopwith.Game.Core.ParticleSystem
         public readonly float EmissionRate;
         private TimeSpan? _emissionStart = null;
 
-        private Particle[] _particles = null!;
-        private int _particlesUsed = 0;
+        private AutoGrowArray<Particle> _particles = null!;
         private int _totalParticlesEmitted = 0;
 
-        public bool IsExpired { get => _emissionStart != null && _particlesUsed == 0; }
+        public bool IsExpired { get => _emissionStart != null && _particles.Length == 0; }
 
-        public ReadOnlySpan<Particle> Particles => _particles.AsSpan(0, _particlesUsed);
+        public ReadOnlySpan<Particle> Particles => _particles.ReadOnlyItems;
 
         public Prototype(IBasis WorldPosition, float emissionRate)
         {
             WorldLocation = WorldPosition;
             EmissionRate = emissionRate;
-            _particles = new Particle[Math.Max(16, (int)EmissionRate)];    // Enough for one second.
+            _particles = new AutoGrowArray<Particle>((int)EmissionRate);    // Enough for one second.
         }
 
         public void RemoveRigging(World collisionWorld)
@@ -46,7 +45,7 @@ namespace VibeSopwith.Game.Core.ParticleSystem
         {
             var age = TimeSpan.FromSeconds(5);
 
-            for (var i = 0; i < _particlesUsed; )
+            for (var i = 0; i < _particles.Length; )
             {
                 ref var particle = ref _particles[i];
                 particle.AdvanceAge(gameTime.ElapsedGameTime);
@@ -57,18 +56,9 @@ namespace VibeSopwith.Game.Core.ParticleSystem
                 }
 
                 particle.RemoveRigging(CollisionWorld);
-                particle = _particles[--_particlesUsed]; // Copy the last particle here and forget about it.
+                _particles.RemoveAt(i);
             }
         }
-
-        private void AddParticle(Particle particle)
-        {
-            if (_particlesUsed == _particles.Length)
-                Array.Resize(ref _particles, _particles.Length + Math.Max(16, (int)EmissionRate)); // Add another second worth of capacity.
-
-            _particles[_particlesUsed++] = particle;
-        }
-
 
         public void EmitParticles(GameTime gameTime)
         {
@@ -78,24 +68,26 @@ namespace VibeSopwith.Game.Core.ParticleSystem
 
             for (var i = 0; i < particlesToEmit; ++i)
             {
-                var randomFactor = 24f * (((float)GameWorld.WorldSeed.NextDouble() * 0.2f - 0.1f) + 1f);
-                var velocity = Direction.RotateDeg((float)GameWorld.WorldSeed.NextDouble() * 1f - 0.5f) * randomFactor;
+                var linearFactor = 24f * (((float)GameWorld.WorldSeed.NextDouble() * 0.2f - 0.1f) + 1f);
+                var angleFactor = (float)GameWorld.WorldSeed.NextDouble() * 1f - 0.5f;
+                var velocity = Direction.RotateDeg(angleFactor) * linearFactor;
+
                 var particle = new Particle(Position, velocity, 0.6f, 0.6f);
                 particle.SetupRigging(CollisionWorld);
-                AddParticle(particle);
+                _particles.Add(particle);
                 _totalParticlesEmitted++;
             }
         }
 
         public void PreSimulationPrepare(Unit _)
         {
-            for (var i = 0; i < _particlesUsed; ++i)
+            for (var i = 0; i < _particles.Length; ++i)
                 _particles[i].PreSimulationPrepare(Unit.Value);
         }
 
         public void PostSimulationUpdate(Unit _)
         {
-            for (var i = 0; i < _particlesUsed; ++i)
+            for (var i = 0; i < _particles.Length; ++i)
                 _particles[i].PostSimulationUpdate(Unit.Value);
         }
 
