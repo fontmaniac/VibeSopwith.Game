@@ -41,7 +41,7 @@ namespace VibeSopwith.Game.Components
                 transform);
 
             DrawHelper.DrawSlice(
-                Location.OffInterface(airplane) with { Position = new Vector2(TheGame.PlaneGizmoWidth / 2f, TheGame.PlaneGizmoHeight / 2f) },
+                Location.Capture(airplane) with { Position = new Vector2(TheGame.PlaneGizmoWidth / 2f, TheGame.PlaneGizmoHeight / 2f) },
                 _airplaneTexture,
                 TheGame.SpriteBatch);
 

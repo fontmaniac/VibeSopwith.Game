@@ -140,7 +140,7 @@ namespace VibeSopwith.Game.Core
             return new(newAngle, newBullet.bullet, newBullet.muzzleFlash, newMovement, newRecoilShift, newBulletTime, newBulletTime);
         }
 
-        public void PreSimulationPrepare(State projected)
+        public void PreSimulationPrepare(State projected, GameTime gameTime)
         {
             if (Barrel.Body == null) return;
 
@@ -148,7 +148,7 @@ namespace VibeSopwith.Game.Core
             Barrel.Body.Rotation = Barrel.Direction.ToAngle();
         }
 
-        public void PostSimulationUpdate(State projected)
+        public void PostSimulationUpdate(State projected, GameTime gameTime)
         {
             CurrentState = projected;
         }

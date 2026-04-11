@@ -150,7 +150,7 @@ namespace VibeSopwith.Game.Core
             return new(newAngle, newMovement, newEigenState);
         }
 
-        public void PreSimulationPrepare(State projected)
+        public void PreSimulationPrepare(State projected, GameTime gameTime)
         {
             if (Nozzle.Body == null) return;
 
@@ -158,7 +158,7 @@ namespace VibeSopwith.Game.Core
             Nozzle.Body.Rotation = Nozzle.Direction.ToAngle();
         }
 
-        public void PostSimulationUpdate(State projected)
+        public void PostSimulationUpdate(State projected, GameTime gameTime)
         {
             CurrentState = projected;
         }

@@ -110,13 +110,13 @@ namespace VibeSopwith.Game.Core
             return barrageCenter + barrage.RotateDeg(-degreesPerSecond * dt); ;
         }
 
-        public void PreSimulationPrepare(Vector2 projectedPosition)
+        public void PreSimulationPrepare(Vector2 projectedPosition, GameTime gameTime)
         {
             if (Body == null) return;
             Body.Position = Position.ToAether();
         }
 
-        public void PostSimulationUpdate(Vector2 projectedPosition)
+        public void PostSimulationUpdate(Vector2 projectedPosition, GameTime gameTime)
         {
             Position = projectedPosition;
         }

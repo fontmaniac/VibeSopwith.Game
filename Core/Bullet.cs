@@ -59,11 +59,11 @@ namespace VibeSopwith.Game.Core
         }
 
 
-        public void PreSimulationPrepare(Unit _)
+        public void PreSimulationPrepare(Unit _, GameTime gameTime)
         {
         }
 
-        public void PostSimulationUpdate(Unit _)
+        public void PostSimulationUpdate(Unit _, GameTime gameTime)
         {
             CurrentState = CurrentState with
             {

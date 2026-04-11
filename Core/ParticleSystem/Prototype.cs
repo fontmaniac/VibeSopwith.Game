@@ -32,6 +32,8 @@ namespace VibeSopwith.Game.Core.ParticleSystem
 
         public void RemoveRigging(World collisionWorld)
         {
+            for (var i = 0; i < _particles.Length; ++i)
+                _particles[i].RemoveRigging(CollisionWorld);
             CollisionWorld = null!;
         }
 
@@ -39,23 +41,6 @@ namespace VibeSopwith.Game.Core.ParticleSystem
         {
             CollisionWorld = collisionWorld;
             return this;
-        }
-
-        public void RemoveParticles(GameTime gameTime)
-        {
-            for (var i = 0; i < _particles.Length; )
-            {
-                ref var particle = ref _particles[i];
-                particle.AdvanceAge(gameTime.ElapsedGameTime);
-                if (particle.Age <= particle.MaxAge) 
-                { 
-                    i++;  
-                    continue; 
-                }
-
-                particle.RemoveRigging(CollisionWorld);
-                _particles.RemoveAt(i);
-            }
         }
 
         public void EmitParticles(GameTime gameTime)
@@ -79,16 +64,29 @@ namespace VibeSopwith.Game.Core.ParticleSystem
             }
         }
 
-        public void PreSimulationPrepare(Unit _)
+        public void PreSimulationPrepare(Unit _, GameTime gameTime)
         {
             for (var i = 0; i < _particles.Length; ++i)
-                _particles[i].PreSimulationPrepare(Unit.Value);
+                _particles[i].PreSimulationPrepare(Unit.Value, gameTime);
         }
 
-        public void PostSimulationUpdate(Unit _)
+        public void PostSimulationUpdate(Unit _, GameTime gameTime)
         {
-            for (var i = 0; i < _particles.Length; ++i)
-                _particles[i].PostSimulationUpdate(Unit.Value);
+            for (var i = 0; i < _particles.Length;)
+            {
+                ref var particle = ref _particles[i];
+                particle.PostSimulationUpdate(Unit.Value, gameTime);
+                particle.AdvanceAge(gameTime.ElapsedGameTime);
+                if (particle.Age <= particle.MaxAge)
+                {
+                    i++;
+                    continue;
+                }
+
+                particle.RemoveRigging(CollisionWorld);
+                _particles.RemoveAt(i);
+
+            }
         }
 
     }

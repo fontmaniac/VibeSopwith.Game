@@ -23,7 +23,7 @@ namespace VibeSopwith.Game.Components
         public void Draw(Bullet bullet, float pxPerUnit, GameTime gameTime)
         {
             DrawHelper.DrawSlice(
-                Location.OffInterface(bullet) with 
+                Location.Capture(bullet) with 
                 { 
                     Length = BulletLengthPx / pxPerUnit,  
                     Height = BulletHeightPx / pxPerUnit,

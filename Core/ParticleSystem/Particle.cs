@@ -29,7 +29,7 @@ namespace VibeSopwith.Game.Core.ParticleSystem
             body.IgnoreGravity = false;
 
             var fixture0 = body.CreateCircle(0.1f, 1.0f);
-            fixture0.Friction = 0f;
+            fixture0.Friction = 0.5f;
             fixture0.Restitution = 0.15f;
             fixture0.CollisionCategories = GameWorld.WorldCollider.AddCategories("Particle");
             fixture0.CollidesWith = GameWorld.WorldCollider.GetAll() & ~GameWorld.WorldCollider.GetCategories("Particle");
@@ -79,11 +79,11 @@ namespace VibeSopwith.Game.Core.ParticleSystem
 
         public void RemoveRigging(World collisionWorld)
         {
-            collisionWorld.Remove(Body);
+            if (Body != null) collisionWorld.Remove(Body);
             Body = null!;
         }
 
-        public void PreSimulationPrepare(Unit _)
+        public void PreSimulationPrepare(Unit _, GameTime g)
         {
             Body.LinearVelocity = Velocity.ToAether();
             var drag = Velocity * -0.01f;
@@ -97,7 +97,7 @@ namespace VibeSopwith.Game.Core.ParticleSystem
             }
         }
 
-        public void PostSimulationUpdate(Unit _)
+        public void PostSimulationUpdate(Unit _, GameTime g)
         {
             var oldPos = Position;
             Position = Body.Position.ToXna();

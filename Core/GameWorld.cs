@@ -260,7 +260,7 @@ namespace VibeSopwith.Game.Core
                     Direction = -Vector2.UnitY,
                 },
                 Speed = Airplane.MinSpeed,
-            });
+            }, ctx.gameTime);
         }
 
         private void Kill<T>(CollisionContext ctx, ICanDie<T> target)
@@ -324,15 +324,7 @@ namespace VibeSopwith.Game.Core
             foreach (var fount in Fountains)  yield return GetActor(fount, (ctx) => DSO.ProceeedWith(fount.DeriveState(ctx.emitParticles, ctx.gameTime)), (ctx) => FountainPostSimulation(fount));
             foreach (var flakGun in FlakGuns) yield return GetActor(flakGun, (ctx) => DSO.ProceeedWith(flakGun.DeriveState(ctx.gameTime)), (ctx) => FlakPostSimulation(flakGun));
             foreach (var baloon in Baloons)   yield return GetActor(baloon, (ctx) => DSO.ProceeedWith(baloon.DeriveState(ctx.gameTime)), DoNothing);
-            foreach (var partSys in ParticleSystems)
-                yield return GetActor(
-                    partSys, 
-                    (ctx) => 
-                    {
-                        partSys.RemoveParticles(ctx.gameTime);
-                        return DSO.DoNothing(ctx);
-                    },
-                    DoNothing);
+            foreach (var partSys in ParticleSystems) yield return GetActor(partSys, DSO.DoNothing, DoNothing);
         }
 
         private IEnumerable<IPerishable> EnumeratePerishables()
@@ -352,10 +344,10 @@ namespace VibeSopwith.Game.Core
                 switch (deriveState(ctx))
                 {
                     case DeriveStateOutcome<TState>.Proceed proceed:
-                        actor.PreSimulationPrepare(proceed.Projected);
+                        actor.PreSimulationPrepare(proceed.Projected, ctx.gameTime);
                         return () =>
                         {
-                            actor.PostSimulationUpdate(proceed.Projected);
+                            actor.PostSimulationUpdate(proceed.Projected, ctx.gameTime);
                             doPostSimulation(ctx);
                         };
                     case DeriveStateOutcome<TState>.Hold: break;

@@ -81,7 +81,7 @@ namespace VibeSopwith.Game.Core
             return this;
         }
 
-        public void PreSimulationPrepare(Unit _)
+        public void PreSimulationPrepare(Unit _, GameTime gameTime)
         {
             var velo = Body.LinearVelocity.ToXna();
             var drag = velo * -0.15f;
@@ -95,7 +95,7 @@ namespace VibeSopwith.Game.Core
             Body.ApplyForce(drag.ToAether(), tailPoint);
         }
 
-        public void PostSimulationUpdate(Unit _)
+        public void PostSimulationUpdate(Unit _, GameTime gameTime)
         {
             CurrentState = CurrentState with
             {

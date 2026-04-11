@@ -370,12 +370,12 @@ namespace VibeSopwith.Game.Core
             return true;
         }
 
-        public void PreSimulationPrepare(State projected)
+        public void PreSimulationPrepare(State projected, GameTime gameTime)
         {
             
         }
 
-        public void PostSimulationUpdate(State projected)
+        public void PostSimulationUpdate(State projected, GameTime gameTime)
         {
             var wasNormalDown = Spin; 
 

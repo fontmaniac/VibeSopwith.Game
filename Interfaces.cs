@@ -80,7 +80,7 @@ public interface IHasLocation : IBasis
 
 public record Location(Vector2 Position, Vector2 Direction, BasisSpin Spin, float Length, float Height) : IHasLocation
 {
-    public static Location OffInterface(IHasLocation src) => new Location(
+    public static Location Capture(IHasLocation src) => new Location(
         src.Position,
         src.Direction,
         src.Spin,
@@ -92,10 +92,10 @@ public record Location(Vector2 Position, Vector2 Direction, BasisSpin Spin, floa
 public interface IAmBehaving<TState>
 {
     // Populate Aether2D Body properties from instance properties for simulation purposes.
-    public void PreSimulationPrepare(TState projected);
+    public void PreSimulationPrepare(TState projected, GameTime gameTime);
 
     // Populate instance properties from Aether2D Body properties computed at simulation step.
-    public void PostSimulationUpdate(TState projected);
+    public void PostSimulationUpdate(TState projected, GameTime gameTime);
 }
 
 public interface ICanRemoveRigging

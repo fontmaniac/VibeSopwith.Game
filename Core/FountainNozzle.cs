@@ -81,10 +81,10 @@ namespace VibeSopwith.Game.Core
             var mid = Position.ToAether();
             var tip = Body.GetWorldPoint(GetRefPoint("tip").ToAether());
             var launchDirection = (tip - mid);
-            var spawnPos = tip + launchDirection * 0.05f;
+            var spawnPos = tip + launchDirection * 0.00f;
 
             var boundBasis = LiveBasis.Bind(new Basis(spawnPos.ToXna(), Direction, Spin), this);
-            var result = new ParticleSystem.Prototype(boundBasis, 200f);
+            var result = new ParticleSystem.Prototype(boundBasis, 600f);
 
             return result;
         }
