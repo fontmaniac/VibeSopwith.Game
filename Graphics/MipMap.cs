@@ -66,44 +66,5 @@ namespace VibeSopwith.Game.Graphics
 
         public static Texture2D CastWithMipMaps(GraphicsDevice gd, SpriteBatch spriteBatch, Texture2D master) =>
             Cast(gd, spriteBatch, master, new Vector2(master.Width / 2f, master.Height / 2f), 0f, SpriteEffects.None);
-
-        public static Texture2D Premultiply(this Texture2D texture)
-        {
-            var data = new Color[texture.Width * texture.Height];
-            texture.GetData(data);
-
-            for (int i = 0; i < data.Length; i++)
-            {
-                var c = data[i];
-                // Color in XNA/FNA stores bytes 0–255
-                // Premultiply: rgb = rgb * (a / 255)
-                float a = c.A / 255f;
-                c.R = (byte)(c.R * a);
-                c.G = (byte)(c.G * a);
-                c.B = (byte)(c.B * a);
-                data[i] = c;
-            }
-
-            texture.SetData(data);
-            return texture; 
-        }
-
-        public static Texture2D ScaleAlpha(this Texture2D texture, float factor, byte zeroThreshold)
-        {
-            var data = new Color[texture.Width * texture.Height];
-            texture.GetData(data);
-
-            for (int i = 0; i < data.Length; i++)
-            {
-                var c = data[i];
-                c.A = (byte)(c.A * factor);
-                if (c.A < zeroThreshold) c.A = (byte)0;
-                data[i] = c;
-            }
-
-            texture.SetData(data);
-            return texture;
-        }
-
     }
 }
