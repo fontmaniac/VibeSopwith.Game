@@ -43,13 +43,11 @@ namespace VibeSopwith.Game.Core.ParticleSystem
 
         public void RemoveParticles(GameTime gameTime)
         {
-            var age = TimeSpan.FromSeconds(5);
-
             for (var i = 0; i < _particles.Length; )
             {
                 ref var particle = ref _particles[i];
                 particle.AdvanceAge(gameTime.ElapsedGameTime);
-                if (particle.Age <= age) 
+                if (particle.Age <= particle.MaxAge) 
                 { 
                     i++;  
                     continue; 
@@ -68,11 +66,13 @@ namespace VibeSopwith.Game.Core.ParticleSystem
 
             for (var i = 0; i < particlesToEmit; ++i)
             {
-                var linearFactor = 36f * (((float)GameWorld.WorldSeed.NextDouble() * 0.2f - 0.1f) + 1f);
+                var linearFactor = 54f * (((float)GameWorld.WorldSeed.NextDouble() * 0.2f - 0.1f) + 1f);
                 var angleFactor = (float)GameWorld.WorldSeed.NextDouble() * 1f - 0.5f;
                 var velocity = Direction.RotateDeg(angleFactor) * linearFactor;
 
-                var particle = new Particle(Position, velocity, 1.3f, 1.3f);
+                var ageFactor = (float)GameWorld.WorldSeed.NextDouble() * 4f - 2f;
+
+                var particle = new Particle(Position, velocity, 0.6f, 0.6f, TimeSpan.FromSeconds(3f + ageFactor));
                 particle.SetupRigging(CollisionWorld);
                 _particles.Add(particle);
                 _totalParticlesEmitted++;

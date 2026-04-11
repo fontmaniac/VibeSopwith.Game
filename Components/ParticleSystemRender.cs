@@ -8,7 +8,9 @@ namespace VibeSopwith.Game.Components
     internal class ParticleSystemRender(Microsoft.Xna.Framework.Game game) : DrawableGameComponent(game)
     {
         private HandedSlice.LR _pixelTexture = null!;
-        private HandedSlice.RL _dropletTexture = null!;
+        private HandedSlice.RL _dropletTexture0 = null!;
+        private HandedSlice.RL _dropletTexture1 = null!;
+        private HandedSlice.RL _dropletTexture2 = null!;
 
         public new void LoadContent()
         {
@@ -18,15 +20,21 @@ namespace VibeSopwith.Game.Components
             texture.SetData(new[] { Color.White });
             _pixelTexture = texture.ToAtlas(Atlas.OriginCentered).ToLRSlice();
 
-            _dropletTexture = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, Game.Content.Load<Texture2D>("Textures\\Water_Shot_4.png")).ToAtlas(new Vector2(18, 18)).ToRLSlice();
-
+            var dropletTexture = Game.Content.Load<Texture2D>("Textures\\Water_Shot_4.png");
+            _dropletTexture0 = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, dropletTexture.Premultiply()).ToAtlas(new Vector2(18, 18)).ToRLSlice();
+            _dropletTexture1 = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, dropletTexture.ScaleAlpha(0.8f, 32).Premultiply()).ToAtlas(new Vector2(18, 18)).ToRLSlice();
+            _dropletTexture2 = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, dropletTexture.ScaleAlpha(0.4f, 32).Premultiply()).ToAtlas(new Vector2(18, 18)).ToRLSlice();
         }
 
         public void Draw(Prototype particleSystem, GameTime gameTime)
         {
             foreach (var particle in particleSystem.Particles)
             {
-                DrawHelper.DrawSlice(particle, _dropletTexture, TheGame.SpriteBatch);
+                var texture =
+                    particle.AgePct > 0.8f ? _dropletTexture2 :
+                    particle.AgePct > 0.2f ? _dropletTexture1 :
+                    _dropletTexture0;
+                DrawHelper.DrawSlice(particle, texture, TheGame.SpriteBatch);
             }
         }
     }

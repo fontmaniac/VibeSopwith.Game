@@ -4,14 +4,15 @@ using VibeSopwith.Game.Utils;
 
 namespace VibeSopwith.Game.Core.ParticleSystem
 {
-    internal record struct Particle(Vector2 Position, Vector2 Velocity, float BaseLength, float BaseHeight) : IHasLocation, ICanRemoveRigging, IAmBehaving<Unit>
+    internal record struct Particle(Vector2 Position, Vector2 Velocity, float BaseLength, float BaseHeight, TimeSpan MaxAge) : IHasLocation, ICanRemoveRigging, IAmBehaving<Unit>
     {
-        public float Length => BaseLength * (0.4f + Velocity.Length() * 0.03f);
+        public float Length => BaseLength * (0.5f + Velocity.Length() * 0.01f);
         public float Height => BaseHeight;
         public Vector2 Direction { get; private set; } = Vector2.Normalize(Velocity);
         public BasisSpin Spin { get; } = BasisSpin.Down;
 
         public TimeSpan Age = TimeSpan.Zero;
+        public float AgePct => MaxAge == TimeSpan.Zero ? 1f : (float)Age.Ticks / MaxAge.Ticks;
 
         public Body Body = null!;
 
@@ -27,9 +28,9 @@ namespace VibeSopwith.Game.Core.ParticleSystem
             body.AngularDamping = 0.0f;
             body.IgnoreGravity = false;
 
-            var fixture0 = body.CreateCircle(0.6f, 1.0f);
+            var fixture0 = body.CreateCircle(0.1f, 1.0f);
             fixture0.Friction = 0f;
-            fixture0.Restitution = 0.05f;
+            fixture0.Restitution = 0.15f;
             fixture0.CollisionCategories = GameWorld.WorldCollider.AddCategories("Particle");
             fixture0.CollidesWith = GameWorld.WorldCollider.GetAll() & ~GameWorld.WorldCollider.GetCategories("Particle");
 
@@ -85,6 +86,9 @@ namespace VibeSopwith.Game.Core.ParticleSystem
         public void PreSimulationPrepare(Unit _)
         {
             Body.LinearVelocity = Velocity.ToAether();
+            var drag = Velocity * -0.01f;
+            var extraGravity = Vector2.UnitY * -1.0f;
+            Body.ApplyForce((drag + extraGravity).ToAether());
 
             if (Body.ContactList == null)
             {
