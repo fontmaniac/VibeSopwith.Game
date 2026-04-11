@@ -17,7 +17,14 @@ namespace VibeSopwith.Game.Core
             public sealed record Destroyed(Explosion Explosion) : EigenState;
         }
 
-        public record State(Basis Location, float Speed, Bomb? Bomb, Bullet? Bullet, DateTime BombTime, DateTime BulletTime, DateTime RollTime, EigenState EigenState);
+        public abstract record WaterGun
+        {
+            public sealed record Idle() : WaterGun;
+            public sealed record Emitting(bool justNow, ParticleSystem.Prototype particleSystem) : WaterGun;
+        }
+
+
+        public record State(Basis Location, float Speed, Bomb? Bomb, Bullet? Bullet, DateTime BombTime, DateTime BulletTime, DateTime RollTime, EigenState EigenState, WaterGun WaterGun);
 
         public State CurrentState;
         public float Speed { get => CurrentState.Speed; }
@@ -48,7 +55,7 @@ namespace VibeSopwith.Game.Core
 
         public Airplane(Vector2 pos, BasisSpin spin)
         {
-            CurrentState = new State(new Basis(pos, Vector2.UnitX * spin.ToFactor(), spin), 0f, null, null, DateTime.MinValue, DateTime.MinValue, DateTime.MinValue, new EigenState.ControlledFlight());
+            CurrentState = new State(new Basis(pos, Vector2.UnitX * spin.ToFactor(), spin), 0f, null, null, DateTime.MinValue, DateTime.MinValue, DateTime.MinValue, new EigenState.ControlledFlight(), new WaterGun.Idle());
 
             SpeedDial = new Dial("Spd\r\nm/s", 0, 40f, 20, new[] { 0f, 10f, 20f, 30f }, () => this.Speed);
             AltDial = new Dial("Alt,m", 0, 60f, 12, new[] { 0f, 15f, 30f, 45f }, () => this.Position.Y);
@@ -193,6 +200,19 @@ namespace VibeSopwith.Game.Core
             return new Bullet(new Bullet.State(spawnPos.ToXna(), Vector2.Normalize(velocityVector), velocityVector), startTime);
         }
 
+        public ParticleSystem.Prototype SpawnWaterJet()
+        {
+            var gun0 = Body.GetWorldPoint(GetRefPoint("gun0").ToAether());
+            var gun1 = Body.GetWorldPoint(GetRefPoint("gun1").ToAether());
+            var launchDirection = gun1 - gun0;
+            var spawnPos = gun1 + launchDirection * 0.05f;
+
+            var boundBasis = LiveBasis.Bind(new Basis(spawnPos.ToXna(), Direction, Spin), this);
+            var result = new ParticleSystem.Prototype(boundBasis, 200f, 70f, 2f, 1.5f);
+
+            return result;
+        }
+
         // Control Constants
         private const float Acceleration = 36f;             // meters per second^2
         private const float MaxSpeed = 36f;                 // meters per second
@@ -233,7 +253,7 @@ namespace VibeSopwith.Game.Core
 
         private record struct InputStack(Inputs? User = null, Inputs? Autopilot = null);
 
-        public DeriveStateOutcome<State> DeriveState(Inputs inputs, float ups, GameTime gameTime, IEnumerable<Runway> runways, IEnumerable<Autopilot.Approach> approaches)
+        public DeriveStateOutcome<State> DeriveState(Inputs inputs, bool emitActive, float ups, GameTime gameTime, IEnumerable<Runway> runways, IEnumerable<Autopilot.Approach> approaches)
         {
             var airplaneInputs = new InputStack(inputs, null);
             switch (CurrentState.EigenState)
@@ -263,10 +283,14 @@ namespace VibeSopwith.Game.Core
             if (CurrentState.EigenState is EigenState.ControlledFlight)
                 runways.FirstOrDefault(CheckAndSetLandingMode);
 
-            return DSO.ProceeedWith(InterpretInputs(airplaneInputs, () => Autopilot.InitiateAutoLanding(this, approaches), gameTime));
+            if (CurrentState.EigenState is EigenState.ControlledFlight && Speed != 0)
+                if (emitActive && CurrentState.WaterGun is WaterGun.Emitting em)
+                    em.particleSystem.EmitParticles(gameTime);
+
+            return DSO.ProceeedWith(InterpretInputs(airplaneInputs, emitActive, () => Autopilot.InitiateAutoLanding(this, approaches), gameTime));
         }
 
-        private State InterpretInputs(InputStack inputStack, Func<Autopilot.ApproachPhase> initiateAutoland, GameTime gameTime)
+        private State InterpretInputs(InputStack inputStack, bool emitActive, Func<Autopilot.ApproachPhase> initiateAutoland, GameTime gameTime)
         {
             var input = inputStack.Autopilot ?? inputStack.User ?? Inputs.Clean();
 
@@ -323,7 +347,14 @@ namespace VibeSopwith.Game.Core
                     _ => throw new NotSupportedException("Unsupported Airplane EigenState")
                 };
 
-            return new State(new Basis(newPosition, newDirection, newSpin), newSpeed, newBomb, newBullet, newBombTime, newBulletTime, newRollTime, newEigenState);
+            WaterGun newWaterGun =
+                !emitActive
+                ? new WaterGun.Idle() as WaterGun
+                : CurrentState.WaterGun is WaterGun.Emitting emit
+                    ? emit with { justNow = false }
+                    : new WaterGun.Emitting(true, SpawnWaterJet());
+
+            return new State(new Basis(newPosition, newDirection, newSpin), newSpeed, newBomb, newBullet, newBombTime, newBulletTime, newRollTime, newEigenState, newWaterGun);
         }
 
         public bool CheckAndSetLandingMode(Ground.Runway runway)

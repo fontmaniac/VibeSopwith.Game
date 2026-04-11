@@ -6,7 +6,7 @@ namespace VibeSopwith.Game.Core.ParticleSystem
 {
     internal record struct Particle(Vector2 Position, Vector2 Velocity, float BaseLength, float BaseHeight, TimeSpan MaxAge) : IHasLocation, ICanRemoveRigging, IAmBehaving<Unit>
     {
-        public float Length => BaseLength * (0.5f + Velocity.Length() * 0.01f);
+        public float Length => BaseLength * MathHelper.Clamp(0.5f + Velocity.Length() * 0.01f, 0f, 2f);
         public float Height => BaseHeight;
         public Vector2 Direction { get; private set; } = Vector2.Normalize(Velocity);
         public BasisSpin Spin { get; } = BasisSpin.Down;
@@ -30,9 +30,9 @@ namespace VibeSopwith.Game.Core.ParticleSystem
 
             var fixture0 = body.CreateCircle(0.1f, 1.0f);
             fixture0.Friction = 0.5f;
-            fixture0.Restitution = 0.15f;
+            fixture0.Restitution = 0.1f;
             fixture0.CollisionCategories = GameWorld.WorldCollider.AddCategories("Particle");
-            fixture0.CollidesWith = GameWorld.WorldCollider.GetAll() & ~GameWorld.WorldCollider.GetCategories("Particle");
+            fixture0.CollidesWith = GameWorld.WorldCollider.GetAll() & ~GameWorld.WorldCollider.GetCategories("Particle", "Bullet");
 
             this.Body = body;
         }

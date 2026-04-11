@@ -457,8 +457,8 @@ namespace VibeSopwith.Game.Core
 
             // Flak guns
             var flakGuns = new List<FlakGun>();
-            //flakGuns.Add(new FlakGun(new Vector2(340, 17), BasisSpin.Down));
-            //flakGuns.Add(new FlakGun(new Vector2(360, 15), BasisSpin.Up));
+            flakGuns.Add(new FlakGun(new Vector2(340, 17), BasisSpin.Down));
+            flakGuns.Add(new FlakGun(new Vector2(360, 15), BasisSpin.Up));
 
             // Fountains
             var fountains = new List<Fountain>();

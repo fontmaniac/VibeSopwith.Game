@@ -15,6 +15,10 @@ namespace VibeSopwith.Game.Core.ParticleSystem
 
         public readonly float EmissionRate;
         private TimeSpan? _emissionStart = null;
+        public readonly float InitialVelocity;
+        public readonly float MidAge;
+        public readonly float DeltaAge;
+
 
         private AutoGrowArray<Particle> _particles = null!;
         private int _totalParticlesEmitted = 0;
@@ -23,11 +27,14 @@ namespace VibeSopwith.Game.Core.ParticleSystem
 
         public ReadOnlySpan<Particle> Particles => _particles.ReadOnlyItems;
 
-        public Prototype(IBasis WorldPosition, float emissionRate)
+        public Prototype(IBasis WorldPosition, float emissionRate, float initialVelocity, float midAge, float deltaAge)
         {
             WorldLocation = WorldPosition;
             EmissionRate = emissionRate;
             _particles = new AutoGrowArray<Particle>((int)EmissionRate);    // Enough for one second.
+            InitialVelocity = initialVelocity;
+            MidAge = midAge;
+            DeltaAge = deltaAge;
         }
 
         public void RemoveRigging(World collisionWorld)
@@ -51,13 +58,13 @@ namespace VibeSopwith.Game.Core.ParticleSystem
 
             for (var i = 0; i < particlesToEmit; ++i)
             {
-                var linearFactor = 54f * (((float)GameWorld.WorldSeed.NextDouble() * 0.2f - 0.1f) + 1f);
+                var linearFactor = InitialVelocity * (((float)GameWorld.WorldSeed.NextDouble() * 0.2f - 0.1f) + 1f);
                 var angleFactor = (float)GameWorld.WorldSeed.NextDouble() * 1f - 0.5f;
                 var velocity = Direction.RotateDeg(angleFactor) * linearFactor;
 
-                var ageFactor = (float)GameWorld.WorldSeed.NextDouble() * 4f - 2f;
+                var ageFactor = (float)GameWorld.WorldSeed.NextDouble() * 2f * DeltaAge - DeltaAge;
 
-                var particle = new Particle(Position, velocity, 0.6f, 0.6f, TimeSpan.FromSeconds(3f + ageFactor));
+                var particle = new Particle(Position, velocity, 0.6f, 0.6f, TimeSpan.FromSeconds(MidAge + ageFactor));
                 particle.SetupRigging(CollisionWorld);
                 _particles.Add(particle);
                 _totalParticlesEmitted++;

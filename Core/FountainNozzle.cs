@@ -76,7 +76,7 @@ namespace VibeSopwith.Game.Core
             Body.Tag = makeTag();
         }
 
-        public ParticleSystem.Prototype SpawnParticleSystem(TimeSpan startTime)
+        public ParticleSystem.Prototype SpawnParticleSystem()
         {
             var mid = Position.ToAether();
             var tip = Body.GetWorldPoint(GetRefPoint("tip").ToAether());
@@ -84,7 +84,7 @@ namespace VibeSopwith.Game.Core
             var spawnPos = tip + launchDirection * 0.00f;
 
             var boundBasis = LiveBasis.Bind(new Basis(spawnPos.ToXna(), Direction, Spin), this);
-            var result = new ParticleSystem.Prototype(boundBasis, 600f);
+            var result = new ParticleSystem.Prototype(boundBasis, 300f, 54f, 3f, 2f);
 
             return result;
         }

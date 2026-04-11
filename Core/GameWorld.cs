@@ -318,7 +318,7 @@ namespace VibeSopwith.Game.Core
 
         private IEnumerable<IActor> EnumerateActors()
         {
-            yield return GetActor(Plane, (ctx) => Plane.DeriveState(ctx.airplaneInputs, ctx.ups, ctx.gameTime, Runways, Approaches), (ctx) => PlanePostSimulation(), () => Plane = MakeNewPlane());
+            yield return GetActor(Plane, (ctx) => Plane.DeriveState(ctx.airplaneInputs, ctx.emitParticles, ctx.ups, ctx.gameTime, Runways, Approaches), (ctx) => PlanePostSimulation(), () => Plane = MakeNewPlane());
             foreach (var bomb in Bombs)       yield return GetActor(bomb, DSO.DoNothing, DoNothing);
             foreach (var bullet in Bullets)   yield return GetActor(bullet, DSO.DoNothing, DoNothing);
             foreach (var fount in Fountains)  yield return GetActor(fount, (ctx) => DSO.ProceeedWith(fount.DeriveState(ctx.emitParticles, ctx.gameTime)), (ctx) => FountainPostSimulation(fount));
@@ -368,6 +368,7 @@ namespace VibeSopwith.Game.Core
         {
             RegisterBomb(Plane.CurrentState.Bomb);
             RegisterBullet(Plane.CurrentState.Bullet);
+            RegisterParticleSystem(Plane.CurrentState.WaterGun is Airplane.WaterGun.Emitting emit && emit.justNow ? emit.particleSystem : null);
         }
 
         private void FountainPostSimulation(Fountain fountain)

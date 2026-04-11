@@ -141,11 +141,11 @@ namespace VibeSopwith.Game.Core
                 CurrentState.Movement;
 
             var newEigenState =
-                !emitActive
+                !emitActive || Exploded
                 ? new EigenState.Idle() as EigenState
                 : CurrentState.EigenState is EigenState.Emitting emit
                     ? emit with { justNow = false }
-                    : new EigenState.Emitting(true, Nozzle.SpawnParticleSystem(gameTime.TotalGameTime));
+                    : new EigenState.Emitting(true, Nozzle.SpawnParticleSystem());
 
             return new(newAngle, newMovement, newEigenState);
         }

@@ -129,7 +129,7 @@ namespace VibeSopwith.Game.Components
             TheGame.SpriteBatch.Begin(
                 SpriteSortMode.Deferred,
                 BlendState.AlphaBlend,
-                SamplerState.PointClamp, 
+                SamplerState.LinearWrap, 
                 DepthStencilState.None,
                 RasterizerState.CullNone, 
                 null,
