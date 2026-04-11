@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using nkast.Aether.Physics2D.Dynamics;
 using VibeSopwith.Game.Utils;
+using VibeSopwith.Game.Utils.ParticleSystem;
 
 namespace VibeSopwith.Game;
 
@@ -19,7 +20,6 @@ public static class SpinModule
     public static BasisSpin Toggle(this BasisSpin s) => s == BasisSpin.Down ? BasisSpin.Up : BasisSpin.Down;
     public static float ToFactor(this BasisSpin c) => c == BasisSpin.Down ? +1f : -1f;
 }
-
 
 public interface IBasis
 {
@@ -98,10 +98,12 @@ public interface IAmBehaving<TState>
     public void PostSimulationUpdate(TState projected, GameTime gameTime);
 }
 
-public interface ICanRemoveRigging
+public interface ICanRemoveRigging<TSimWorld>
 {
-    void RemoveRigging(World collisionWorld);
+    void RemoveRigging(TSimWorld collisionWorld);
 }
+
+public interface ICanRemoveRigging : ICanRemoveRigging<World>;
 
 public interface IHasParts
 {

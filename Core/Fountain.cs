@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using nkast.Aether.Physics2D.Dynamics;
 using VibeSopwith.Game.Utils;
+using VibeSopwith.Game.Utils.ParticleSystem;
 
 namespace VibeSopwith.Game.Core
 {
@@ -11,7 +12,7 @@ namespace VibeSopwith.Game.Core
         public abstract record EigenState
         {
             public sealed record Idle() : EigenState;
-            public sealed record Emitting(bool justNow, ParticleSystem.Prototype particleSystem) : EigenState;
+            public sealed record Emitting(bool justNow, IParticleSystem<World> particleSystem) : EigenState;
         }
 
         public record State(float NozzleAngle, NozzleMovement Movement, EigenState EigenState);

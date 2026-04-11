@@ -1,7 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using nkast.Aether.Physics2D.Dynamics;
 using VibeSopwith.Game.Utils;
-using static VibeSopwith.Game.Core.Ground;
+using VibeSopwith.Game.Utils.ParticleSystem;
 using Aether = nkast.Aether.Physics2D.Common;
 
 namespace VibeSopwith.Game.Core
@@ -20,7 +20,7 @@ namespace VibeSopwith.Game.Core
         public abstract record WaterGun
         {
             public sealed record Idle() : WaterGun;
-            public sealed record Emitting(bool justNow, ParticleSystem.Prototype particleSystem) : WaterGun;
+            public sealed record Emitting(bool justNow, IParticleSystem<World> particleSystem) : WaterGun;
         }
 
 
@@ -200,7 +200,7 @@ namespace VibeSopwith.Game.Core
             return new Bullet(new Bullet.State(spawnPos.ToXna(), Vector2.Normalize(velocityVector), velocityVector), startTime);
         }
 
-        public ParticleSystem.Prototype SpawnWaterJet()
+        public IParticleSystem<World> SpawnWaterJet()
         {
             var gun0 = Body.GetWorldPoint(GetRefPoint("gun0").ToAether());
             var gun1 = Body.GetWorldPoint(GetRefPoint("gun1").ToAether());
@@ -208,7 +208,7 @@ namespace VibeSopwith.Game.Core
             var spawnPos = gun1 + launchDirection * 0.05f;
 
             var boundBasis = LiveBasis.Bind(new Basis(spawnPos.ToXna(), Direction, Spin), this);
-            var result = new ParticleSystem.Prototype(boundBasis, 200f, 70f, 2f, 1.5f);
+            var result = new Utils.ParticleSystem.Special.EmitterWaterJet(boundBasis, 200f, 70f, 2f, 1.5f);
 
             return result;
         }
@@ -253,7 +253,7 @@ namespace VibeSopwith.Game.Core
 
         private record struct InputStack(Inputs? User = null, Inputs? Autopilot = null);
 
-        public DeriveStateOutcome<State> DeriveState(Inputs inputs, bool emitActive, float ups, GameTime gameTime, IEnumerable<Runway> runways, IEnumerable<Autopilot.Approach> approaches)
+        public DeriveStateOutcome<State> DeriveState(Inputs inputs, bool emitActive, float ups, GameTime gameTime, IEnumerable<Ground.Runway> runways, IEnumerable<Autopilot.Approach> approaches)
         {
             var airplaneInputs = new InputStack(inputs, null);
             switch (CurrentState.EigenState)

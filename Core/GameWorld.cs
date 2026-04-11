@@ -2,6 +2,7 @@ using Microsoft.Xna.Framework;
 using nkast.Aether.Physics2D.Dynamics;
 using nkast.Aether.Physics2D.Dynamics.Contacts;
 using VibeSopwith.Game.Utils;
+using VibeSopwith.Game.Utils.ParticleSystem;
 using Aether = nkast.Aether.Physics2D.Common;
 
 namespace VibeSopwith.Game.Core
@@ -17,7 +18,7 @@ namespace VibeSopwith.Game.Core
         public readonly Ground Ground;
         public readonly Ceiling Ceiling;
         public Airplane Plane;
-        public readonly List<ParticleSystem.Prototype> ParticleSystems = new List<ParticleSystem.Prototype>();
+        public readonly List<IParticleSystem<World>> ParticleSystems = new List<IParticleSystem<World>>();
         public readonly List<Explosion> Explosions = new List<Explosion>();
         public readonly List<Bomb> Bombs = new List<Bomb>();
         public readonly List<Bullet> Bullets = new List<Bullet>();
@@ -38,7 +39,8 @@ namespace VibeSopwith.Game.Core
 
             collisionWorld = new World()
             {
-                Gravity = (-Vector2.UnitY * 10f).ToAether(),
+                //Gravity = Vector2.Zero.ToAether(),
+                //Gravity = (-Vector2.UnitY * 10f).ToAether(),
             };
 
             //Ground = Ground.MakeFlat(0.1f); 
@@ -135,7 +137,7 @@ namespace VibeSopwith.Game.Core
             IfNotNull(bullet, bullet => Bullets.Add(bullet.SetupRigging(collisionWorld)));
         private void RegisterExplosion(Explosion? explosion) =>
             IfNotNull(explosion, explosion => Explosions.Add(explosion));
-        private void RegisterParticleSystem(ParticleSystem.Prototype? particleSystem) =>
+        private void RegisterParticleSystem(IParticleSystem<World>? particleSystem) =>
             IfNotNull(particleSystem, particleSystem => ParticleSystems.Add(particleSystem.SetupRigging(collisionWorld)));
 
         #region Object Capabilities
@@ -332,7 +334,15 @@ namespace VibeSopwith.Game.Core
             foreach (var bullet in Bullets)          yield return GetPerishable((ctx) => { if (bullet.IsExpired(ctx.gameTime.TotalGameTime)) return Bullets.Remove(bullet); return false; });
             foreach (var explosion in Explosions)    yield return GetPerishable((ctx) => { if (explosion.IsExpired(ctx.gameTime.TotalGameTime)) return Explosions.Remove(explosion); return false; });
             foreach (var baloon in Baloons)          yield return GetPerishable((ctx) => { if (baloon.Exploded) return Baloons.Remove(baloon); return false; });
-            foreach (var partSys in ParticleSystems) yield return GetPerishable((ctx) => { if (partSys.IsExpired) return ParticleSystems.Remove(partSys); return false; });
+            foreach (var partSys in ParticleSystems) yield return GetPerishable((ctx) => 
+            {
+                if (partSys.IsExpired)
+                {
+                    partSys.RemoveRigging(collisionWorld);
+                    return ParticleSystems.Remove(partSys);
+                }
+                return false; 
+            });
         }
 
         private IActor GetActor<TAct, TState>(

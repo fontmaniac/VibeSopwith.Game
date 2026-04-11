@@ -8,6 +8,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Core\ParticleSystem\**" />
+    <EmbeddedResource Remove="Core\ParticleSystem\**" />
+    <None Remove="Core\ParticleSystem\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Reference Include="FNA">
       <HintPath>..\..\..\..\Libs\FNA\bin\Debug\FNA.dll</HintPath>
     </Reference>

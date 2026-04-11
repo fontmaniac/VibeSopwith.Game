@@ -1,7 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using VibeSopwith.Game.Core.ParticleSystem;
 using VibeSopwith.Game.Graphics;
+using VibeSopwith.Game.Utils.ParticleSystem.Special;
 
 namespace VibeSopwith.Game.Components
 {
@@ -30,7 +30,7 @@ namespace VibeSopwith.Game.Components
             _dropletTexture4 = MipMap.CastWithMipMaps(GraphicsDevice, TheGame.SpriteBatch, dropletTexture.ScaleAlpha(0.2f, 48).Premultiply()).ToAtlas(new Vector2(18, 18)).ToRLSlice();
         }
 
-        public void Draw(Prototype particleSystem, GameTime gameTime)
+        public void Draw(EmitterWaterJet particleSystem, GameTime gameTime)
         {
             foreach (var particle in particleSystem.Particles)
             {
