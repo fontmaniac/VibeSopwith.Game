@@ -167,8 +167,8 @@ namespace VibeSopwith.Game.Components
             foreach (var fountain in world.Fountains)
             {
                 _fountainRender.DrawSnapped(fountain, gameTime, worldPixelSize);
-                _bodyRender.Draw(fountain.Nozzle.Body, gameTime);
-                _bodyRender.Draw(fountain.Body, gameTime);
+                //_bodyRender.Draw(fountain.Nozzle.Body, gameTime);
+                //_bodyRender.Draw(fountain.Body, gameTime);
             }
 
             foreach (var particleSystem in world.ParticleSystems.OfType<EmitterWaterJet>())
