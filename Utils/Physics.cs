@@ -2,7 +2,6 @@ using Microsoft.Xna.Framework;
 using nkast.Aether.Physics2D.Collision.Shapes;
 using nkast.Aether.Physics2D.Dynamics;
 using nkast.Aether.Physics2D.Dynamics.Contacts;
-using System.Runtime.Intrinsics.X86;
 using Aether = nkast.Aether.Physics2D.Common;
 
 namespace VibeSopwith.Game.Utils
