@@ -1,7 +1,7 @@
 using Microsoft.Xna.Framework;
+using Nage.Strata.Types;
 using nkast.Aether.Physics2D.Dynamics;
 using nkast.Aether.Physics2D.Dynamics.Contacts;
-using System.Diagnostics;
 using VibeSopwith.Game.Utils;
 using VibeSopwith.Game.Utils.ParticleSystem;
 using Aether = nkast.Aether.Physics2D.Common;

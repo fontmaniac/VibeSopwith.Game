@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using Nage.Strata.Types;
 using nkast.Aether.Physics2D.Dynamics;
 using VibeSopwith.Game.Utils;
 

@@ -48,6 +48,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Nage.Strata\Nage.Strata.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Update="Content\Fonts\Arial12.xnb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using Nage.Strata.Types;
 
 namespace VibeSopwith.Game.Utils.ParticleSystem
 {
