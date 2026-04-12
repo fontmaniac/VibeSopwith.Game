@@ -1,0 +1,4 @@
+[submodule "Nage.Strata"]
+	path = Nage.Strata
+	url = https://github.com/fontmaniac/Nage.Strata.git
+	branch = master
