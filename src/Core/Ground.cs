@@ -1,5 +1,5 @@
 using Microsoft.Xna.Framework;
-using Nage.Strata.Abstractions;
+using Nage.Strata.Abstractions.Spatial;
 using Nage.Strata.Physics;
 using nkast.Aether.Physics2D.Dynamics;
 using Aether = nkast.Aether.Physics2D.Common;

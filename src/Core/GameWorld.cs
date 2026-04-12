@@ -1,5 +1,6 @@
 using Microsoft.Xna.Framework;
-using Nage.Strata.Abstractions;
+using Nage.Strata.Abstractions.Behavioral;
+using Nage.Strata.Abstractions.Spatial;
 using Nage.Strata.Physics;
 using Nage.Strata.Types;
 using nkast.Aether.Physics2D.Dynamics;
@@ -423,12 +424,12 @@ namespace VibeSopwith.Game.Core
                 var planeVsGround = (Airplane plane) => pPlane.IsAlive(plane) && plane.Speed != 0;
 
                 var _ = 
-                    Physics.OnCollision(ct, "Plane-Ceiling", pPlane.IsAlive,  pCeiling.IsAlive,                                 (cp, fa, fb, p, c) => ExecuteBounce   (makeCtx(cp, fa, fb), p,  c)) ||
-                    Physics.OnCollision(ct, "Plane-{0}",     pPlane.IsAlive,  Caps.CheckAlive<ICanDieByPlane<Unit>>(),          (cp, fa, fb, p, t) => ExecuteCollision(makeCtx(cp, fa, fb), p,  t)) ||
-                    Physics.OnCollision(ct, "Plane-{0}",     planeVsGround,   Caps.CheckAlive<ICanDieByPlane<Ground.XRange>>(), (cp, fa, fb, p, t) => ExecuteCollision(makeCtx(cp, fa, fb), p,  t)) ||
-                    Physics.OnCollision(ct, "Bullet-{0}",    pBullet.IsAlive, Caps.CheckAlive<ICanDieByBullet<Unit>>(),         (cp, fa, fb, b, t) => ExecuteExplosion(makeCtx(cp, fa, fb), b,  t)) ||
-                    Physics.OnCollision(ct, "Bomb-{0}",      pBomb.IsAlive,   Caps.CheckAlive<ICanDieByBomb<Unit>>(),           (cp, fa, fb, b, t) => ExecuteExplosion(makeCtx(cp, fa, fb), b,  t)) ||
-                    Physics.OnCollision(ct, "Bomb-{0}",      pBomb.IsAlive,   Caps.CheckAlive<ICanDieByBomb<Ground.XRange>>(),  (cp, fa, fb, b, t) => ExecuteExplosion(makeCtx(cp, fa, fb), b,  t)) ||
+                    ct.OnCollision("Plane-Ceiling", pPlane.IsAlive,  pCeiling.IsAlive,                                 (cp, fa, fb, p, c) => ExecuteBounce   (makeCtx(cp, fa, fb), p,  c)) ||
+                    ct.OnCollision("Plane-{0}",     pPlane.IsAlive,  Caps.CheckAlive<ICanDieByPlane<Unit>>(),          (cp, fa, fb, p, t) => ExecuteCollision(makeCtx(cp, fa, fb), p,  t)) ||
+                    ct.OnCollision("Plane-{0}",     planeVsGround,   Caps.CheckAlive<ICanDieByPlane<Ground.XRange>>(), (cp, fa, fb, p, t) => ExecuteCollision(makeCtx(cp, fa, fb), p,  t)) ||
+                    ct.OnCollision("Bullet-{0}",    pBullet.IsAlive, Caps.CheckAlive<ICanDieByBullet<Unit>>(),         (cp, fa, fb, b, t) => ExecuteExplosion(makeCtx(cp, fa, fb), b,  t)) ||
+                    ct.OnCollision("Bomb-{0}",      pBomb.IsAlive,   Caps.CheckAlive<ICanDieByBomb<Unit>>(),           (cp, fa, fb, b, t) => ExecuteExplosion(makeCtx(cp, fa, fb), b,  t)) ||
+                    ct.OnCollision("Bomb-{0}",      pBomb.IsAlive,   Caps.CheckAlive<ICanDieByBomb<Ground.XRange>>(),  (cp, fa, fb, b, t) => ExecuteExplosion(makeCtx(cp, fa, fb), b,  t)) ||
                     false;
             }
 

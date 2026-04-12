@@ -1,53 +1,12 @@
 ﻿using Microsoft.Xna.Framework;
-using Nage.Strata.Abstractions;
+using Nage.Strata.Abstractions.Behavioral;
+using Nage.Strata.Abstractions.Spatial;
 using Nage.Strata.Types;
 using nkast.Aether.Physics2D.Dynamics;
 
 namespace VibeSopwith.Game;
 
-public interface IAmBehaving<TState>
-{
-    // Populate Aether2D Body properties from instance properties for simulation purposes.
-    public void PreSimulationPrepare(TState projected, GameTime gameTime);
-
-    // Populate instance properties from Aether2D Body properties computed at simulation step.
-    public void PostSimulationUpdate(TState projected, GameTime gameTime);
-}
-
-public interface ICanRemoveRigging<TSimWorld>
-{
-    void RemoveRigging(TSimWorld simWorld);
-}
-
 public interface ICanRemoveRigging : ICanRemoveRigging<World>;
-
-public interface IHasParts
-{
-    IBasis PickPart(object tag);
-}
-
-public interface IDescribeMyself { string WhoAmI { get; } }
-
-public record Poppet<T>(Func<T, bool> IsAlive, Action<T> Erase)
-{
-    public Poppet Embrace(T target) => new Poppet(() => IsAlive(target), () => Erase(target));
-}
-
-public record Poppet(Func<bool> IsAlive, Action Erase)
-{
-    public static Poppet<T> Make<T>(Func<T, bool> isAlive, Action<T> erase) => new Poppet<T>(isAlive, erase);
-    public static void Killable<T>(out Poppet<T> popout, Func<T, bool> isAlive, Action<T> erase) => popout = new Poppet<T>(isAlive, erase);
-    public static void KillableByEffect<T>(out Poppet<T> popout, Func<T, bool> isAlive) => popout = new Poppet<T>(isAlive, _ => { });
-    public static void AlwaysAlive<T>(out Poppet<T> popout) => popout = new Poppet<T>(_ => true, _ => { });
-}
-
-public interface IHasPoppet { Poppet Poppet { get; } }
-
-public interface ICanDie<T> : IHasPoppet
-{
-    Action<T> RefreshRigging { get; }
-    Func<GameTime, Vector2, T> ExecuteEffect { get; }
-}
 
 public interface ICanDieByBomb<T> : ICanDie<T>;
 
@@ -121,15 +80,3 @@ public static class Caps
 
 }
 
-public abstract record DeriveStateOutcome<TState>
-{
-    public sealed record Proceed(TState Projected) : DeriveStateOutcome<TState>;
-    public sealed record Hold() : DeriveStateOutcome<TState>;
-    public sealed record Rebirth() : DeriveStateOutcome<TState>;
-}
-
-public abstract class DSO
-{
-    public static DeriveStateOutcome<TState>.Proceed ProceeedWith<TState>(TState projected) => new DeriveStateOutcome<TState>.Proceed(projected);
-    public static DeriveStateOutcome<Unit>.Proceed DoNothing<TCtx>(TCtx ctx) => new DeriveStateOutcome<Unit>.Proceed(Unit.Value);
-}

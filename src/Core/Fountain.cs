@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
-using Nage.Strata.Abstractions;
+using Nage.Strata.Abstractions.Behavioral;
+using Nage.Strata.Abstractions.Spatial;
 using Nage.Strata.Physics;
 using nkast.Aether.Physics2D.Dynamics;
 using VibeSopwith.Game.Utils;
