@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
-using VibeSopwith.Game.Utils;
+using Nage.Strata.Abstractions;
+using Nage.Strata.Physics;
 
 namespace VibeSopwith.Game.Core
 {

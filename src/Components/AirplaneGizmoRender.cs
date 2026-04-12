@@ -1,7 +1,8 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Nage.Strata.Abstractions;
+using Nage.Strata.Graphics;
 using VibeSopwith.Game.Core;
-using VibeSopwith.Game.Graphics;
 
 namespace VibeSopwith.Game.Components
 {

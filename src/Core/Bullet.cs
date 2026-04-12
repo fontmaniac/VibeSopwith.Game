@@ -1,7 +1,8 @@
 ﻿using Microsoft.Xna.Framework;
+using Nage.Strata.Abstractions;
+using Nage.Strata.Physics;
 using Nage.Strata.Types;
 using nkast.Aether.Physics2D.Dynamics;
-using VibeSopwith.Game.Utils;
 
 namespace VibeSopwith.Game.Core
 {
