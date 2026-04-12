@@ -15,27 +15,27 @@
 
   <ItemGroup>
     <Reference Include="FNA">
-      <HintPath>..\..\..\..\Libs\FNA\bin\Debug\FNA.dll</HintPath>
+      <HintPath>..\..\..\..\..\Libs\FNA\bin\Debug\FNA.dll</HintPath>
     </Reference>
   </ItemGroup>
 
 	<ItemGroup>
-		<None Include="..\..\..\..\Libs\FNALibs\FNA3D.dll">
+		<None Include="..\..\..\..\..\Libs\FNALibs\FNA3D.dll">
 			<Link>natives\FNA3D.dll</Link>
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 			<TargetPath>FNA3D.dll</TargetPath>
 		</None>
-		<None Include="..\..\..\..\Libs\FNALibs\FAudio.dll">
+		<None Include="..\..\..\..\..\Libs\FNALibs\FAudio.dll">
 			<Link>natives\FAudio.dll</Link>
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 			<TargetPath>FAudio.dll</TargetPath>
 		</None>
-		<None Include="..\..\..\..\Libs\FNALibs\libtheorafile.dll">
+		<None Include="..\..\..\..\..\Libs\FNALibs\libtheorafile.dll">
 			<Link>natives\libtheorafile.dll</Link>
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 			<TargetPath>libtheorafile.dll</TargetPath>
 		</None>
-		<None Include="..\..\..\..\Libs\FNALibs\SDL3.dll">
+		<None Include="..\..\..\..\..\Libs\FNALibs\SDL3.dll">
 			<Link>natives\SDL3.dll</Link>
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 			<TargetPath>SDL3.dll</TargetPath>

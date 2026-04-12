@@ -34,5 +34,5 @@ TestResult.xml
 
 .fake
 
-/Content/*
-/Content/
+/src/Content/*
+/src/Content/
