@@ -5,9 +5,11 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VibeSopwith.Game", "src\VibeSopwith.Game.csproj", "{F628B55A-BE43-1697-A34C-70E2F98963F4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nage.Strata", "Nage.Strata\Nage.Strata.csproj", "{B45EB0FE-2EEF-36F2-7C4C-947584A6E3BD}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FNA.Core", "extern\FNA\FNA.Core.csproj", "{09E7354E-7D53-8010-3562-198098BD7972}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nage.Strata", "extern\Nage.Strata\Nage.Strata.csproj", "{BA9B285B-DE9C-3486-CD8E-F3CAC57EAD59}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "extern", "extern", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -19,17 +21,21 @@ Global
 		{F628B55A-BE43-1697-A34C-70E2F98963F4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F628B55A-BE43-1697-A34C-70E2F98963F4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F628B55A-BE43-1697-A34C-70E2F98963F4}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B45EB0FE-2EEF-36F2-7C4C-947584A6E3BD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B45EB0FE-2EEF-36F2-7C4C-947584A6E3BD}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B45EB0FE-2EEF-36F2-7C4C-947584A6E3BD}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B45EB0FE-2EEF-36F2-7C4C-947584A6E3BD}.Release|Any CPU.Build.0 = Release|Any CPU
 		{09E7354E-7D53-8010-3562-198098BD7972}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{09E7354E-7D53-8010-3562-198098BD7972}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{09E7354E-7D53-8010-3562-198098BD7972}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{09E7354E-7D53-8010-3562-198098BD7972}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BA9B285B-DE9C-3486-CD8E-F3CAC57EAD59}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BA9B285B-DE9C-3486-CD8E-F3CAC57EAD59}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BA9B285B-DE9C-3486-CD8E-F3CAC57EAD59}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BA9B285B-DE9C-3486-CD8E-F3CAC57EAD59}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{09E7354E-7D53-8010-3562-198098BD7972} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{BA9B285B-DE9C-3486-CD8E-F3CAC57EAD59} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {2B1C6FBC-AC10-48F8-B0EC-DFE951D13548}

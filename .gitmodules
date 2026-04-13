@@ -1,8 +1,8 @@
 [submodule "Nage.Strata"]
-	path = Nage.Strata
+	path = extern/Nage.Strata
 	url = https://github.com/fontmaniac/Nage.Strata.git
 	branch = master
-[submodule "extern/FNA"]
+[submodule "FNA"]
 	path = extern/FNA
 	url = https://github.com/FNA-XNA/FNA.git
 	branch = master

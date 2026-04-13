@@ -42,7 +42,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Nage.Strata\Nage.Strata.csproj" />
+    <ProjectReference Include="..\extern\Nage.Strata\Nage.Strata.csproj" />
   </ItemGroup>
 
   <ItemGroup>
