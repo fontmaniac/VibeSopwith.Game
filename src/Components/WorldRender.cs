@@ -62,7 +62,7 @@ namespace VibeSopwith.Game.Components
             _fountainRender.LoadContent();
 
             _waterJetRender = new EmitterWaterJetRender(Game);
-            _waterJetRender.LoadContent();
+            _waterJetRender.LoadContent(TheGame.SpriteBatchPoint);
 
             _balloonRender = new BaloonRender(Game);
             _balloonRender.LoadContent();
@@ -172,7 +172,7 @@ namespace VibeSopwith.Game.Components
             }
 
             foreach (var particleSystem in world.ParticleSystems.OfType<EmitterWaterJet>())
-                _waterJetRender.Draw(particleSystem, gameTime);
+                _waterJetRender.Draw(particleSystem, gameTime, TheGame.SpriteBatchLinear);
 
             foreach (var baloon in world.Baloons)
             {
