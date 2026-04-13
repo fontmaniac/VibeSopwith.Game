@@ -86,7 +86,7 @@ namespace VibeSopwith.Game.Components
             DrawTextures(gd, _band2Texture, _quadVertsTex.Length / 4 * 2, triCountPerBand);
             DrawTextures(gd, _skyTexture,   _quadVertsTex.Length / 4 * 3, triCountPerBand);
 
-            singlePass(0, new(0f, 0f), (_, pbs) => TheGame.Primitives.DrawLine(pbs.p1, pbs.p2, Color.White, thickness / scaleVert));
+            singlePass(0, new(0f, 0f), (_, pbs) => TheGame.Global.Primitives.DrawLine(TheGame.SpriteBatchPoint, pbs.p1, pbs.p2, Color.White, thickness / scaleVert));
         }
 
         private static Vector2 RotateUV(Vector2 uv, float angle)

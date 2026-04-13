@@ -2,6 +2,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MLEM.Misc;
+using Nage.Strata.Graphics.Global;
 using Nage.Strata.Utils;
 using VibeSopwith.Game.Components;
 using VibeSopwith.Game.Core;
@@ -16,7 +17,8 @@ public class TheGame : Microsoft.Xna.Framework.Game
     public static SpriteBatch SpriteBatchLinear = null!;
     public static SpriteBatch SpriteBatchPoint = null!;
     public static BasicEffect BasicEffect = null!;
-    public static PrimitivesRender Primitives = null!;
+
+    public static IRenderers Global = null!;
 
     private Components.WorldRender _worldRender = null!;
     private Components.Dashboard _dashboard = null!;
@@ -60,8 +62,7 @@ public class TheGame : Microsoft.Xna.Framework.Game
         SpriteBatchPoint = new SpriteBatch(GraphicsDevice);
         BasicEffect = new BasicEffect(GraphicsDevice);
 
-        Primitives = new PrimitivesRender(this);
-        Primitives.LoadContent();
+        Global = RenderersBag.Init(this);
 
         _worldRender = new Components.WorldRender(this);
         _worldRender.LoadContent();

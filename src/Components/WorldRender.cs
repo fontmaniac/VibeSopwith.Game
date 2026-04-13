@@ -9,7 +9,6 @@ namespace VibeSopwith.Game.Components
     internal class WorldRender(Microsoft.Xna.Framework.Game game) : DrawableGameComponent(game)
     {
         private GroundRender _groundRender = null!;
-        private AetherBodyRender _bodyRender = null!;
         private ApproachRender _approachRender = null!;
 
         private AirplaneRender _airplaneRender = null!;
@@ -67,7 +66,6 @@ namespace VibeSopwith.Game.Components
             _balloonRender = new BaloonRender(Game);
             _balloonRender.LoadContent();
 
-            _bodyRender = new AetherBodyRender(Game);
             _approachRender = new ApproachRender(Game);
 
             //_postEffect = Game.Content.Load<Effect>("Shaders/PostGreenOnBlack");
@@ -101,7 +99,6 @@ namespace VibeSopwith.Game.Components
         protected override void UnloadContent()
         {
             _approachRender?.Dispose();
-            _bodyRender?.Dispose();
             _buildingRender?.Dispose();
             _bulletRender?.Dispose();
             _bombRender?.Dispose();
@@ -145,6 +142,8 @@ namespace VibeSopwith.Game.Components
                 null,
                 transform);
 
+            var bodyRender = (nkast.Aether.Physics2D.Dynamics.Body body) => TheGame.Global.AetherBody.Draw(TheGame.SpriteBatchPoint, body, gameTime);
+
             _groundRender.Draw(world.Ground, groundThicknessPx, scaleVert, transform);
             //_bodyRender.Draw(world.Ceiling.Body, gameTime);
 
@@ -154,7 +153,7 @@ namespace VibeSopwith.Game.Components
             foreach (var building in world.Buildings)
             {
                 _buildingRender.DrawSnapped(building, gameTime, worldPixelSize);
-                //_bodyRender.Draw(building.Body, gameTime);
+                //bodyRender(building.Body);
             }
 
             foreach (var flakGun in world.FlakGuns)

@@ -35,20 +35,20 @@ namespace VibeSopwith.Game.Components
                 zone.TopEntryY - zone.BottomEntryY
             );
 
-            TheGame.SpriteBatchPoint.Draw(TheGame.Primitives.Pixel, rectPos, null, color, 0f, Vector2.Zero, rectSize, SpriteEffects.None, 0f);
+            TheGame.SpriteBatchPoint.Draw(TheGame.Global.Primitives.Pixel, rectPos, null, color, 0f, Vector2.Zero, rectSize, SpriteEffects.None, 0f);
 
             // Outline (optional but useful)
-            TheGame.Primitives.DrawLine(topLeft, topRight, Color.Blue, 0.1f);
-            TheGame.Primitives.DrawLine(topRight, bottomRight, Color.Blue, 0.1f);
-            TheGame.Primitives.DrawLine(bottomRight, bottomLeft, Color.Blue, 0.1f);
-            TheGame.Primitives.DrawLine(bottomLeft, topLeft, Color.Blue, 0.1f);
+            TheGame.Global.Primitives.DrawLine(TheGame.SpriteBatchPoint, topLeft, topRight, Color.Blue, 0.1f);
+            TheGame.Global.Primitives.DrawLine(TheGame.SpriteBatchPoint, topRight, bottomRight, Color.Blue, 0.1f);
+            TheGame.Global.Primitives.DrawLine(TheGame.SpriteBatchPoint, bottomRight, bottomLeft, Color.Blue, 0.1f);
+            TheGame.Global.Primitives.DrawLine(TheGame.SpriteBatchPoint, bottomLeft, topLeft, Color.Blue, 0.1f);
 
             // Funnel
             var funnelCenter = new Vector2(zone.EntryX, (zone.BottomEntryY + zone.TopEntryY) / 2f);
             var funnelArrow1 = funnelCenter + zone.Funnel.Ray1 * 2f;
             var funnelArrow2 = funnelCenter + zone.Funnel.Ray2 * 2f;
-            TheGame.Primitives.DrawLine(funnelCenter, funnelArrow1, Color.Blue, 0.1f);
-            TheGame.Primitives.DrawLine(funnelCenter, funnelArrow2, Color.Blue, 0.1f);
+            TheGame.Global.Primitives.DrawLine(TheGame.SpriteBatchPoint, funnelCenter, funnelArrow1, Color.Blue, 0.1f);
+            TheGame.Global.Primitives.DrawLine(TheGame.SpriteBatchPoint, funnelCenter, funnelArrow2, Color.Blue, 0.1f);
         }
     }
 }

@@ -31,7 +31,7 @@ namespace VibeSopwith.Game.Components
         public void Draw(Dial dial, Vector2 center, float radius, Color color, Style style, GameTime gameTime)
         {
             // Draw Rim
-            TheGame.Primitives.DrawCirclePrimitive(center, radius, color, style.RimThickness);
+            TheGame.Global.Primitives.DrawCirclePrimitive(TheGame.SpriteBatchPoint, center, radius, color, style.RimThickness);
 
             float getAngle(float val) =>
                 MathHelper.ToRadians((val - dial.MinVal) / (dial.MaxVal - dial.MinVal) * 360f) - float.Pi / 2f;
@@ -49,7 +49,7 @@ namespace VibeSopwith.Game.Components
                 var p2 = center + new Vector2(outer * MathF.Cos(angle), outer * MathF.Sin(angle));
                 var p3 = center + new Vector2(label * MathF.Cos(angle), label * MathF.Sin(angle));
 
-                TheGame.Primitives.DrawLine(p1, p2, color, style.MarkThickness);
+                TheGame.Global.Primitives.DrawLine(TheGame.SpriteBatchPoint, p1, p2, color, style.MarkThickness);
 
                 var text = markVal.ToString();
                 Vector2 size = _font.MeasureString(text);
@@ -69,7 +69,7 @@ namespace VibeSopwith.Game.Components
                 var p1 = center + new Vector2(inner * MathF.Cos(angle), inner * MathF.Sin(angle));
                 var p2 = center + new Vector2(outer * MathF.Cos(angle), outer * MathF.Sin(angle));
 
-                TheGame.Primitives.DrawLine(p1, p2, color, style.SubMarkThickness);
+                TheGame.Global.Primitives.DrawLine(TheGame.SpriteBatchPoint, p1, p2, color, style.SubMarkThickness);
             }
 
             // Draw name
@@ -92,7 +92,7 @@ namespace VibeSopwith.Game.Components
                 armLength * MathF.Sin(armAngle)
             );
 
-            TheGame.Primitives.DrawLine(center, endPoint, color, style.ArmThickness);
+            TheGame.Global.Primitives.DrawLine(TheGame.SpriteBatchPoint, center, endPoint, color, style.ArmThickness);
         }
     }
 }
