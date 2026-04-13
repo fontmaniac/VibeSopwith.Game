@@ -3,9 +3,9 @@ using Nage.Strata.Abstractions.Behavioral;
 using Nage.Strata.Abstractions.Spatial;
 using Nage.Strata.Physics;
 using Nage.Strata.Types;
+using Nage.Strata.Utils;
 using nkast.Aether.Physics2D.Dynamics;
 using nkast.Aether.Physics2D.Dynamics.Contacts;
-using VibeSopwith.Game.Utils;
 using VibeSopwith.Game.Utils.ParticleSystem;
 using Aether = nkast.Aether.Physics2D.Common;
 
