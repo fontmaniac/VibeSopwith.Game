@@ -13,12 +13,6 @@
     <None Remove="Core\ParticleSystem\**" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Reference Include="FNA">
-      <HintPath>..\..\..\..\..\Libs\FNA\bin\Debug\FNA.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-
 	<ItemGroup>
 		<None Include="..\..\..\..\..\Libs\FNALibs\FNA3D.dll">
 			<Link>natives\FNA3D.dll</Link>
