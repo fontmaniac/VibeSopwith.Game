@@ -1,18 +1,15 @@
-using Microsoft.Xna.Framework;
+namespace VibeSopwith.Game;
 
-namespace VibeSopwith.Game
+internal class Program
 {
-    internal class Program
+    static void Main(string[] args)
     {
-        static void Main(string[] args)
-        {
-            Console.WriteLine("VibeSopwith.Game started");
+        Console.WriteLine("VibeSopwith.Game started");
 
-            using (TheGame game = new TheGame())
-            {
-                game.Run();
-                Console.WriteLine("VibeSopwith.Game exited");
-            }
+        using (TheGame game = new TheGame())
+        {
+            game.Run();
+            Console.WriteLine("VibeSopwith.Game exited");
         }
     }
 }
