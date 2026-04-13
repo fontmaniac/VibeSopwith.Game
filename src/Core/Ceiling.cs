@@ -1,4 +1,5 @@
-﻿using nkast.Aether.Physics2D.Dynamics;
+﻿using Nage.Strata.Abstractions.Infra;
+using nkast.Aether.Physics2D.Dynamics;
 using Aether = nkast.Aether.Physics2D.Common;
 
 namespace VibeSopwith.Game.Core
@@ -15,8 +16,8 @@ namespace VibeSopwith.Game.Core
             body.Mass = float.MaxValue;
 
             var fixture = body.CreateRectangle(GameWorld.WorldLength+10f, 2f, 1f, new Aether.Vector2(GameWorld.WorldLength/2f, GameWorld.WorldHeight + 2f));
-            fixture.CollisionCategories = GameWorld.WorldCollider.AddCategories("Ceiling");
-            fixture.CollidesWith = GameWorld.WorldCollider.GetAll() & ~GameWorld.WorldCollider.AddCategories("Bomb", "Bullet");
+            fixture.CollisionCategories = Globs.World.Collider.AddCategories("Ceiling");
+            fixture.CollidesWith = Globs.World.Collider.GetAll() & ~Globs.World.Collider.AddCategories("Bomb", "Bullet");
 
             Body = body;
         }

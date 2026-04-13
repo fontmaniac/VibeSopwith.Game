@@ -1,5 +1,6 @@
 using Microsoft.Xna.Framework;
 using Nage.Strata.Abstractions.Behavioral;
+using Nage.Strata.Abstractions.Infra;
 using Nage.Strata.Abstractions.Spatial;
 using Nage.Strata.Physics;
 using Nage.Strata.Types;
@@ -16,8 +17,9 @@ namespace VibeSopwith.Game.Core
         public const int WorldLength = 600;
         public const int WorldHeight = 60;
 
-        public static readonly Random WorldSeed = new Random(12345);
-        public static readonly Collider<string> WorldCollider = new Collider<string>();
+        public static readonly IGlobs Globs = Nage.Strata.Abstractions.Infra.Globs.Init(
+            new Random(12345),
+            new Collider<string>());
 
         public readonly Ground Ground;
         public readonly Ceiling Ceiling;

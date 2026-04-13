@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Nage.Strata.Abstractions.Behavioral;
+using Nage.Strata.Abstractions.Infra;
 using Nage.Strata.Abstractions.Spatial;
 using Nage.Strata.Physics;
 using Nage.Strata.Types;
@@ -53,8 +54,8 @@ namespace VibeSopwith.Game.Core
             var fixture0 = body.CreateRectangle(BulletLength, BulletHeight, 1f, Vector2.Zero.ToAether());
             fixture0.Friction = 1f;
             fixture0.Restitution = 0.0f;
-            fixture0.CollisionCategories = GameWorld.WorldCollider.AddCategories("Bullet");
-            fixture0.CollidesWith = GameWorld.WorldCollider.GetAll() & ~GameWorld.WorldCollider.AddCategories("Bullet");
+            fixture0.CollisionCategories = Globs.World.Collider.AddCategories("Bullet");
+            fixture0.CollidesWith = Globs.World.Collider.GetAll() & ~Globs.World.Collider.AddCategories("Bullet");
 
             this.Body = body;
 

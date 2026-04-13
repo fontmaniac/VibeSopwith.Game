@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Nage.Strata.Abstractions.Behavioral;
+using Nage.Strata.Abstractions.Infra;
 using Nage.Strata.Abstractions.Spatial;
 using Nage.Strata.Physics;
 using Nage.Strata.Types;
@@ -58,8 +59,8 @@ namespace VibeSopwith.Game.Core
 
             fixture0.Friction = 0.2f;
             fixture0.Restitution = 0.0f;
-            fixture0.CollisionCategories = GameWorld.WorldCollider.AddCategories("Bomb");
-            fixture0.CollidesWith = GameWorld.WorldCollider.GetAll(); // & ~GameWorld.WorldCollider.GetCategories("Bomb");
+            fixture0.CollisionCategories = Globs.World.Collider.AddCategories("Bomb");
+            fixture0.CollidesWith = Globs.World.Collider.GetAll(); // & ~Globs.World.Collider.GetCategories("Bomb");
 
             // Add fixture 1
             var fixture1 = new[]
@@ -74,8 +75,8 @@ namespace VibeSopwith.Game.Core
 
             fixture1.Friction = 0.2f;
             fixture1.Restitution = 0.0f;
-            fixture1.CollisionCategories = GameWorld.WorldCollider.AddCategories("Bomb");
-            fixture1.CollidesWith = GameWorld.WorldCollider.GetAll(); // & ~GameWorld.WorldCollider.GetCategories("Bomb");
+            fixture1.CollisionCategories = Globs.World.Collider.AddCategories("Bomb");
+            fixture1.CollidesWith = Globs.World.Collider.GetAll(); // & ~Globs.World.Collider.GetCategories("Bomb");
 
             this.Body = body;
 

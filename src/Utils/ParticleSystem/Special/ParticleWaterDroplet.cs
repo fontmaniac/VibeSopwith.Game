@@ -1,10 +1,10 @@
 ﻿using Microsoft.Xna.Framework;
 using Nage.Strata.Abstractions.Behavioral;
+using Nage.Strata.Abstractions.Infra;
 using Nage.Strata.Abstractions.Spatial;
 using Nage.Strata.Physics;
 using Nage.Strata.Types;
 using nkast.Aether.Physics2D.Dynamics;
-using VibeSopwith.Game.Core;
 
 namespace VibeSopwith.Game.Utils.ParticleSystem.Special
 {
@@ -35,8 +35,8 @@ namespace VibeSopwith.Game.Utils.ParticleSystem.Special
             var fixture0 = body.CreateCircle(0.1f, 1.0f);
             fixture0.Friction = 0.5f;
             fixture0.Restitution = 0.1f;
-            fixture0.CollisionCategories = GameWorld.WorldCollider.AddCategories("ParticleWaterDroplet");
-            fixture0.CollidesWith = GameWorld.WorldCollider.GetAll() & ~GameWorld.WorldCollider.GetCategories("ParticleWaterDroplet", "Bullet");
+            fixture0.CollisionCategories = Globs.World.Collider.AddCategories("ParticleWaterDroplet");
+            fixture0.CollidesWith = Globs.World.Collider.GetAll() & ~Globs.World.Collider.GetCategories("ParticleWaterDroplet", "Bullet");
 
             Body = body;
         }
@@ -69,7 +69,7 @@ namespace VibeSopwith.Game.Utils.ParticleSystem.Special
         {
             var oldPos = Position;
             Position = Body.Position.ToXna();
-            Velocity = Body.LinearVelocity.ToXna().RotateDeg((float)GameWorld.WorldSeed.NextDouble() * 1f - 0.5f);
+            Velocity = Body.LinearVelocity.ToXna().RotateDeg((float)Globs.World.Seed.NextDouble() * 1f - 0.5f);
 
             var newPos = Position;
             Direction = Vector2.Normalize(newPos - oldPos);

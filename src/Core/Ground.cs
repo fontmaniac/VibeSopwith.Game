@@ -1,4 +1,5 @@
 using Microsoft.Xna.Framework;
+using Nage.Strata.Abstractions.Infra;
 using Nage.Strata.Abstractions.Spatial;
 using Nage.Strata.Physics;
 using nkast.Aether.Physics2D.Dynamics;
@@ -208,7 +209,7 @@ namespace VibeSopwith.Game.Core
                 var platformX = 0f;
                 do
                 {
-                    platformX = MathF.Round((float)GameWorld.WorldSeed.NextDouble() * GameWorld.WorldLength);
+                    platformX = MathF.Round((float)Globs.World.Seed.NextDouble() * GameWorld.WorldLength);
                 } while (!fullAccept(platformX));
 
                 if (!result.GetSegmentAtOffset(new HOffset.OffLeft(platformX, Units.Met), out var seg))
@@ -258,9 +259,9 @@ namespace VibeSopwith.Game.Core
             {
                 for (int i = 0; i < count; i++)
                 {
-                    float cx = (float)GameWorld.WorldSeed.NextDouble() * worldW;
-                    float amp = minH + (float)GameWorld.WorldSeed.NextDouble() * (maxH - minH);
-                    float width = minW + (float)GameWorld.WorldSeed.NextDouble() * (maxW - minW);
+                    float cx = (float)Globs.World.Seed.NextDouble() * worldW;
+                    float amp = minH + (float)Globs.World.Seed.NextDouble() * (maxH - minH);
+                    float width = minW + (float)Globs.World.Seed.NextDouble() * (maxW - minW);
                     hills.Add((cx, amp, width));
                 }
             }
@@ -367,7 +368,7 @@ namespace VibeSopwith.Game.Core
         public static Ground MakeRandom()
         {
             // 25% to 75%
-            float randomY() => (float)(25f + GameWorld.WorldSeed.NextDouble() * 50f);
+            float randomY() => (float)(25f + Globs.World.Seed.NextDouble() * 50f);
 
             // First random point at left ceiling
             var b = new GroundBuilder().Segment(OffLeft(0, Units.Pct), OffCeiling(0, Units.Pct));
@@ -437,13 +438,13 @@ namespace VibeSopwith.Game.Core
 
             foreach (var platform in platforms)
             {
-                var dice = GameWorld.WorldSeed.Next(2);
+                var dice = Globs.World.Seed.Next(2);
                 var buildingType = 
                     dice == 0 ? StaticBuilding.BuildingType.Factory :
                     dice == 1 ? StaticBuilding.BuildingType.Cistern :
                     StaticBuilding.BuildingType.Factory;
 
-                var spin = GameWorld.WorldSeed.Next(2) == 0 ? BasisSpin.Down : BasisSpin.Up;
+                var spin = Globs.World.Seed.Next(2) == 0 ? BasisSpin.Down : BasisSpin.Up;
                 buildings.Add(new StaticBuilding(buildingType, new Vector2(platform.X, platform.Y), spin));
             }
             // Army base
@@ -850,7 +851,7 @@ namespace VibeSopwith.Game.Core
                 var shape = new nkast.Aether.Physics2D.Collision.Shapes.PolygonShape(vertices, 1.0f);
                 var fixture = Body.CreateFixture(shape);
                 fixture.Tag = (p1, p2);
-                fixture.CollisionCategories = GameWorld.WorldCollider.AddCategories("Ground");
+                fixture.CollisionCategories = Globs.World.Collider.AddCategories("Ground");
             }
 
         }

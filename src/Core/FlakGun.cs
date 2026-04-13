@@ -1,9 +1,9 @@
 ﻿using Microsoft.Xna.Framework;
 using Nage.Strata.Abstractions.Behavioral;
+using Nage.Strata.Abstractions.Infra;
 using Nage.Strata.Abstractions.Spatial;
 using Nage.Strata.Physics;
 using nkast.Aether.Physics2D.Dynamics;
-using VibeSopwith.Game.Utils;
 
 namespace VibeSopwith.Game.Core
 {
@@ -39,7 +39,7 @@ namespace VibeSopwith.Game.Core
             Spin = spin;
             Direction = Vector2.UnitX * (spin == BasisSpin.Down ? +1f : -1f);
 
-            var barrelAngle = (float)GameWorld.WorldSeed.NextDouble() * (MaxGunAngle - MinGunAngle) + MinGunAngle;
+            var barrelAngle = (float)Globs.World.Seed.NextDouble() * (MaxGunAngle - MinGunAngle) + MinGunAngle;
             CurrentState = new State(barrelAngle, null, null, BarrelMovement.Up, 0f, DateTime.MinValue, DateTime.MinValue);
 
             var barrelDirection = () => Vector2.UnitX.RotateDeg(CurrentState.BarrelAngle * spin.ToFactor());

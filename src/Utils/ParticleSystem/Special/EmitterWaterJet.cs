@@ -1,8 +1,8 @@
 ﻿using Microsoft.Xna.Framework;
+using Nage.Strata.Abstractions.Infra;
 using Nage.Strata.Abstractions.Spatial;
 using Nage.Strata.Physics;
 using nkast.Aether.Physics2D.Dynamics;
-using VibeSopwith.Game.Core;
 
 namespace VibeSopwith.Game.Utils.ParticleSystem.Special
 {
@@ -25,11 +25,11 @@ namespace VibeSopwith.Game.Utils.ParticleSystem.Special
 
         private ParticleWaterDroplet MakeDroplet(GameTime gameTime, int batchSize, int batchIndex)
         {
-            var linearFactor = InitialVelocity * ((float)GameWorld.WorldSeed.NextDouble() * 0.2f - 0.1f + 1f);
-            var angleFactor = (float)GameWorld.WorldSeed.NextDouble() * SprayConeDegrees - SprayConeDegrees / 2f;
+            var linearFactor = InitialVelocity * ((float)Globs.World.Seed.NextDouble() * 0.2f - 0.1f + 1f);
+            var angleFactor = (float)Globs.World.Seed.NextDouble() * SprayConeDegrees - SprayConeDegrees / 2f;
             var velocity = Source.Direction.RotateDeg(angleFactor) * linearFactor;
 
-            var ageFactor = (float)GameWorld.WorldSeed.NextDouble() * 2f * DeltaAge - DeltaAge;
+            var ageFactor = (float)Globs.World.Seed.NextDouble() * 2f * DeltaAge - DeltaAge;
 
             return new ParticleWaterDroplet(Source.Position, velocity, 0.6f, 0.6f, TimeSpan.FromSeconds(MidAge + ageFactor));
         }

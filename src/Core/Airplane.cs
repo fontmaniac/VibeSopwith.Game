@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Nage.Strata.Abstractions.Behavioral;
+using Nage.Strata.Abstractions.Infra;
 using Nage.Strata.Abstractions.Spatial;
 using Nage.Strata.Physics;
 using nkast.Aether.Physics2D.Dynamics;
@@ -100,8 +101,8 @@ namespace VibeSopwith.Game.Core
                 fix.Tag = tag;
                 fix.Friction = 0.0f;
                 fix.Restitution = 0.0f;
-                fix.CollisionCategories = GameWorld.WorldCollider.AddCategories("Airplane");
-                fix.CollidesWith = GameWorld.WorldCollider.GetAll();
+                fix.CollisionCategories = Globs.World.Collider.AddCategories("Airplane");
+                fix.CollidesWith = Globs.World.Collider.GetAll();
                 return fix;
             }
 
