@@ -1,5 +1,6 @@
-MANIFEST-2026-04-11T08:56:32Z-master-eed6ebd3eef44cb690238b642458db48
+MANIFEST-2026-04-13T01:38:21Z-master-d0f9b3d2614b4882922a0329ac738f50
 src/Content
 https://github.com/fontmaniac/VibeSopwith.Content.git
 
-* Textures/Water_Shot_2.png
++ Textures/Particles/Water_Shot_2.png
++ Textures/Particles/Water_Shot_3.png

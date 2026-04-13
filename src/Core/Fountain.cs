@@ -1,10 +1,9 @@
 ﻿using Microsoft.Xna.Framework;
 using Nage.Strata.Abstractions.Behavioral;
 using Nage.Strata.Abstractions.Spatial;
+using Nage.Strata.ParticleSystem;
 using Nage.Strata.Physics;
 using nkast.Aether.Physics2D.Dynamics;
-using VibeSopwith.Game.Utils;
-using VibeSopwith.Game.Utils.ParticleSystem;
 
 namespace VibeSopwith.Game.Core
 {

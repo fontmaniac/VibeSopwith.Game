@@ -2,12 +2,12 @@ using Microsoft.Xna.Framework;
 using Nage.Strata.Abstractions.Behavioral;
 using Nage.Strata.Abstractions.Infra;
 using Nage.Strata.Abstractions.Spatial;
+using Nage.Strata.ParticleSystem;
 using Nage.Strata.Physics;
 using Nage.Strata.Types;
 using Nage.Strata.Utils;
 using nkast.Aether.Physics2D.Dynamics;
 using nkast.Aether.Physics2D.Dynamics.Contacts;
-using VibeSopwith.Game.Utils.ParticleSystem;
 using Aether = nkast.Aether.Physics2D.Common;
 
 namespace VibeSopwith.Game.Core
@@ -17,9 +17,7 @@ namespace VibeSopwith.Game.Core
         public const int WorldLength = 600;
         public const int WorldHeight = 60;
 
-        public static readonly IGlobs Globs = Nage.Strata.Abstractions.Infra.Globs.Init(
-            new Random(12345),
-            new Collider<string>());
+        public static readonly IGlobs Globs;
 
         public readonly Ground Ground;
         public readonly Ceiling Ceiling;
@@ -37,6 +35,13 @@ namespace VibeSopwith.Game.Core
         public readonly List<Autopilot.Approach> Approaches = new List<Autopilot.Approach>();
 
         private readonly World simWorld;
+
+        static GameWorld()
+        {
+            Globs = Nage.Strata.Abstractions.Infra.Globs.Init(
+                new Random(12345),
+                new Collider<string>());
+        }
 
         public GameWorld()
         {

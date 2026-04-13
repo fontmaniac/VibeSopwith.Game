@@ -1,8 +1,8 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Nage.Strata.Graphics;
+using Nage.Strata.ParticleSystem.Species;
 using VibeSopwith.Game.Core;
-using VibeSopwith.Game.Utils.ParticleSystem.Special;
 
 namespace VibeSopwith.Game.Components
 {

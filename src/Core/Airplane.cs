@@ -2,10 +2,10 @@
 using Nage.Strata.Abstractions.Behavioral;
 using Nage.Strata.Abstractions.Infra;
 using Nage.Strata.Abstractions.Spatial;
+using Nage.Strata.ParticleSystem;
+using Nage.Strata.ParticleSystem.Species;
 using Nage.Strata.Physics;
 using nkast.Aether.Physics2D.Dynamics;
-using VibeSopwith.Game.Utils;
-using VibeSopwith.Game.Utils.ParticleSystem;
 using Aether = nkast.Aether.Physics2D.Common;
 
 namespace VibeSopwith.Game.Core
@@ -212,7 +212,7 @@ namespace VibeSopwith.Game.Core
             var spawnPos = gun1 + launchDirection * 0.05f;
 
             var boundBasis = LiveBasis.Bind(new Basis(spawnPos.ToXna(), Direction, Spin), this);
-            var result = new Utils.ParticleSystem.Special.EmitterWaterJet(boundBasis, 200f, 70f, 1.5f, 1.5f, 0.2f);
+            var result = new EmitterWaterJet(boundBasis, 200f, 70f, 1.5f, 1.5f, 0.2f);
 
             return result;
         }

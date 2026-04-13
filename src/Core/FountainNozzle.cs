@@ -1,9 +1,9 @@
 ﻿using Microsoft.Xna.Framework;
 using Nage.Strata.Abstractions.Spatial;
+using Nage.Strata.ParticleSystem;
+using Nage.Strata.ParticleSystem.Species;
 using Nage.Strata.Physics;
 using nkast.Aether.Physics2D.Dynamics;
-using VibeSopwith.Game.Utils;
-using VibeSopwith.Game.Utils.ParticleSystem;
 
 namespace VibeSopwith.Game.Core
 {
@@ -87,7 +87,7 @@ namespace VibeSopwith.Game.Core
             var spawnPos = tip + launchDirection * 0.00f;
 
             var boundBasis = LiveBasis.Bind(new Basis(spawnPos.ToXna(), Direction, Spin), this);
-            var result = new Utils.ParticleSystem.Special.EmitterWaterJet(boundBasis, 300f, 54f, 3f, 2f, 1f);
+            var result = new EmitterWaterJet(boundBasis, 300f, 54f, 3f, 2f, 1f);
 
             return result;
         }

@@ -169,13 +169,10 @@
     <None Update="Content\Textures\Skybox_1.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Content\Textures\Water_Shot_2.png">
+    <None Update="Content\Textures\Particles\Water_Shot_2.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Content\Textures\Water_Shot_3.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Content\Textures\Water_Shot_4.png">
+    <None Update="Content\Textures\Particles\Water_Shot_3.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
