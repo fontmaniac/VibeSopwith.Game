@@ -8,22 +8,22 @@
   </PropertyGroup>
 
 	<ItemGroup>
-		<None Include="..\..\..\..\..\Libs\FNALibs\FNA3D.dll">
+		<None Include="..\extern\FNALibs\x64\FNA3D.dll">
 			<Link>natives\FNA3D.dll</Link>
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 			<TargetPath>FNA3D.dll</TargetPath>
 		</None>
-		<None Include="..\..\..\..\..\Libs\FNALibs\FAudio.dll">
+		<None Include="..\extern\FNALibs\x64\FAudio.dll">
 			<Link>natives\FAudio.dll</Link>
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 			<TargetPath>FAudio.dll</TargetPath>
 		</None>
-		<None Include="..\..\..\..\..\Libs\FNALibs\libtheorafile.dll">
+		<None Include="..\extern\FNALibs\x64\libtheorafile.dll">
 			<Link>natives\libtheorafile.dll</Link>
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 			<TargetPath>libtheorafile.dll</TargetPath>
 		</None>
-		<None Include="..\..\..\..\..\Libs\FNALibs\SDL3.dll">
+		<None Include="..\extern\FNALibs\x64\SDL3.dll">
 			<Link>natives\SDL3.dll</Link>
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 			<TargetPath>SDL3.dll</TargetPath>
