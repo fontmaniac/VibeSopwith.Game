@@ -82,6 +82,7 @@ public class TheGame : Microsoft.Xna.Framework.Game
         BasicEffect?.Dispose();
         SpriteBatchPoint?.Dispose();
         SpriteBatchLinear?.Dispose();
+        Global?.Dispose();
     }
 
     public  record ControlScheme(Keys LThrottle, Keys RThrottle, Keys UPitch, Keys DPitch, Keys Roll, Keys Bomb, Keys Gun, Keys Autoland, Keys Particles, bool SpinIndependent);

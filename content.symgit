@@ -1,5 +1,7 @@
-MANIFEST-2026-04-13T04:08:21Z-master-b306b61902164df1b4e988c2d5b7bbc0
+MANIFEST-2026-04-20T03:05:57Z-master-1db5e316bba741e9bac011b10b92a3fd
 src/Content
 https://github.com/fontmaniac/VibeSopwith.Content.git
 
-+ Textures/SpriteCells.svg
++ Textures/Bubble_Shot_1.png
++ Textures/Bubble_Shot_2.png
++ Textures/Bubble_Shot_Plane_1.png
