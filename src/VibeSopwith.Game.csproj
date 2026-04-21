@@ -35,12 +35,12 @@
 		<None Include="..\extern\FNALibs\lib64\libFNA3D.so.0">
 			<Link>natives\libFNA3D.so.0</Link>
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-			<TargetPath>FNA3D.so</TargetPath>
+			<TargetPath>libFNA3D.so.0</TargetPath>
 		</None>
 		<None Include="..\extern\FNALibs\lib64\libFAudio.so.0">
 			<Link>natives\libFAudio.so.0</Link>
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-			<TargetPath>FAudio.so</TargetPath>
+			<TargetPath>libFAudio.so.0</TargetPath>
 		</None>
 		<None Include="..\extern\FNALibs\lib64\libtheorafile.so">
 			<Link>natives\libtheorafile.so</Link>
@@ -50,7 +50,7 @@
 		<None Include="..\extern\FNALibs\lib64\libSDL3.so.0">
 			<Link>natives\libSDL3.so.0</Link>
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-			<TargetPath>SDL3.so</TargetPath>
+			<TargetPath>libSDL3.so.0</TargetPath>
 		</None>
 	</ItemGroup>
 
