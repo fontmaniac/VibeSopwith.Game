@@ -79,9 +79,9 @@ let rec parseOptionsRec (state: Flags) (args: string list) =
         parseOptionsRec { state with Repo = Some value } rest
     | "-remote" :: value :: rest ->
         parseOptionsRec { state with Remote = Some value } rest
-
-    | unknown :: _ ->
-        failwithf "Unknown argument: %s" unknown
+    | unknown :: rest ->
+        printfn "Unknown argument: %s" unknown
+        parseOptionsRec state rest
 
 let parseArgs (argv: string[]) =
     if argv.Length < 2 then

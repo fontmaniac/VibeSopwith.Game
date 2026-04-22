@@ -41,8 +41,9 @@ let rec parseOptionsRec (state: Flags) (args: string list) =
         parseOptionsRec { state with Manifest = Some value } rest
     | "-delete" :: rest ->
         parseOptionsRec { state with DeleteFrom = true } rest
-    | unknown :: _ ->
-        failwithf "Unknown argument: %s" unknown
+    | unknown :: rest ->
+        printfn "Unknown argument: %s" unknown
+        parseOptionsRec state rest
 
 let parseArgs (argv: string[]) =
     // Parse flags
@@ -119,7 +120,11 @@ let writeManifest args resultManifest =
 
 // Usage: dotnet fsi contentise.fsx -from "Content" -to "wwwroot/Content" -manifest "wwwroot/content.txt" -delete
 
+printfn "contentise.fsx run with args %A" fsi.CommandLineArgs
+
 let args = parseArgs fsi.CommandLineArgs.[1..]
+
+printfn "contentise.fsx parsed args %A" args
 
 let copyManifest = makeCopyManifest args
 let resultManifest = copyFiles args copyManifest
