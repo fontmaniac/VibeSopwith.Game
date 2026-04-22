@@ -3,8 +3,8 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net9.0</TargetFramework>
-	<RuntimeIdentifier>win-x64</RuntimeIdentifier>
-	<ImplicitUsings>enable</ImplicitUsings>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
@@ -12,28 +12,28 @@
     <ProjectReference Include="..\src\VibeSopwith.Game.csproj" />
   </ItemGroup>
 
-	<ItemGroup>
-		<None Include="..\extern\FNALibs\x64\FNA3D.dll">
-			<Link>natives\FNA3D.dll</Link>
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-			<TargetPath>FNA3D.dll</TargetPath>
-		</None>
-		<None Include="..\extern\FNALibs\x64\FAudio.dll">
-			<Link>natives\FAudio.dll</Link>
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-			<TargetPath>FAudio.dll</TargetPath>
-		</None>
-		<None Include="..\extern\FNALibs\x64\libtheorafile.dll">
-			<Link>natives\libtheorafile.dll</Link>
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-			<TargetPath>libtheorafile.dll</TargetPath>
-		</None>
-		<None Include="..\extern\FNALibs\x64\SDL3.dll">
-			<Link>natives\SDL3.dll</Link>
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-			<TargetPath>SDL3.dll</TargetPath>
-		</None>
-	</ItemGroup>
+    <ItemGroup>
+        <None Include="..\extern\FNALibs\x64\FNA3D.dll">
+            <Link>natives\FNA3D.dll</Link>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <TargetPath>FNA3D.dll</TargetPath>
+        </None>
+        <None Include="..\extern\FNALibs\x64\FAudio.dll">
+            <Link>natives\FAudio.dll</Link>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <TargetPath>FAudio.dll</TargetPath>
+        </None>
+        <None Include="..\extern\FNALibs\x64\libtheorafile.dll">
+            <Link>natives\libtheorafile.dll</Link>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <TargetPath>libtheorafile.dll</TargetPath>
+        </None>
+        <None Include="..\extern\FNALibs\x64\SDL3.dll">
+            <Link>natives\SDL3.dll</Link>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <TargetPath>SDL3.dll</TargetPath>
+        </None>
+    </ItemGroup>
 
 
 </Project>

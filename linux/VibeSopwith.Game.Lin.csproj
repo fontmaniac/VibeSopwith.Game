@@ -4,7 +4,7 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>net9.0</TargetFramework>
     <RuntimeIdentifier>linux-x64</RuntimeIdentifier>
-	<ImplicitUsings>enable</ImplicitUsings>
+    <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
@@ -12,28 +12,28 @@
     <ProjectReference Include="..\src\VibeSopwith.Game.csproj" />
   </ItemGroup>
 
-	<ItemGroup>
-		<None Include="..\extern\FNALibs\lib64\libFNA3D.so.0">
-			<Link>natives\libFNA3D.so.0</Link>
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-			<TargetPath>libFNA3D.so.0</TargetPath>
-		</None>
-		<None Include="..\extern\FNALibs\lib64\libFAudio.so.0">
-			<Link>natives\libFAudio.so.0</Link>
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-			<TargetPath>libFAudio.so.0</TargetPath>
-		</None>
-		<None Include="..\extern\FNALibs\lib64\libtheorafile.so">
-			<Link>natives\libtheorafile.so</Link>
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-			<TargetPath>libtheorafile.so</TargetPath>
-		</None>
-		<None Include="..\extern\FNALibs\lib64\libSDL3.so.0">
-			<Link>natives\libSDL3.so.0</Link>
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-			<TargetPath>libSDL3.so.0</TargetPath>
-		</None>
-	</ItemGroup>
+    <ItemGroup>
+        <None Include="..\extern\FNALibs\lib64\libFNA3D.so.0">
+            <Link>natives\libFNA3D.so.0</Link>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <TargetPath>libFNA3D.so.0</TargetPath>
+        </None>
+        <None Include="..\extern\FNALibs\lib64\libFAudio.so.0">
+            <Link>natives\libFAudio.so.0</Link>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <TargetPath>libFAudio.so.0</TargetPath>
+        </None>
+        <None Include="..\extern\FNALibs\lib64\libtheorafile.so">
+            <Link>natives\libtheorafile.so</Link>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <TargetPath>libtheorafile.so</TargetPath>
+        </None>
+        <None Include="..\extern\FNALibs\lib64\libSDL3.so.0">
+            <Link>natives\libSDL3.so.0</Link>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <TargetPath>libSDL3.so.0</TargetPath>
+        </None>
+    </ItemGroup>
 
 
 </Project>
