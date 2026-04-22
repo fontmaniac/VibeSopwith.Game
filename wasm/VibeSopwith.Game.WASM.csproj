@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.WebAssembly">
 
   <PropertyGroup>
-    <SupportedOSPlatform>browser</SupportedOSPlatform>
-    <TargetFramework>net8.0</TargetFramework>
+	<RuntimeIdentifier>browser-wasm</RuntimeIdentifier>
+	<TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
 
@@ -16,30 +16,24 @@
 
 
   <ItemGroup>
- 		<NativeFileReference Include="..\extern\FNALibs\wasm\FNA3D.a" />
-		<NativeFileReference Include="..\extern\FNALibs\wasm\FAudio.a" />
-		<NativeFileReference Include="..\extern\FNALibs\wasm\SDL2.a" />
-		<NativeFileReference Include="..\extern\FNALibs\wasm\libmojoshader.a" />
+ 	<NativeFileReference Include="..\extern\FNALibs\wasm\FNA3D.a" />
+	<NativeFileReference Include="..\extern\FNALibs\wasm\FAudio.a" />
+	<NativeFileReference Include="..\extern\FNALibs\wasm\SDL2.a" />
+	<NativeFileReference Include="..\extern\FNALibs\wasm\libmojoshader.a" />
 
-    <EmccExportedRuntimeMethod Include="SDL">
-        <Visible>false</Visible>
-    </EmccExportedRuntimeMethod>
-    <EmccExportedRuntimeMethod Include="GL">
-        <Visible>false</Visible>
-    </EmccExportedRuntimeMethod>
-    <EmccExportedRuntimeMethod Include="setMainLoop">
-        <Visible>false</Visible>
-    </EmccExportedRuntimeMethod>
+    <EmccExportedRuntimeMethod Include="SDL" />
+    <EmccExportedRuntimeMethod Include="GL" />
+    <EmccExportedRuntimeMethod Include="setMainLoop" />
 	</ItemGroup>
    
 	<ItemGroup>
     <PackageReference Include="Aether.Physics2D" Version="2.2.0" />
     <PackageReference Include="MLEM.Ui.FNA" Version="8.0.0" />
   </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\extern\Nage.Strata\Nage.Strata.csproj" />
-  </ItemGroup>
+   
+	<ItemGroup>
+	  <ProjectReference Include="..\src\VibeSopwith.Game.csproj" />
+	</ItemGroup>
 
   <ItemGroup>
     <None Update="contentise.fsx">
@@ -48,134 +42,7 @@
   </ItemGroup>
 
   <Target Name="RunContentiseAfterPublish" AfterTargets="Publish">
-    <Exec WorkingDirectory="$(PublishDir)"
-          Command="dotnet.exe fsi contentise.fsx -from Content -to wwwroot/Content -manifest wwwroot/content.txt -delete" />
+    <Exec WorkingDirectory="$(PublishDir)" Command="dotnet.exe fsi contentise.fsx -from Content -to wwwroot/Content -manifest wwwroot/content.txt -delete" />
   </Target>
-
-  <ItemGroup>
-    <None Update="Content\Fonts\Arial12.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Content\Fonts\Arial14.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Content\Fonts\Arial16.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Content\Shaders\PostBarrelDistortion.fxb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Content\Shaders\PostBDandGOB.fxb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Content\Shaders\PostGreenOnBlack.fxb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Content\Shaders\PostPixelated.fxb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Content\Textures\Army_Base_1.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Content\Textures\Army_Base_1_Exploded.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Content\Textures\Bomb_1.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Content\Textures\Cistern_1.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Content\Textures\Cistern_1_Exploded.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Content\Textures\Explosion_1.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Content\Textures\Explosion_2.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Content\Textures\Explosion_3.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Content\Textures\Factory_1.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Content\Textures\Factory_1_Exploded.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Content\Textures\FlakBarrel_1_LR.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Content\Textures\FlakBarrel_1_RL.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Content\Textures\Flak_1_Exploded_LR.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Content\Textures\Flak_1_Exploded_RL.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Content\Textures\Flak_1_LR.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Content\Textures\Flak_1_RL.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Content\Textures\FountainBase_1.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Content\Textures\FountainBase_Exploded_1.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Content\Textures\FountainNozzle_1.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Content\Textures\Hot_Air_Balloon_1.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Content\Textures\Plane_1_Q.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Content\Textures\Plane_1_Q128.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Content\Textures\Plane_2.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Content\Textures\Plane_1.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Content\Textures\Plane_SS_1.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Content\Textures\Rock_Tile.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Content\Textures\Rock_Tile_Dark_1.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Content\Textures\Rock_Tile_Huge.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Content\Textures\Rock_Tile_Huge2.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Content\Textures\Rock_Tile_Light_1.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Content\Textures\Rock_Tile_Med_1.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Content\Textures\Skybox_1.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Content\Textures\Particles\Water_Shot_2.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Content\Textures\Particles\Water_Shot_3.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
 
 </Project>

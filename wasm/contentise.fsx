@@ -61,11 +61,6 @@ type ResultManifest = {
     Files : List<string>
 }
 
-// let makeCopyManifest args =
-//     // Walk args.From list of directories recursively
-//     // Transform each file into pair From -> To, where From and To are paths to existing and copied file. Paths either "full" or "qualified enough" to be usable in copy routine running from predefined location.
-//     { FromTos = [] }
-
 let makeCopyManifest args =
     let fromTos = ResizeArray<string * string>()
 
@@ -85,28 +80,6 @@ let makeCopyManifest args =
 
     { FromTos = List.ofSeq fromTos }
 
-
-// let makeResultManifest args copyManifest =
-//     // Take every "To" full path and transform it to relative path. Relative from the perspective of the following folder structure:
-//     // <output>             ; <output> will be copied into 'publish' 
-//     // |- <args.From>       ; most likely "From" location. But not limited - there may be more, to gather Content from other dependencies/sources.
-//     //    |- textures
-//     //       |- file1.png
-//     // |- wwwroot
-//     //    |- <args.Manifest>; Manifest file will be written here
-//     //    |- main.js        ; resolution code will be sitting here...
-//     //    |- _framework     ; ...but will be resolving from here. It will be reading manifest file and stuffing each entry into VFS, with "../" prefix for correct resolution.
-//     //    |- <args.To>      ; will be "wwwroot/Content" or "wwwroot/assets" 
-//     //       |- textures
-//     //          |- file1.png
-//     //
-//     // For the above folder structure inputs will be (example):
-//     // args.From = "Content"        ; Relative to <output>
-//     // args.To = "wwwroot/Content"  ; Relative to <output>
-//     // copyManifest = { FromTos = [("<path-to-output>/Content/textures/file1.png", "<path-to-output>/wwwroot/Content/textures/file1.png")] }
-//     // result = { Files = ["/Content/textures/file1.png"]}  ; CRITICAL! Path has to include the last directory from args.To - i.e. "/Content" if args.To is "wwwroot/Content"
-//     { Files = [] }
-
 let makeResultManifest args (copyManifest: CopyManifest) =
     let files = ResizeArray<string>()
 
@@ -120,11 +93,6 @@ let makeResultManifest args (copyManifest: CopyManifest) =
 
     { Files = List.ofSeq files }
 
-// let copyFiles args copyManifest =
-//     // Perform copying as per manifest
-//     // ...
-//     makeResultManifest args copyManifest
-
 let copyFiles args (copyManifest: CopyManifest) =
     for (src, dst) in copyManifest.FromTos do
         let dstDir = Path.GetDirectoryName(dst)
@@ -132,12 +100,6 @@ let copyFiles args (copyManifest: CopyManifest) =
         File.Copy(src, dst, true)
 
     makeResultManifest args copyManifest
-
-
-// let deleteSources args =
-//     // Delete "From" folders
-//     // ..
-//     ()
 
 let deleteSources args =
     for fromDir in args.From do
@@ -155,8 +117,7 @@ let writeManifest args resultManifest =
 // Main entry point
 // -----------------------------
 
-// Usage: dotnet fsi contentise.fsx -from "Content" -to "wwwroot/Content" -manifest "content.txt" -delete
-// That way I can run it automatically from <output> during build, or manually from 'publish' post-publishing.
+// Usage: dotnet fsi contentise.fsx -from "Content" -to "wwwroot/Content" -manifest "wwwroot/content.txt" -delete
 
 let args = parseArgs fsi.CommandLineArgs.[1..]
 

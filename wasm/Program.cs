@@ -16,8 +16,7 @@ public static partial class Program
     [JSExport]
     internal static void OnUserInteraction()
     {
-        if (_myGame != null)
-            _myGame.OnAudioAllowedToInit();
+        _myGame?.OnAudioAllowedToInit();
     }
 
     [JSExport]
@@ -33,8 +32,7 @@ public static partial class Program
                 _myGame = new VibeSopwith.Game.TheGame(); 
             }
 
-            if (_myGame != null)
-                _myGame.RunOneFrame();
+            _myGame?.RunOneFrame();
         }
         catch (Exception e)
         {
