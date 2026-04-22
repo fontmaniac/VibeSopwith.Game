@@ -13,6 +13,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "extern", "extern", "{02EA68
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VibeSopwith.Game.Win", "windows\VibeSopwith.Game.Win.csproj", "{F82C6252-89D7-55BE-2768-F2AEE3531E24}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VibeSopwith.Game.Lin", "linux\VibeSopwith.Game.Lin.csproj", "{899A74BA-6A53-2E12-B355-ED44EC28B28A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -35,6 +37,10 @@ Global
 		{F82C6252-89D7-55BE-2768-F2AEE3531E24}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F82C6252-89D7-55BE-2768-F2AEE3531E24}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F82C6252-89D7-55BE-2768-F2AEE3531E24}.Release|Any CPU.Build.0 = Release|Any CPU
+		{899A74BA-6A53-2E12-B355-ED44EC28B28A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{899A74BA-6A53-2E12-B355-ED44EC28B28A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{899A74BA-6A53-2E12-B355-ED44EC28B28A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{899A74BA-6A53-2E12-B355-ED44EC28B28A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

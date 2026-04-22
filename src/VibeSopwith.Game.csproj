@@ -6,30 +6,7 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
-	<ItemGroup Condition="'$(RuntimeIdentifier)' == 'linux-x64'">
-		<None Include="..\extern\FNALibs\lib64\libFNA3D.so.0">
-			<Link>natives\libFNA3D.so.0</Link>
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-			<TargetPath>libFNA3D.so.0</TargetPath>
-		</None>
-		<None Include="..\extern\FNALibs\lib64\libFAudio.so.0">
-			<Link>natives\libFAudio.so.0</Link>
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-			<TargetPath>libFAudio.so.0</TargetPath>
-		</None>
-		<None Include="..\extern\FNALibs\lib64\libtheorafile.so">
-			<Link>natives\libtheorafile.so</Link>
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-			<TargetPath>libtheorafile.so</TargetPath>
-		</None>
-		<None Include="..\extern\FNALibs\lib64\libSDL3.so.0">
-			<Link>natives\libSDL3.so.0</Link>
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-			<TargetPath>libSDL3.so.0</TargetPath>
-		</None>
-	</ItemGroup>
-
-	<ItemGroup>
+  <ItemGroup>
     <PackageReference Include="Aether.Physics2D" Version="2.2.0" />
     <PackageReference Include="MLEM.Ui.FNA" Version="8.0.0" />
   </ItemGroup>
