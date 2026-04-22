@@ -85,6 +85,19 @@ public class TheGame : Microsoft.Xna.Framework.Game
         Global?.Dispose();
     }
 
+    public void OnAudioAllowedToInit()
+    {
+        //we have to wait for a user to interact with the app before we're allowed to use the audio system
+        // if (!_audioInit)
+        // {
+        //     Console.WriteLine("Initialising audio");
+        //     _audioInit = true;
+        //     _songs["music"] = Content.Load<Song>("audio/music.ogg");
+        //     _sounds["click"] = Content.Load<SoundEffect>("audio/click.wav");
+        // }
+    }
+
+
     public  record ControlScheme(Keys LThrottle, Keys RThrottle, Keys UPitch, Keys DPitch, Keys Roll, Keys Bomb, Keys Gun, Keys Autoland, Keys Particles, bool SpinIndependent);
     private static ControlScheme MyControlScheme = new(Keys.A, Keys.D, Keys.W, Keys.S, Keys.X, Keys.B, Keys.Space, Keys.H, Keys.D0, false);
     private static ControlScheme ClassicControlScheme = new(Keys.Z, Keys.X, Keys.OemComma, Keys.OemQuestion, Keys.OemPeriod, Keys.B, Keys.Space, Keys.H, Keys.D0, true);
