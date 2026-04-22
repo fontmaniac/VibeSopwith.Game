@@ -1,0 +1,48 @@
+<Project Sdk="Microsoft.NET.Sdk.WebAssembly">
+
+  <PropertyGroup>
+	  <RuntimeIdentifier>browser-wasm</RuntimeIdentifier>
+	  <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>    
+    <WasmBuildNative>true</WasmBuildNative>
+    <WasmAllowUndefinedSymbols>true</WasmAllowUndefinedSymbols>
+    <EmccLinkOptimizationFlag>-O1</EmccLinkOptimizationFlag>
+    <EmccExtraLDFlags>--js-library $(MSBuildProjectDirectory.Replace('\', '/'))/js/library-fixemscripten.js -sFULL_ES3</EmccExtraLDFlags>
+
+  </PropertyGroup>
+
+
+  <ItemGroup>
+ 	<NativeFileReference Include="..\extern\FNALibs\wasm\FNA3D.a" />
+	<NativeFileReference Include="..\extern\FNALibs\wasm\FAudio.a" />
+	<NativeFileReference Include="..\extern\FNALibs\wasm\SDL2.a" />
+	<NativeFileReference Include="..\extern\FNALibs\wasm\libmojoshader.a" />
+
+    <EmccExportedRuntimeMethod Include="SDL" />
+    <EmccExportedRuntimeMethod Include="GL" />
+    <EmccExportedRuntimeMethod Include="setMainLoop" />
+	</ItemGroup>
+   
+	<ItemGroup>
+    <PackageReference Include="Aether.Physics2D" Version="2.2.0" />
+    <PackageReference Include="MLEM.Ui.FNA" Version="8.0.0" />
+  </ItemGroup>
+   
+	<ItemGroup>
+	  <ProjectReference Include="..\src\VibeSopwith.Game.csproj" />
+	</ItemGroup>
+
+  <ItemGroup>
+    <None Update="contentise.fsx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <Target Name="RunContentiseAfterPublish" AfterTargets="Publish">
+    <Exec WorkingDirectory="$(PublishDir)" Command="dotnet.exe fsi contentise.fsx -from Content -to wwwroot/Content -manifest wwwroot/content.txt -delete" />
+  </Target>
+
+</Project>
