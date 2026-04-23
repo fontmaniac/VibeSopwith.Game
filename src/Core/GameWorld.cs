@@ -342,18 +342,10 @@ namespace VibeSopwith.Game.Core
 
         private IEnumerable<IPerishable> EnumeratePerishables()
         {
-            foreach (var bullet in Bullets)          yield return GetPerishable((ctx) => { if (bullet.IsExpired(ctx.gameTime.TotalGameTime)) { bullet.RemoveRigging(simWorld); return Bullets.Remove(bullet); } return false; });
-            foreach (var explosion in Explosions)    yield return GetPerishable((ctx) => { if (explosion.IsExpired(ctx.gameTime.TotalGameTime)) return Explosions.Remove(explosion); return false; });
-            foreach (var baloon in Baloons)          yield return GetPerishable((ctx) => { if (baloon.Exploded) return Baloons.Remove(baloon); return false; });
-            foreach (var partSys in ParticleSystems) yield return GetPerishable((ctx) => 
-            {
-                if (partSys.IsExpired)
-                {
-                    partSys.RemoveRigging(simWorld);
-                    return ParticleSystems.Remove(partSys);
-                }
-                return false; 
-            });
+            foreach (var bullet in Bullets)          yield return GetPerishable((ctx) => Caps.RemoveWithRigging(bullet, simWorld, bullet.IsExpired(ctx.gameTime.TotalGameTime), () => Bullets.Remove(bullet)));
+            foreach (var explosion in Explosions)    yield return GetPerishable((ctx) => Caps.Remove(explosion.IsExpired(ctx.gameTime.TotalGameTime), () => Explosions.Remove(explosion)));
+            foreach (var baloon in Baloons)          yield return GetPerishable((ctx) => Caps.Remove(baloon.Exploded, () => Baloons.Remove(baloon)));
+            foreach (var partSys in ParticleSystems) yield return GetPerishable((ctx) => Caps.RemoveWithRigging(partSys, simWorld, partSys.IsExpired, () => ParticleSystems.Remove(partSys)));
         }
 
         private IActor GetActor<TAct, TState>(

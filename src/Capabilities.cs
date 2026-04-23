@@ -55,6 +55,13 @@ public static class Caps
     public static Func<bool> ImperviousToHits() => () => false;
 
     public static Action<Unit> RemoveRigging(ICanRemoveRigging canRemove, World simWorld) => (_) => canRemove.RemoveRigging(simWorld);
+    public static bool Remove(bool isExpired, Func<bool> remove) => isExpired ? remove() : false;
+    public static bool RemoveWithRigging(ICanRemoveRigging<World> canRemove, World simWorld, bool isExpired, Func<bool> remove)
+    {
+        if (!isExpired) return false; 
+        canRemove.RemoveRigging(simWorld);
+        return remove();
+    }
 
     public static Func<GameTime, Vector2, Unit> ExecuteEffect(Action<GameTime, Vector2> doExecute) => (gt, ct) => { doExecute(gt, ct); return Unit.Value; };
     public static Func<GameTime, Vector2, Unit> NoEffect() => (_, _) => default;
