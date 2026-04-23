@@ -28,7 +28,16 @@ namespace VibeSopwith.Game.Core
         }
 
 
-        public record State(Basis Location, float Speed, Bomb? Bomb, Bullet? Bullet, DateTime BombTime, DateTime BulletTime, DateTime RollTime, EigenState EigenState, WaterGun WaterGun);
+        public record struct State(
+            Basis Location, 
+            float Speed, 
+            Bomb? Bomb, 
+            Bullet? Bullet, 
+            DateTime BombTime, 
+            DateTime BulletTime, 
+            DateTime RollTime, 
+            EigenState EigenState, 
+            WaterGun WaterGun);
 
         public State CurrentState;
         public float Speed { get => CurrentState.Speed; }

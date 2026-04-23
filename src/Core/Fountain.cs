@@ -17,7 +17,7 @@ namespace VibeSopwith.Game.Core
             public sealed record Emitting(bool justNow, IParticleSystem<World> particleSystem) : EigenState;
         }
 
-        public record State(float NozzleAngle, NozzleMovement Movement, EigenState EigenState);
+        public record struct State(float NozzleAngle, NozzleMovement Movement, EigenState EigenState);
         public State CurrentState;
 
         public Vector2 Position { get => WorldLocation.Position; }

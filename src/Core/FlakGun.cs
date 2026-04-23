@@ -11,7 +11,15 @@ namespace VibeSopwith.Game.Core
     {
         public Body Body = null!;
 
-        public record State(float BarrelAngle, Bullet? Bullet, Explosion? MuzzleFlash, BarrelMovement Movement, float RecoilShift, DateTime BulletTime, DateTime RecoilTime);
+        public record struct State(
+            float BarrelAngle, 
+            Bullet? Bullet, 
+            Explosion? MuzzleFlash, 
+            BarrelMovement Movement, 
+            float RecoilShift, 
+            DateTime BulletTime, 
+            DateTime RecoilTime);
+
         public State CurrentState;
 
         public Vector2 Position { get; }
