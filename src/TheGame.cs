@@ -28,6 +28,7 @@ public class TheGame : Microsoft.Xna.Framework.Game
     private readonly Core.GameWorld _world;
     public readonly static UpsCounter UPS = new UpsCounter();
     public readonly static UpsCounter FPS = new UpsCounter();
+    public readonly static MemoryStats MemStats = new MemoryStats();
 
     public const float PlaneGizmoWidth = 4f;
     public const float PlaneGizmoHeight = 4f;
@@ -183,14 +184,15 @@ public class TheGame : Microsoft.Xna.Framework.Game
         base.Draw(gameTime);
 
         FPS.Update(DateTime.UtcNow);
+        MemStats.Update(DateTime.UtcNow);
 
         var full = GraphicsDevice.Viewport;
         var bnd = full.Height - 120;
 
         var mainViewport = new Viewport(0, 0, full.Width, bnd);
-        var dashViewport = new Viewport(0, bnd, 200, 120);
-        var gizmoViewport = new Viewport(200, bnd, 120, 120);
-        var dialsViewport = new Viewport(320, bnd, 240, 120);
+        var dashViewport = new Viewport(0, bnd, 300, 120);
+        var gizmoViewport = new Viewport(300, bnd, 120, 120);
+        var dialsViewport = new Viewport(420, bnd, 240, 120);
         var minimapViewport = new Viewport(full.Width / 2 + 5, bnd + 20, full.Width / 2 - 10, 120 - 40);
 
         GraphicsDevice.Clear(Color.Black);
@@ -209,7 +211,7 @@ public class TheGame : Microsoft.Xna.Framework.Game
 
         DrawInViewport(dashViewport, full, () =>
         {
-            _dashboard.Draw(_world.Plane, UPS, FPS, dashViewport, gameTime);
+            _dashboard.Draw(_world.Plane, UPS, FPS, MemStats, dashViewport, gameTime);
         });
 
         DrawInViewport(gizmoViewport, full, () =>

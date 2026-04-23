@@ -342,7 +342,7 @@ namespace VibeSopwith.Game.Core
 
         private IEnumerable<IPerishable> EnumeratePerishables()
         {
-            foreach (var bullet in Bullets)          yield return GetPerishable((ctx) => { if (bullet.IsExpired(ctx.gameTime.TotalGameTime)) return Bullets.Remove(bullet); return false; });
+            foreach (var bullet in Bullets)          yield return GetPerishable((ctx) => { if (bullet.IsExpired(ctx.gameTime.TotalGameTime)) { bullet.RemoveRigging(simWorld); return Bullets.Remove(bullet); } return false; });
             foreach (var explosion in Explosions)    yield return GetPerishable((ctx) => { if (explosion.IsExpired(ctx.gameTime.TotalGameTime)) return Explosions.Remove(explosion); return false; });
             foreach (var baloon in Baloons)          yield return GetPerishable((ctx) => { if (baloon.Exploded) return Baloons.Remove(baloon); return false; });
             foreach (var partSys in ParticleSystems) yield return GetPerishable((ctx) => 
@@ -441,6 +441,8 @@ namespace VibeSopwith.Game.Core
             }
 
             foreach (var postAction in postCheckActions) postAction();
+
+            GC.Collect();
         }
 
     }

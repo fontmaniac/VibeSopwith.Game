@@ -36,7 +36,8 @@ namespace VibeSopwith.Game.Core
 
         public void RemoveRigging(World simWorld)
         {
-            simWorld.Remove(Body);
+            if (Body != null) simWorld.Remove(Body);
+            Body = null!;
         }
 
         public Bullet SetupRigging(World simWorld)

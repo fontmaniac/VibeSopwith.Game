@@ -1,23 +1,22 @@
-﻿namespace VibeSopwith.Game.Core
+﻿namespace VibeSopwith.Game.Core;
+
+public class UpsCounter
 {
-    public class UpsCounter
+    private int _frameCounter = 0;
+    private DateTime _startTime = DateTime.UtcNow;
+
+    public int UPS { get; private set; }
+
+    public void Update(DateTime utcTime)
     {
-        private int _frameCounter = 0;
-        private DateTime _startTime = DateTime.UtcNow;
+        var elapsedTime = (utcTime - _startTime).TotalSeconds;
+        _frameCounter++;
 
-        public int UPS { get; private set; }
-
-        public void Update(DateTime utcTime)
+        if (elapsedTime >= 1.0)
         {
-            var elapsedTime = (utcTime - _startTime).TotalSeconds;
-            _frameCounter++;
-
-            if (elapsedTime >= 1.0)
-            {
-                UPS = (int)((double)_frameCounter / elapsedTime);
-                _frameCounter = 0;
-                _startTime = DateTime.UtcNow;
-            }
+            UPS = (int)((double)_frameCounter / elapsedTime);
+            _frameCounter = 0;
+            _startTime = DateTime.UtcNow;
         }
     }
 }

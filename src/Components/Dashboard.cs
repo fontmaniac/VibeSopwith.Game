@@ -19,6 +19,9 @@ namespace VibeSopwith.Game.Components
         private Paragraph _spd = null!;
         private Paragraph _lng = null!;
         private Paragraph _ups = null!;
+        private Paragraph _bps = null!;
+        private Paragraph _tb = null!;
+        private Paragraph _heap = null!;
 
         public new void LoadContent()
         {
@@ -33,13 +36,16 @@ namespace VibeSopwith.Game.Components
 
             _uiSystem = new UiSystem(this.Game, untexturedStyle);
 
-            _root = new Panel(Anchor.TopLeft, new Vector2(200, 150), new Vector2(2, 2), false, true);
+            _root = new Panel(Anchor.TopLeft, new Vector2(300, 150), new Vector2(2, 2), false, true);
             _uiSystem.Add("Root", _root);
 
-            _root.AddChild(_alt = new Paragraph(Anchor.AutoLeft, 1, "Altitude"));
-            _root.AddChild(_lng = new Paragraph(Anchor.AutoLeft, 1, "Position"));
+            //_root.AddChild(_alt = new Paragraph(Anchor.AutoLeft, 1, "Altitude"));
+            //_root.AddChild(_lng = new Paragraph(Anchor.AutoLeft, 1, "Position"));
             _root.AddChild(_spd = new Paragraph(Anchor.AutoLeft, 1, "Speed"));
             _root.AddChild(_ups = new Paragraph(Anchor.AutoLeft, 1, "FPS"));
+            _root.AddChild(_bps = new Paragraph(Anchor.AutoLeft, 1, "BPS"));
+            //_root.AddChild(_tb = new Paragraph(Anchor.AutoLeft, 1, "TotalBytes"));
+            _root.AddChild(_heap = new Paragraph(Anchor.AutoLeft, 1, "Heap"));
         }
 
         public new void UnloadContent()
@@ -53,17 +59,20 @@ namespace VibeSopwith.Game.Components
             _uiSystem.Update(gameTime);
         }
 
-        public void Draw(Airplane plane, UpsCounter ups, UpsCounter fps, Viewport vp, GameTime gameTime)
+        public void Draw(Airplane plane, UpsCounter ups, UpsCounter fps, MemoryStats ms, Viewport vp, GameTime gameTime)
         {
             _root.PositionOffset = new Vector2(vp.X, vp.Y);
             _root.Size = new Vector2(vp.Width, vp.Height);
 
             base.Draw(gameTime);
 
-            _alt.Text = $"Altitude: {(int)plane.Position.Y}";
-            _lng.Text = $"Position: {(int)plane.Position.X}";
+            //_alt.Text = $"Altitude: {(int)plane.Position.Y}";
+            //_lng.Text = $"Position: {(int)plane.Position.X}";
             _spd.Text = $"Speed: {plane.Speed:0.000}";
             _ups.Text = $"FPS/UPS: {fps.UPS}/{ups.UPS}";
+            _bps.Text = $"BPS: {ms.BytesPerSecond}";
+            //_tb.Text  = $"TotalBytes: {ms.TotalBytes}";
+            _heap.Text = $"Heap: {ms.HeapSize}";
 
             _uiSystem.Draw(gameTime, TheGame.SpriteBatchPoint);
         }

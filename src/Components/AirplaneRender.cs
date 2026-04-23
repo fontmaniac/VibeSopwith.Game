@@ -30,7 +30,7 @@ namespace VibeSopwith.Game.Components
         public void Draw(Airplane airplane, GameTime gameTime, Vector2? worldPixelSize = null)
         {
             Animation.DrawStaticSequence(airplane, _sequence, gameTime, TheGame.SpriteBatchPoint);
-            //DrawHelper.DrawSlice(airplane, _airplaneTexture, TheGame.SpriteBatch, worldPixelSize);
+            //DrawHelper.DrawSlice(airplane, _airplaneTexture, TheGame.SpriteBatchPoint, worldPixelSize);
         }
     }
 }

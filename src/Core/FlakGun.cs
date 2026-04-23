@@ -138,6 +138,8 @@ namespace VibeSopwith.Game.Core
                 ? ((null, null), CurrentState.BulletTime)
                 : (Barrel.SpawnBullet(gameTime.TotalGameTime), nowTime);
 
+            //var (newBullet, newBulletTime) = (new { bullet = (Bullet?)null, muzzleFlash = (Explosion?)null}, CurrentState.BulletTime);
+
             // Barrels goes fully back in RecoilHalfTime and then fully forward in another RecoilHalfTime. 
             var recoilPhase = MathF.Min((float)(nowTime - CurrentState.RecoilTime).TotalSeconds, RecoilHalfTime * 2f);
             var recoilPhasePct = recoilPhase / RecoilHalfTime;
