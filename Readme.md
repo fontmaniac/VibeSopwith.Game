@@ -14,7 +14,7 @@ Having advanced a bit alongside the development arc I can confidently state that
 
 ### "AI" detour
 
-Let me get that latter statement out of way before I focus on the important matters. As evident from the name itself, the project has started with hope to unleash the "power" of modern "artificial intelligence" for realization of my "creative visions". Particularly of modern "agentic" tools and workflows. I harbour(ed) enough scepsis towards "vibe-coding" to be totally unenthusiastic to try it, but as it is sometimes attributed to Niels Bohr - "a horseshoe brings luck whether you believe in it or not" - I decided to jump in with open mind. 
+Let me get that latter statement out of way before I focus on the important matters. As evident from the name itself, the project has started with hope to unleash the "power" of modern "artificial intelligence" for realization of my "creative visions". Particularly of modern "agentic" tools and workflows. I harbour(ed) enough skepsis towards "vibe-coding" to be totally unenthusiastic to try it, but as it is sometimes attributed to Niels Bohr - "a horseshoe brings luck whether you believe in it or not" - I decided to jump in with open mind. 
 
 I've already had another FNA game project started where I somewhat settled on chosen architecture, composition and code organisation. That project was/is called "Bin Blitz" (I am staking the name here :-)) and involved a garbage truck with moving arm and scattered around garbage bins of different colors - I may open up the repo some day. So the first task to "agent" (I tried VCode Copilot and Gemini CLI) was to research "Bin Blitz" code and identify/extract useful "patterns" and "invariants" (Copilot loves this word); to create a plan for Sopwith-inspired game; and to attempt reverse-engineer a prompt with which "Bin Blitz" could have been YOLO-ed into existence. Or even not YOLO-ed, just methodically brought into. 
 
@@ -47,7 +47,7 @@ So, what it is:
   - Code organisation
   - Assets organisation
   - Particle system simulation and rendering
-  - Multi-platform deployment, inclusing browser-wasm
+  - Multi-platform deployment, including browser-wasm
   (See the important section [below](#what-it-is-not) for clarification)  
 
 - A coding toy that I love to casually fire up - no, not to play - but to add or ponder another "feature", untangle another code conundrum or dare to try something I thought wasn't possible - which inevitably produces more conundrums for future entertainment!
@@ -72,7 +72,7 @@ So, what it is:
 ## The Journey
 
 There is so much I would like to share about milestones of this project or stumbling blocks I had to overcome! So much that at my pace of writing I would never be able to publish the project, if I'd postpone publishing until completion.
-Thos who might feel curious are welcome to attend to [The Journey](Journey.md). There isn't much there yet, because any items I would like to share deserve their own write-up (or is it write-down?). And as learnings was mine, and victories and achievements were mine too, then writing about it cannot be "AI-assisted" in any way. Still, I hope to keep the pace somewhat steady, even if slow - keep an eye if interested.
+Those who might feel curious are welcome to attend [The Journey](Journey.md). There isn't much there yet, because any items I would like to share deserve their own write-up (or is it write-down?). And as learnings was mine, and victories and achievements were mine too, then writing about it cannot be "AI-assisted" in any way. Still, I hope to keep the pace somewhat steady, even if slow - keep an eye if interested.
 
 ## Overview
 
@@ -87,10 +87,10 @@ extern/
 │    
 src/    
 ├── VibeSopwith.Game.csproj       # Core "game" logic as class library
-│   ├── Components                # Rendering classes
-│   ├── Content                   # Assets. "Symbolic submodule"
-│   ├── Core                      # Game objects and associated logic
-│   └── Docs                      # Not much in there
+├── Components                    # Rendering classes
+├── Content                       # Assets. "Symbolic submodule"
+├── Core                          # Game objects and associated logic
+└── Docs                          # Not much in there
 │
 windows/
 ├── VibeSopwith.Game.Win.csproj   # Windows "build".
@@ -108,11 +108,11 @@ The game is backed by FNA.
 
 "Native" libraries are downloaded from the official [fnalib-dailies](https://github.com/FNA-XNA/fnalibs-dailies) release page as of the time of development.
 
-Browser-specific "natives" copied from RedMike's sample project [FNA.WASM.Sample](https://github.com/RedMike/FNA.WASM.Sample).Huge thanks to [RedMike](https://github.com/RedMike) and his [guide](https://github.com/RedMike/FNA.WASM.Sample/wiki/Manually-setting-up-FNA-Project-for-WASM) for helping me setting WASM build!
+Browser-specific "natives" are copied from RedMike's sample project [FNA.WASM.Sample](https://github.com/RedMike/FNA.WASM.Sample).Huge thanks to [RedMike](https://github.com/RedMike) and his [guide](https://github.com/RedMike/FNA.WASM.Sample/wiki/Manually-setting-up-FNA-Project-for-WASM) for helping me set up WASM build!
 
 Content lives in a separate repository [VibeSopwith.Content](https://github.com/fontmaniac/VibeSopwith.Content). The linking between main repo and Content repo is "symbolic", enabled by my homebrew "symbolic submodules" contraption [symgit](https://github.com/fontmaniac/symgit). 
 
-The main reason is that I originally developed the project without thinking of opening it to anyone - and used some textures that I couldn't correctly attribute or shpw the license for. But later I suddenly felt the itch for publishing the repository with all original history, and because "git remembers everything" I realized the need for content decoupling and swapping with "clean" alternative. "Laundering", so to speak. For that I developed the whole "workflow" including `symgit` and git-history-replayer `dremmett`. `symgit` is opened and linked above, and `Dr.Emmett` is being prepared for publishing too - watch this space!
+The main reason is that I originally developed the project without thinking of opening it to anyone - and used some textures that I couldn't correctly attribute or show the license for. But later I suddenly felt the itch for publishing the repository with all original history, and because "git remembers everything" I realized the need for content decoupling and swapping with "clean" alternative. "Laundering", so to speak. For that I developed the whole "workflow" including `symgit` and git-history-replayer `dremmett`. `symgit` is opened and linked above, and `Dr.Emmett` is being prepared for publishing too - watch this space!
 
 For physics simulation the game uses [`Aether.Physics2D`](https://github.com/nkast/Aether.Physics2D) fork.
 For text rendering - [`MLEM.UI`](https://github.com/Ellpeck/MLEM)
@@ -136,7 +136,7 @@ One of the goals for me was to extract a useful set of "primitives" to reuse in 
 - Make sure submodules are updated recursively.
   `git submodule update --init --recursive`
   This will update `FNA` dependency and `Nage.Strata` dependency.
-- Content repository must be cloned separately, as it lives in detached [repository](https://github.com/fontmaniac/VibeSopwith.Content). 
+- Content repository must be cloned separately, as it lives in a detached [repository](https://github.com/fontmaniac/VibeSopwith.Content). 
   - Either clone it directly within `src/Content` directory (you'd have to create the directory):
   `git clone https://github.com/fontmaniac/VibeSopwith.Content.git .` 
   - Or utilise my `symbolic submodules` script. You can read more about it here: [symgit](https://github.com/fontmaniac/symgit). Run from the repo root:
@@ -174,11 +174,13 @@ Additionally, for now **0** will start spraying all water guns - ground-based an
 
 ## Licensing
 
+Please strictly adhere to terms and conditions outlined in the [LICENSE](LICENSE.txt).
 For asset attribution see [Readme.md at Content Repo](https://github.com/fontmaniac/VibeSopwith.Content)
 
 ## Collaboration
 
 Feel free to fork and mutilate this "game" to your liking. 
+Any issue, PR, critique or praise is welcome,
 If you work in game development and see potential for collaboration, I would appreciate being considered.
 
 ## Screenshots
