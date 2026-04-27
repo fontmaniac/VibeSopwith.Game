@@ -31,7 +31,7 @@ Saying so, I generally find LLMs of chatbot variety a very useful tools of assis
 
 And while I hadn't forgotten. My attempts to use image-gen "AI" models to generate assets for this game fell flat even lower than lowest. I can confidently assert that useful overlap between current capabilities of image-gen models and needs of pixel-art-ish game developer is zero. If I was willing to climb the learning curve of tools like Comphy, I could probably move forward within epsilon-proximity (from the left! :-)), but I wasn't.
  
-**TL;DR:**  "Agents" aren't there yet - at least for me. Chatbot LLM was useful. The codebase is 100% architected by me and 90% coded exclusively by me, and there is no nook or cranny in the remaining 10% which I'm not as familiar with as my own code. 
+**TL;DR:**  "Agents" aren't there yet - at least for me. Chatbot LLM was useful. The codebase is 100% architected by me and 90% coded exclusively by me, and there is no nook or cranny in the remaining 10% which I'm not as familiar with as my own code. Except HLSL shaders - it does my head in, so I was happy to delegate them in entirety to Copilot! ;)
 
 ### To higher places!
 
