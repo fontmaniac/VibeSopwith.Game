@@ -118,9 +118,7 @@ For physics simulation the game uses [`Aether.Physics2D`](https://github.com/nka
 For text rendering - [`MLEM.UI`](https://github.com/Ellpeck/MLEM)
 Huge thanks to all authors and maintainers of those projects. 
 
-`Aether.Physics2D` requires setting up "fixtures" for "physical bodies", which, naturally must approximately follow the contours of sprites as defined by used textures. For that reason you'd see a plenty of "magic numbers" in every game object definition. While it would be not atypical for me to painstakingly compute all these numbers using pen-and-paper approach, this time "AI agent" - namely Gemini CLI - was able to rescue me from such misery. With me cracking the whip it was able to vibe-shot me a React-based `"Aether Bodybuilder"` tool which enabled authoring "fixtures" and "reference points" using a specific texture as underlay. This tool is fully vibe-coded, to the extent that I either didn't look at the code or was utterly terrified when looking. As such, Aether Bodybuilder will never be opened! But here is a screenshot, for the curious of you:
-
-[![Aether BodyBuilder](screenshots/aetherbb-thumb.png)](screenshots/aetherbb.png)
+`Aether.Physics2D` requires setting up "fixtures" for "physical bodies", which, naturally must approximately follow the contours of sprites as defined by used textures. For that reason you'd see a plenty of "magic numbers" in every game object definition. While it would be not atypical for me to painstakingly compute all these numbers using pen-and-paper approach, this time "AI agent" - namely Gemini CLI - was able to rescue me from such misery. With me cracking the whip it was able to vibe-shot me a React-based `"Aether Bodybuilder"` tool which enabled authoring "fixtures" and "reference points" using a specific texture as underlay. This tool is fully vibe-coded, to the extent that I either didn't look at the code or was utterly terrified when looking. As such, Aether Bodybuilder will never be opened! But here is a [screenshot](#aether-bodybuilder), for the curious of you.
 
 Overall the "game" application follows pretty standard flow.
 
@@ -130,7 +128,6 @@ Overall the "game" application follows pretty standard flow.
 - Some "out-of-world" object-renderers like *Dashboard*, *"Gizmo"* and *Dials* are "rootless" and directly handled by `TheGame`. 
 
 One of the goals for me was to extract a useful set of "primitives" to reuse in my other FNA-based game projects. Which I was able to do, and that set is now open as [Nage.Strata](https://github.com/fontmaniac/Nage.Strata), and used as submodule dependency in this "game". It is under active development, but one day I hope to populate it with proper documentation and examples. At the time of writing there are none :-). However, the history of what became `Nage.Strata` can be tracked by looking back at the history of `VibeSopwith`. 
-
 
 
 ## How to run
@@ -175,8 +172,6 @@ Default keybindings are the same as in original "Sopwith":
 There is an alternative, WASD-oriented control scheme, which can be enabled in the code.
 Additionally, for now **0** will start spraying all water guns - ground-based and plane-mounted. 
 
-
-
 ## Licensing
 
 For asset attribution see [Readme.md at Content Repo](https://github.com/fontmaniac/VibeSopwith.Content)
@@ -186,3 +181,16 @@ For asset attribution see [Readme.md at Content Repo](https://github.com/fontman
 Feel free to fork and mutilate this "game" to your liking. 
 If you work in game development and see potential for collaboration, I would appreciate being considered.
 
+## Screenshots
+
+### Windows
+
+![VibeSopwith In Windows](screenshots/sswin.png)
+
+### WASM
+
+![VibeSopwith In Browser](screenshots/sswasm.png)
+
+### Aether Bodybuilder
+
+![Aether BodyBuilder](screenshots/aetherbb.png)
