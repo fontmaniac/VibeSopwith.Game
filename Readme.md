@@ -119,6 +119,7 @@ For text rendering - [`MLEM.UI`](https://github.com/Ellpeck/MLEM)
 Huge thanks to all authors and maintainers of those projects. 
 
 `Aether.Physics2D` requires setting up "fixtures" for "physical bodies", which, naturally must approximately follow the contours of sprites as defined by used textures. For that reason you'd see a plenty of "magic numbers" in every game object definition. While it would be not atypical for me to painstakingly compute all these numbers using pen-and-paper approach, this time "AI agent" - namely Gemini CLI - was able to rescue me from such misery. With me cracking the whip it was able to vibe-shot me a React-based `"Aether Bodybuilder"` tool which enabled authoring "fixtures" and "reference points" using a specific texture as underlay. This tool is fully vibe-coded, to the extent that I either didn't look at the code or was utterly terrified when looking. As such, Aether Bodybuilder will never be opened! But here is a screenshot, for the curious of you:
+
 [![Aether BodyBuilder](screenshots/aetherbb-thumb.png)](screenshots/aetherbb.png)
 
 Overall the "game" application follows pretty standard flow.
