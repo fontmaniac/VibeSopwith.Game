@@ -42,7 +42,15 @@
   </ItemGroup>
 
   <Target Name="RunContentiseAfterPublish" AfterTargets="Publish">
-    <Exec WorkingDirectory="$(PublishDir)" Command="dotnet.exe fsi contentise.fsx -from Content -to wwwroot/Content -manifest wwwroot/content.txt -delete" />
+    <!-- Windows -->
+    <Exec WorkingDirectory="$(PublishDir)"
+          Command="dotnet.exe fsi contentise.fsx -from Content -to wwwroot/Content -manifest wwwroot/content.txt -delete"
+          Condition="'$(OS)' == 'Windows_NT'" />
+
+    <!-- Linux/macOS -->
+    <Exec WorkingDirectory="$(PublishDir)"
+          Command="dotnet fsi contentise.fsx -from Content -to wwwroot/Content -manifest wwwroot/content.txt -delete"
+          Condition="'$(OS)' != 'Windows_NT'" />
   </Target>
 
 </Project>
