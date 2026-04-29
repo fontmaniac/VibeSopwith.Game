@@ -144,7 +144,8 @@ One of the goals for me was to extract a useful set of "primitives" to reuse in 
 - Build the solution. 
 - On Windows the VibeSopwith.Game.Win.csproj can be run from Visual Studio, or VSCode, or "published" and run directly.
 - On Linux - which I am less familiar with - I could run VibeSopwith.Game.Lin.csproj with `dotnet run` or directly after `dotnet publish`
-- The "game" runs in browser! However, I was unable to persuade Visual Studio to "publish" it properly. Command line dotnet worked though:
+- The "game" runs in browser! Check it out: [**behold!**](https://fontmaniac.github.io/VibeSopwith.Game/) 
+  However, I was unable to persuade Visual Studio to "publish" it properly. Command line dotnet worked though:
   - Ensure necessary dotnet tools are installed:
   ```
   dotnet workload install wasm-tools
