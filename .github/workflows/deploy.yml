@@ -1,0 +1,45 @@
+name: Deploy WASM to GitHub Pages
+
+on:
+  push:
+    branches:
+      - master
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Pull Content via symgit
+        run: dotnet fsi symgit.fsx update -all
+
+      - name: Publish WASM project
+        working-directory: ./wasm
+        run: dotnet publish -c Release
+
+      # IMPORTANT: GitHub Pages must serve from a folder containing index.html at root
+      - name: Copy publish output
+        run: |
+          mkdir site
+          # Copy everything from publish (to keep .json/.config/etc.)
+          cp -r wasm/bin/Release/net8.0/publish/* site/
+          # Lift wwwroot contents to the root
+          cp -r site/wwwroot/* site/
+          rm -rf site/wwwroot
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./site
