@@ -21,6 +21,11 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
+      - name: Install WASM workloads
+        run: |
+          dotnet workload install wasm-tools
+          dotnet workload install wasm-experimental
+
       - name: Pull Content via symgit
         run: dotnet fsi symgit.fsx update -all
 
