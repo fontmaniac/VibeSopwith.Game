@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <base href="/VibeSopwith.Game/">
+    <meta charset="utf-8" />
+    <title>Vibe Sopwith (WASM)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            overflow: hidden;
+            height: 100%;
+            width: 100%;
+        }
+
+        #canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+            image-rendering: pixelated;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="canvas"></canvas>
+    <link rel="preload" href="./content.txt" as="fetch" crossorigin="anonymous">
+    <script type="module" src="main.js"></script>
+</body>
+
+</html>
