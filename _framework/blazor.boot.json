@@ -1,7 +1,7 @@
 {
   "mainAssemblyName": "VibeSopwith.Game.Wasm",
   "resources": {
-    "hash": "sha256-0Noh7DtvdhTSgxyUiJUP2+AkJP5D6qjAjw3yhfHq/C8=",
+    "hash": "sha256-lZ117+78ttbDIyJ6rop5PJkVzchWfV6FSdmxIkOwtOA=",
     "jsModuleNative": {
       "dotnet.native.js": "sha256-g3OPjb51iQzMXy8frbEBjkknRH9pYvtxeDDKl3ly6lo="
     },
@@ -48,7 +48,7 @@
       "System.Security.Cryptography.wasm": "sha256-SJYknLwr23CyeWWloyLDxgMzAQuQmiDr84S3iCHtjf0=",
       "System.Text.RegularExpressions.wasm": "sha256-azimtdTi+/S5pcw/WZJ/gMxBf8bkMCrhI1MmmylxwUw=",
       "System.wasm": "sha256-CfWhwtzQNrVby4C9XfIEc+D0jIH0ZH+3FOR2seU7N2k=",
-      "VibeSopwith.Game.Wasm.wasm": "sha256-Fe3ZMXvSCVwCpqO3N4GcrtfbPwtvV7ZsQLt/kTimNb8=",
+      "VibeSopwith.Game.Wasm.wasm": "sha256-mOstGdfr8HCrT6+ONmXsfn1U2Teuy7rArEJF4QC4ZFo=",
       "VibeSopwith.Game.wasm": "sha256-/TCzgBv/FYmrZcLnEwGvP5acfWAxY3YZZ/Rg2nP40HE="
     }
   },
