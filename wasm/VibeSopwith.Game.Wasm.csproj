@@ -16,10 +16,10 @@
 
 
   <ItemGroup>
-    <NativeFileReference Include="..\extern\FNALibs\wasm\FNA3D.a" />
-    <NativeFileReference Include="..\extern\FNALibs\wasm\FAudio.a" />
-    <NativeFileReference Include="..\extern\FNALibs\wasm\SDL2.a" />
-    <NativeFileReference Include="..\extern\FNALibs\wasm\libmojoshader.a" />
+    <NativeFileReference Include="..\extern\fnalibs\wasm\FNA3D.a" />
+    <NativeFileReference Include="..\extern\fnalibs\wasm\FAudio.a" />
+    <NativeFileReference Include="..\extern\fnalibs\wasm\SDL2.a" />
+    <NativeFileReference Include="..\extern\fnalibs\wasm\libmojoshader.a" />
 
     <EmccExportedRuntimeMethod Include="SDL" />
     <EmccExportedRuntimeMethod Include="GL" />
